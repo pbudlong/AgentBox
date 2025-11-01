@@ -162,6 +162,8 @@ export default function Demo() {
         onReset={resetDemo}
         threadStatus={threadStatus}
         isRunning={isRunning}
+        showNext={showCalendar && !isRunning}
+        onNext={() => navigate("/profiles")}
         showCalendar={showCalendar && !isRunning}
         onViewCalendar={() => setShowCalendarModal(true)}
       />
@@ -192,7 +194,7 @@ export default function Demo() {
 
         {/* Fit score indicator underneath emails */}
         {showScore && (
-          <div className="border-t border-border bg-background/50 p-8 flex justify-center">
+          <div className="border-t border-border bg-background/50 p-8 flex justify-center gap-8 items-center">
             <div className="w-full max-w-md">
               <FitScoreIndicator
                 score={fitScore}
@@ -200,6 +202,17 @@ export default function Demo() {
                 threshold={70}
               />
             </div>
+            {showCalendar && !isRunning && (
+              <Button
+                onClick={() => navigate("/profiles")}
+                size="default"
+                className="hover-elevate active-elevate-2 flex-shrink-0"
+                data-testid="button-next-profiles-bottom"
+              >
+                See Profiles
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </Button>
+            )}
           </div>
         )}
       </div>

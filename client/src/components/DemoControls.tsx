@@ -90,7 +90,7 @@ export default function DemoControls({ onStart, onReset, threadStatus, isRunning
               className="hover-elevate active-elevate-2"
               data-testid="button-next-profiles"
             >
-              See Profile Matching
+              See Profiles
               <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
           ) : !showCalendar ? (
