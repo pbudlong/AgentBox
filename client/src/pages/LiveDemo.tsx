@@ -326,7 +326,7 @@ export default function LiveDemo() {
                   <div className="mt-3 pt-3 border-t border-border">
                     <p className="text-xs font-semibold text-muted-foreground mb-2">Webhook Events:</p>
                     <div className="space-y-2">
-                      {webhookEvents.filter((e: any) => e.from?.includes('buyer') || e.to?.includes('seller')).map((event: any, idx: number) => (
+                      {webhookEvents.filter((e: any) => e.to?.includes('seller')).map((event: any, idx: number) => (
                         <div 
                           key={idx} 
                           className={`text-xs rounded overflow-hidden ${
@@ -442,7 +442,7 @@ export default function LiveDemo() {
                   <div className="mt-3 pt-3 border-t border-border">
                     <p className="text-xs font-semibold text-muted-foreground mb-2">Webhook Events:</p>
                     <div className="space-y-2">
-                      {webhookEvents.filter((e: any) => e.from?.includes('seller') || e.to?.includes('buyer')).map((event: any, idx: number) => (
+                      {webhookEvents.filter((e: any) => e.to?.includes('buyer')).map((event: any, idx: number) => (
                         <div 
                           key={idx} 
                           className={`text-xs rounded overflow-hidden ${
