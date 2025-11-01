@@ -7,32 +7,37 @@ const sponsors = [
   {
     name: "AgentMail",
     role: "Core Email Infrastructure",
-    description: "Provides @agentbox.ai email addresses, SMTP/IMAP handling, and thread management for agent-to-agent conversations.",
+    description: "Provides @agentmail.to email addresses, webhook delivery, and real-time email routing for agent conversations.",
     status: "integrated",
+    liveDemo: true,
   },
   {
-    name: "Convex.dev",
-    role: "Real-time Backend",
-    description: "Handles state management, thread synchronization, scoring calculations, and real-time updates between agents.",
+    name: "Neon / PostgreSQL",
+    role: "Production Database",
+    description: "Persists demo sessions, inbox IDs, and exchange counters to survive deployments and enable webhook state recovery.",
     status: "integrated",
+    liveDemo: true,
   },
   {
     name: "Mastra / OpenAI",
     role: "Agent Intelligence",
-    description: "Powers the conversational agents with LLM capabilities for qualification, clarification, and meeting coordination.",
+    description: "Powers buyer and seller AI agents with GPT-4 for natural language generation and intelligent email responses.",
     status: "integrated",
+    liveDemo: true,
   },
   {
     name: "Perplexity",
     role: "Research & Context",
-    description: "Enriches agent knowledge with real-time company research, market context, and industry insights for better qualification.",
-    status: "integrated",
+    description: "Enriches agent knowledge with real-time company research and market context for better qualification (available but not used in current demo).",
+    status: "available",
+    liveDemo: false,
   },
   {
     name: "Replit",
     role: "Hosting & Deployment",
-    description: "Full-stack hosting platform with integrated AI tools, automatic scaling, and seamless deployment for rapid prototyping.",
+    description: "Full-stack hosting with integrated database, webhooks, and seamless deployment for rapid prototyping.",
     status: "integrated",
+    liveDemo: true,
   },
 ];
 
@@ -40,26 +45,32 @@ const implemented = [
   {
     name: "React + TypeScript",
     description: "Frontend framework with full type safety",
+    demo: "both",
   },
   {
     name: "Tailwind CSS + shadcn/ui",
-    description: "Professional UI components with dark mode support",
+    description: "Professional UI components with dark mode",
+    demo: "both",
   },
   {
-    name: "Express + AgentMail Webhooks",
-    description: "Backend API with inbound email processing endpoints",
+    name: "Express + PostgreSQL",
+    description: "Backend API with Neon database persistence",
+    demo: "live",
+  },
+  {
+    name: "AgentMail Webhooks",
+    description: "Real-time email webhook delivery with timestamp filtering",
+    demo: "live",
   },
   {
     name: "Mastra AI Agent Framework",
-    description: "Buyer and seller agents with tool-calling capabilities",
+    description: "GPT-4 powered buyer and seller agents",
+    demo: "live",
   },
   {
-    name: "Perplexity Research Tool",
-    description: "Company enrichment for enhanced qualification",
-  },
-  {
-    name: "8-Signal Fit Scoring Engine",
-    description: "Weighted scoring algorithm for match quality",
+    name: "Database-Backed Sessions",
+    description: "Demo sessions persisted across deployments",
+    demo: "live",
   },
 ];
 
