@@ -81,7 +81,7 @@ export default function Cover() {
               onClick={() => navigate("/problem")}
               data-testid="button-start-demo"
             >
-              Start Demo
+              See Project
               <ArrowRight className="ml-3 h-6 w-6" />
             </Button>
           </div>
