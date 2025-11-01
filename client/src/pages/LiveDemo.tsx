@@ -127,16 +127,28 @@ export default function LiveDemo() {
       
       // Only show messages from the current session (sent after session start)
       const sessionMessages = sessionStartTime 
-        ? allMessages.filter(m => m.timestamp >= sessionStartTime)
+        ? allMessages.filter((m: any) => m.timestamp >= sessionStartTime)
         : allMessages;
       
+      // Deduplicate by message ID
+      const uniqueMessages = sessionMessages.reduce((acc: any[], msg: any) => {
+        if (!acc.find((m: any) => m.id === msg.id)) {
+          acc.push(msg);
+        }
+        return acc;
+      }, []);
+      
       console.log("📊 Total messages from API:", allMessages.length);
-      console.log("📊 Session messages (after filter):", sessionMessages.length);
+      console.log("📊 Session messages (after time filter):", sessionMessages.length);
+      console.log("📊 Unique messages (after dedup):", uniqueMessages.length);
       if (allMessages.length > 0 && sessionMessages.length < allMessages.length) {
         console.log("🗑️ Filtered out", allMessages.length - sessionMessages.length, "historical messages");
       }
+      if (sessionMessages.length > uniqueMessages.length) {
+        console.log("🗑️ Removed", sessionMessages.length - uniqueMessages.length, "duplicate messages");
+      }
       
-      setLiveMessages(sessionMessages);
+      setLiveMessages(uniqueMessages);
     }
   }, [messagesData, sessionStartTime]);
 
