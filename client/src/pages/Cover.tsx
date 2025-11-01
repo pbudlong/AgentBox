@@ -61,7 +61,7 @@ export default function Cover() {
 
           {/* Tagline */}
           <p className="text-xl md:text-2xl text-muted-foreground mb-12 font-light" data-testid="text-tagline">
-            Email That Thinks Like You
+            Email That Thinks For You
           </p>
 
           <div className="flex flex-col items-center gap-8">
