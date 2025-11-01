@@ -84,6 +84,15 @@ export async function listMessages(inbox_id: string) {
   return result;
 }
 
+export async function getMessage(inbox_id: string, message_id: string) {
+  if (!agentmail) {
+    throw new Error("AgentMail not configured");
+  }
+
+  const result = await agentmail.inboxes.messages.get(inbox_id, message_id);
+  return result;
+}
+
 export async function listInboxes() {
   if (!agentmail) {
     throw new Error("AgentMail not configured");

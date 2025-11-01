@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { buyerAgent, sellerAgent } from "./mastra/index";
-import { replyToEmail, type InboundEmail, createInbox, sendEmail, listMessages, findInboxByEmail, registerWebhook } from "./agentmail";
+import { replyToEmail, type InboundEmail, createInbox, sendEmail, listMessages, getMessage, findInboxByEmail, registerWebhook } from "./agentmail";
 
 // In-memory storage for demo inbox IDs
 let demoInboxes: {
@@ -201,7 +201,7 @@ Respond as a buyer evaluating this product. Ask a qualifying question about pric
       // Generate seller's first email using agent
       console.log("🤖 Generating seller's outreach email...");
       const sellerMessage = await sellerAgent.generate(
-        "Write a brief sales outreach email to a potential B2B SaaS buyer. Introduce a product that helps with sales qualification. Keep it under 100 words and professional."
+        "Write a brief sales outreach email to Sarah, a VP of Sales at TechCorp. Introduce AgentBox, a product that helps with sales qualification using AI agents. Keep it under 100 words and professional."
       );
       console.log("✅ Seller message generated:", sellerMessage.text.substring(0, 100) + "...");
 
@@ -262,7 +262,7 @@ Respond as a buyer evaluating this product. Ask a qualifying question about pric
         return res.json({ messages: [], initialized: false });
       }
 
-      // Fetch messages from both inboxes
+      // Fetch messages from both inboxes (list gives us message IDs)
       const [sellerMessages, buyerMessages] = await Promise.all([
         listMessages(demoInboxes.seller.inbox_id),
         listMessages(demoInboxes.buyer.inbox_id),
@@ -270,20 +270,32 @@ Respond as a buyer evaluating this product. Ask a qualifying question about pric
 
       // AgentMail returns all messages for the pod (not per-inbox)
       // So both listMessages calls return the same data - just use one
-      const allMessages = (sellerMessages.messages || []).sort((a: any, b: any) => {
+      const messageList = (sellerMessages.messages || []);
+      
+      // Fetch full content for each message (list only returns preview)
+      const fullMessages = await Promise.all(
+        messageList.map(async (msg: any) => {
+          try {
+            // getMessage returns full text/html content
+            const fullMsg = await getMessage(demoInboxes.seller.inbox_id, msg.messageId);
+            return {
+              ...msg,
+              text: fullMsg.text || msg.preview,  // Use full text if available
+              html: fullMsg.html,
+            };
+          } catch (err) {
+            console.error("Failed to fetch full message:", msg.messageId, err);
+            // Fallback to preview if getMessage fails
+            return { ...msg, text: msg.preview };
+          }
+        })
+      );
+
+      const allMessages = fullMessages.sort((a: any, b: any) => {
         const dateA = new Date(a.createdAt || a.created_at).getTime();
         const dateB = new Date(b.createdAt || b.created_at).getTime();
         return dateA - dateB;
       });
-
-      // Debug: Log first 2 messages to inspect structure
-      if (allMessages.length > 0) {
-        console.log("\n🔍 DEBUG: First 2 messages structure:");
-        allMessages.slice(0, 2).forEach((msg: any, idx: number) => {
-          console.log(`\nMessage ${idx + 1}:`, JSON.stringify(msg, null, 2));
-        });
-        console.log(`\n📧 Total messages in system: ${allMessages.length}\n`);
-      }
 
       res.json({
         messages: allMessages,

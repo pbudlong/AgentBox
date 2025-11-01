@@ -126,8 +126,8 @@ export default function LiveDemo() {
         from: m.from,
         to: m.to,
         subject: m.subject || "No Subject",
-        // AgentMail's listMessages() returns 'preview' field, not 'text' or 'html'
-        body: m.preview || m.text || m.html || "",
+        // AgentMail: getMessage returns full 'text', fallback to 'preview' from list
+        body: m.text || m.preview || m.html || "",
         timestamp: new Date(m.createdAt || m.created_at || Date.now()),
         raw: m, // Keep raw message for debugging
       }));
