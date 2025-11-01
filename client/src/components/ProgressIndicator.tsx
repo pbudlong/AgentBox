@@ -7,9 +7,8 @@ const steps = [
   { id: 3, name: "Buyer", path: "/buyer" },
   { id: 4, name: "Seller", path: "/seller" },
   { id: 5, name: "Demo", path: "/demo" },
-  { id: 6, name: "Profiles", path: "/profiles" },
-  { id: 7, name: "Live", path: "/live" },
-  { id: 8, name: "Tech", path: "/tech" },
+  { id: 6, name: "Live", path: "/live" },
+  { id: 7, name: "Tech", path: "/tech" },
 ];
 
 export default function ProgressIndicator() {
