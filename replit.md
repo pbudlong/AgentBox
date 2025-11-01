@@ -173,11 +173,13 @@ Preferred communication style: Simple, everyday language.
 - ✅ Solution: Client-side filtering by message.from address (seller pane shows messages FROM seller, buyer pane shows messages FROM buyer)
 - ✅ Fixed timestamp parsing to handle both camelCase (createdAt) and snake_case (created_at) formats
 - ✅ Enhanced CTA styling: Made "Click Start Live Demo" text bold and larger for better visibility
-- ✅ Implemented webhook registration: Webhooks auto-register on demo initialization
-  - Fixed API payload: Changed from `events` to `event_types` array
-  - Webhook endpoint handles AgentMail's `message_received` event structure
-  - Buyer agent auto-responds when webhook fires (no polling needed)
+- ✅ Implemented hybrid demo approach (guaranteed reliability):
+  - **Immediate Response**: Buyer agent responds immediately after seller sends initial email (same API request)
+  - **Webhook System**: Webhooks registered for follow-up messages and future scalability
+  - Fixed webhook event type: Changed from `message_received` to `message.received` (dot notation per AgentMail API spec)
+  - Webhook endpoint handles AgentMail's `message.received` event structure
   - Production-ready: Uses REPLIT_DEV_DOMAIN (dev) or REPLIT_DOMAINS (production)
+  - Comprehensive logging: All phases logged with clear visual separators for debugging
 
 **Testing:**
 - End-to-end test confirmed both agents communicate via real emails
