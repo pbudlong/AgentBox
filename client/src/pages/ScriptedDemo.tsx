@@ -426,8 +426,8 @@ export default function ScriptedDemo() {
         {/* Fit Score Section */}
         <div className="px-8 py-8">
           <div className="max-w-7xl mx-auto">
-            <div className="flex items-center justify-center gap-8">
-              <div className="flex-1 max-w-md">
+            <div className="flex flex-col items-center gap-6">
+              <div className="max-w-md">
                 <FitScoreIndicator
                   score={85}
                   signals={[
@@ -443,17 +443,15 @@ export default function ScriptedDemo() {
                   threshold={70}
                 />
               </div>
-              <div>
-                <Button 
-                  size="lg"
-                  onClick={() => navigate("/live")}
-                  className="hover-elevate active-elevate-2"
-                  data-testid="button-watch-live-demo"
-                >
-                  <Sparkles className="mr-2 h-5 w-5" />
-                  Watch Live Demo
-                </Button>
-              </div>
+              <Button 
+                size="lg"
+                onClick={() => navigate("/live")}
+                className="hover-elevate active-elevate-2"
+                data-testid="button-watch-live-demo"
+              >
+                <Sparkles className="mr-2 h-5 w-5" />
+                Watch Live Demo
+              </Button>
             </div>
           </div>
         </div>

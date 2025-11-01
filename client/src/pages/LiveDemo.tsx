@@ -286,8 +286,8 @@ export default function LiveDemo() {
         {/* Fit Score Section */}
         <div className="px-8 py-8">
           <div className="max-w-7xl mx-auto">
-            <div className="flex items-center justify-center gap-8">
-              <div className="flex-1 max-w-md">
+            <div className="flex flex-col items-center gap-6">
+              <div className="max-w-md">
                 <FitScoreIndicator
                   score={85}
                   signals={[
@@ -303,17 +303,15 @@ export default function LiveDemo() {
                   threshold={70}
                 />
               </div>
-              <div>
-                <Button 
-                  size="lg"
-                  onClick={() => navigate("/tech")}
-                  className="hover-elevate active-elevate-2"
-                  data-testid="button-view-tech-stack"
-                >
-                  <ArrowRight className="mr-2 h-5 w-5" />
-                  View Tech Stack
-                </Button>
-              </div>
+              <Button 
+                size="lg"
+                onClick={() => navigate("/tech")}
+                className="hover-elevate active-elevate-2"
+                data-testid="button-view-tech-stack"
+              >
+                <ArrowRight className="mr-2 h-5 w-5" />
+                View Tech Stack
+              </Button>
             </div>
           </div>
         </div>
