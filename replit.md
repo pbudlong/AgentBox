@@ -163,6 +163,16 @@ Preferred communication style: Simple, everyday language.
 - Error handling for AlreadyExistsError gracefully falls back to listing/finding existing inboxes
 
 **Recent Fixes (Nov 1, 2025):**
+- ✅ **Fixed infinite loop bug** (Nov 1, 2025):
+  - Added exchange counter to limit conversation to 2 exchanges maximum (seller sends → buyer replies → seller replies → STOP)
+  - Both buyer and seller webhook handlers now check exchange count before responding
+  - Exchange counter resets when initializing new demo
+  - Prevents agents from replying endlessly to each other
+- ✅ **Stripped email quote history** (Nov 1, 2025):
+  - Created `extractNewContent()` function to remove quoted email threads (lines starting with `>` or `On 2025...`)
+  - Applied to both webhook responses (so agents only see new content)
+  - Applied to frontend message display (users see clean messages without long quote chains)
+  - Messages now show only the new content, not the entire conversation history
 - ✅ Fixed historical message accumulation bug: Implemented session-based filtering to show only current conversation
   - Session timestamp set 5 seconds before demo initialization to ensure new messages are captured
   - Filter messages by timestamp (only show messages sent after session start)

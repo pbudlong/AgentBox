@@ -10,6 +10,10 @@ let demoInboxes: {
   buyer?: { inbox_id: string; email: string };
 } = {};
 
+// Track number of exchanges to prevent infinite loops
+let exchangeCount = 0;
+const MAX_EXCHANGES = 2; // Seller sends 1, buyer replies 1, seller replies 1, stop
+
 // Track webhook events for debugging
 let webhookEvents: Array<{ 
   timestamp: Date; 
@@ -24,6 +28,33 @@ let webhookEvents: Array<{
 
 // Track processed event IDs to prevent duplicates
 const processedEventIds = new Set<string>();
+
+// Helper function to extract only the new message content (strip quoted history)
+function extractNewContent(emailBody: string): string {
+  // Split by common reply markers
+  const replyMarkers = [
+    '\n\nOn 20', // "On 2025-11-01..."
+    '\n> ', // Quoted lines starting with >
+    '\nOn 20', // Alternative format
+  ];
+  
+  let newContent = emailBody;
+  
+  // Find the first occurrence of any reply marker
+  for (const marker of replyMarkers) {
+    const index = emailBody.indexOf(marker);
+    if (index !== -1) {
+      newContent = emailBody.substring(0, index);
+      break;
+    }
+  }
+  
+  // Also try to split on multiple > characters (deeply nested quotes)
+  const lines = newContent.split('\n');
+  const cleanLines = lines.filter(line => !line.trim().startsWith('>'));
+  
+  return cleanLines.join('\n').trim();
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // AgentMail webhook endpoint for inbound emails
@@ -100,11 +131,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (receivedByBuyer && demoInboxes.buyer) {
           console.log("📧 BUYER INBOX received email from seller - generating response...");
           
+          // Check if we've hit the exchange limit
+          if (exchangeCount >= MAX_EXCHANGES) {
+            console.log(`⏹️ Maximum exchanges (${MAX_EXCHANGES}) reached. Stopping conversation.`);
+            webhookEvents[webhookEvents.length - 1].status = 'ignored (max exchanges reached)';
+            return;
+          }
+          
           const emailBody = inboundEmail.text || inboundEmail.html || "";
+          const newContent = extractNewContent(emailBody);
+          console.log("📝 Extracted new content:", newContent.substring(0, 100) + "...");
+          
           const prompt = `You received a sales outreach email:
 From: ${inboundEmail.from}
 Subject: ${inboundEmail.subject}
-Body: ${emailBody}
+Body: ${newContent}
 
 Respond as a buyer evaluating this product. Ask a qualifying question about pricing, features, or implementation. Keep it under 80 words.`;
 
@@ -120,6 +161,9 @@ Respond as a buyer evaluating this product. Ask a qualifying question about pric
             text: response.text,
           });
 
+          exchangeCount++;
+          console.log(`📊 Exchange count: ${exchangeCount}/${MAX_EXCHANGES}`);
+
           // Update webhook event status
           webhookEvents[webhookEvents.length - 1].status = 'success (buyer replied)';
           console.log("✅ Buyer response sent successfully via webhook");
@@ -128,11 +172,21 @@ Respond as a buyer evaluating this product. Ask a qualifying question about pric
         else if (receivedBySeller && demoInboxes.seller) {
           console.log("📧 SELLER INBOX received email from buyer - generating response...");
           
+          // Check if we've hit the exchange limit
+          if (exchangeCount >= MAX_EXCHANGES) {
+            console.log(`⏹️ Maximum exchanges (${MAX_EXCHANGES}) reached. Stopping conversation.`);
+            webhookEvents[webhookEvents.length - 1].status = 'ignored (max exchanges reached)';
+            return;
+          }
+          
           const emailBody = inboundEmail.text || inboundEmail.html || "";
+          const newContent = extractNewContent(emailBody);
+          console.log("📝 Extracted new content:", newContent.substring(0, 100) + "...");
+          
           const prompt = `You received a reply to your sales outreach:
 From: ${inboundEmail.from}
 Subject: ${inboundEmail.subject}
-Body: ${emailBody}
+Body: ${newContent}
 
 Respond as a helpful sales person. Answer their questions professionally and try to move toward scheduling a meeting. Keep it under 100 words.`;
 
@@ -147,6 +201,9 @@ Respond as a helpful sales person. Answer their questions professionally and try
             message_id: inboundEmail.message_id,
             text: response.text,
           });
+
+          exchangeCount++;
+          console.log(`📊 Exchange count: ${exchangeCount}/${MAX_EXCHANGES}`);
 
           // Update webhook event status
           webhookEvents[webhookEvents.length - 1].status = 'success (seller replied)';
@@ -181,9 +238,11 @@ Respond as a helpful sales person. Answer their questions professionally and try
     try {
       console.log("Initializing demo inboxes...");
       
-      // Clear previous webhook events and processed IDs
+      // Clear previous webhook events, processed IDs, and exchange count
       webhookEvents = [];
       processedEventIds.clear();
+      exchangeCount = 0;
+      console.log("🔄 Reset exchange counter to 0");
 
       // Create FRESH inboxes with timestamp to avoid old messages
       const timestamp = Date.now();
@@ -318,9 +377,14 @@ Respond as a helpful sales person. Answer their questions professionally and try
           try {
             // getMessage returns full text/html content
             const fullMsg = await getMessage(demoInboxes.seller.inbox_id, msg.messageId);
+            const fullText = fullMsg.text || msg.preview;
+            
+            // Strip quoted email history for cleaner display
+            const cleanText = extractNewContent(fullText);
+            
             return {
               ...msg,
-              text: fullMsg.text || msg.preview,  // Use full text if available
+              text: cleanText,  // Use cleaned text without quoted history
               html: fullMsg.html,
             };
           } catch (err) {
