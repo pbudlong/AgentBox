@@ -17,6 +17,25 @@ export const insertUserSchema = createInsertSchema(users).pick({
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
+// Demo sessions table to persist inbox IDs across server restarts
+export const demoSessions = pgTable("demo_sessions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sellerInboxId: text("seller_inbox_id").notNull(),
+  sellerEmail: text("seller_email").notNull(),
+  buyerInboxId: text("buyer_inbox_id").notNull(),
+  buyerEmail: text("buyer_email").notNull(),
+  exchangeCount: integer("exchange_count").notNull().default(0),
+  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const insertDemoSessionSchema = createInsertSchema(demoSessions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertDemoSession = z.infer<typeof insertDemoSessionSchema>;
+export type DemoSession = typeof demoSessions.$inferSelect;
+
 // AgentBox types
 export type Party = "seller" | "buyer";
 export type Status = "collecting" | "approved" | "declined" | "scheduled";

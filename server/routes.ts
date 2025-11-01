@@ -4,14 +4,7 @@ import { storage } from "./storage";
 import { buyerAgent, sellerAgent } from "./mastra/index";
 import { replyToEmail, type InboundEmail, createInbox, sendEmail, listMessages, getMessage, findInboxByEmail, registerWebhook } from "./agentmail";
 
-// In-memory storage for demo inbox IDs and webhook events
-let demoInboxes: {
-  seller?: { inbox_id: string; email: string };
-  buyer?: { inbox_id: string; email: string };
-} = {};
-
-// Track number of exchanges to prevent infinite loops
-let exchangeCount = 0;
+// MAX_EXCHANGES constant for preventing infinite loops
 const MAX_EXCHANGES = 4; // Seller sends 1, buyer replies 1, seller replies 1, buyer replies 1, seller replies 1, stop
 
 // Track webhook events for debugging
@@ -100,9 +93,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (event.event_type === "message.received" && event.message) {
         const inboundEmail = event.message;
         
+        // Load demo session from database
+        const session = await storage.getDemoSessionByInboxId(inboundEmail.inbox_id);
+        
+        if (!session) {
+          console.log("⚠️ No demo session found for inbox:", inboundEmail.inbox_id);
+          webhookEvents.push({
+            timestamp: new Date(),
+            from: inboundEmail.from || 'unknown',
+            to: Array.isArray(inboundEmail.to) ? inboundEmail.to.join(', ') : (inboundEmail.to || 'unknown'),
+            subject: inboundEmail.subject || 'No subject',
+            status: 'error (no session found)',
+            event_id: event.event_id || 'unknown',
+            payload: event,
+            response: { success: true }
+          });
+          return;
+        }
+        
         // Check which inbox RECEIVED the email (inbox_id is the recipient)
-        const receivedByBuyer = inboundEmail.inbox_id === demoInboxes.buyer?.inbox_id;
-        const receivedBySeller = inboundEmail.inbox_id === demoInboxes.seller?.inbox_id;
+        const receivedByBuyer = inboundEmail.inbox_id === session.buyerInboxId;
+        const receivedBySeller = inboundEmail.inbox_id === session.sellerInboxId;
         
         const receiverName = receivedByBuyer ? 'buyer' : receivedBySeller ? 'seller' : 'unknown';
         
@@ -111,8 +122,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           from: inboundEmail.from,
           to: inboundEmail.to,
           receivedBy: receiverName,
-          buyerInbox: demoInboxes.buyer?.inbox_id,
-          sellerInbox: demoInboxes.seller?.inbox_id,
+          buyerInbox: session.buyerInboxId,
+          sellerInbox: session.sellerInboxId,
+          currentExchangeCount: session.exchangeCount,
         });
         
         // Log webhook event for debugging
@@ -128,11 +140,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
         
         // Buyer receives email → generate reply
-        if (receivedByBuyer && demoInboxes.buyer) {
+        if (receivedByBuyer) {
           console.log("📧 BUYER INBOX received email from seller - generating response...");
           
           // Check if we've hit the exchange limit
-          if (exchangeCount >= MAX_EXCHANGES) {
+          if (session.exchangeCount >= MAX_EXCHANGES) {
             console.log(`⏹️ Maximum exchanges (${MAX_EXCHANGES}) reached. Stopping conversation.`);
             webhookEvents[webhookEvents.length - 1].status = 'ignored (max exchanges reached)';
             return;
@@ -161,19 +173,20 @@ Respond as a buyer evaluating this product. Ask a qualifying question about pric
             text: response.text,
           });
 
-          exchangeCount++;
-          console.log(`📊 Exchange count: ${exchangeCount}/${MAX_EXCHANGES}`);
+          // Increment exchange count in database
+          await storage.incrementExchangeCount(session.id);
+          console.log(`📊 Exchange count: ${session.exchangeCount + 1}/${MAX_EXCHANGES}`);
 
           // Update webhook event status
           webhookEvents[webhookEvents.length - 1].status = 'success (buyer replied)';
           console.log("✅ Buyer response sent successfully via webhook");
         } 
         // Seller receives email → generate reply
-        else if (receivedBySeller && demoInboxes.seller) {
+        else if (receivedBySeller) {
           console.log("📧 SELLER INBOX received email from buyer - generating response...");
           
           // Check if we've hit the exchange limit
-          if (exchangeCount >= MAX_EXCHANGES) {
+          if (session.exchangeCount >= MAX_EXCHANGES) {
             console.log(`⏹️ Maximum exchanges (${MAX_EXCHANGES}) reached. Stopping conversation.`);
             webhookEvents[webhookEvents.length - 1].status = 'ignored (max exchanges reached)';
             return;
@@ -202,8 +215,9 @@ Respond as a helpful sales person. Answer their questions professionally and try
             text: response.text,
           });
 
-          exchangeCount++;
-          console.log(`📊 Exchange count: ${exchangeCount}/${MAX_EXCHANGES}`);
+          // Increment exchange count in database
+          await storage.incrementExchangeCount(session.id);
+          console.log(`📊 Exchange count: ${session.exchangeCount + 1}/${MAX_EXCHANGES}`);
 
           // Update webhook event status
           webhookEvents[webhookEvents.length - 1].status = 'success (seller replied)';
@@ -238,11 +252,10 @@ Respond as a helpful sales person. Answer their questions professionally and try
     try {
       console.log("Initializing demo inboxes...");
       
-      // Clear previous webhook events, processed IDs, and exchange count
+      // Clear previous webhook events and processed IDs
       webhookEvents = [];
       processedEventIds.clear();
-      exchangeCount = 0;
-      console.log("🔄 Reset exchange counter to 0");
+      console.log("🔄 Reset webhook tracking");
 
       // Create FRESH inboxes with timestamp to avoid old messages
       const timestamp = Date.now();
@@ -254,22 +267,29 @@ Respond as a helpful sales person. Answer their questions professionally and try
       // Create seller inbox
       const sellerInbox = await createInbox(sellerInboxName, "Mike (Seller)");
       console.log("Created inbox result:", JSON.stringify(sellerInbox, null, 2));
-      demoInboxes.seller = {
-        inbox_id: (sellerInbox as any).inboxId, // AgentMail API uses camelCase
-        email: (sellerInbox as any).inboxId,    // inboxId IS the email address
-      };
-      console.log("Created new seller inbox:", demoInboxes.seller.email);
+      const sellerInboxId = (sellerInbox as any).inboxId; // AgentMail API uses camelCase
+      const sellerEmail = (sellerInbox as any).inboxId;    // inboxId IS the email address
+      console.log("Created new seller inbox:", sellerEmail);
 
       // Create buyer inbox
       const buyerInbox = await createInbox(buyerInboxName, "Sarah (Buyer)");
       console.log("Created inbox result:", JSON.stringify(buyerInbox, null, 2));
-      demoInboxes.buyer = {
-        inbox_id: (buyerInbox as any).inboxId, // AgentMail API uses camelCase
-        email: (buyerInbox as any).inboxId,    // inboxId IS the email address
-      };
-      console.log("Created new buyer inbox:", demoInboxes.buyer.email);
+      const buyerInboxId = (buyerInbox as any).inboxId; // AgentMail API uses camelCase
+      const buyerEmail = (buyerInbox as any).inboxId;    // inboxId IS the email address
+      console.log("Created new buyer inbox:", buyerEmail);
 
-      console.log("Inboxes ready:", demoInboxes);
+      // Save session to database
+      console.log("💾 Saving demo session to database...");
+      const session = await storage.createDemoSession({
+        sellerInboxId,
+        sellerEmail,
+        buyerInboxId,
+        buyerEmail,
+        exchangeCount: 0,
+      });
+      console.log("✅ Demo session created in database:", session.id);
+
+      console.log("Inboxes ready:", { seller: sellerEmail, buyer: buyerEmail });
 
       console.log("\n" + "=".repeat(80));
       console.log("🌐 WEBHOOK REGISTRATION PHASE");
@@ -295,14 +315,14 @@ Respond as a helpful sales person. Answer their questions professionally and try
       if (replitDomain) {
         const webhookUrl = `https://${replitDomain}/webhooks/agentmail`;
         console.log(`🔗 Attempting webhook registration at: ${webhookUrl}`);
-        console.log(`📬 Seller inbox ID: ${demoInboxes.seller.inbox_id}`);
-        console.log(`📬 Buyer inbox ID: ${demoInboxes.buyer.inbox_id}`);
+        console.log(`📬 Seller inbox ID: ${sellerInboxId}`);
+        console.log(`📬 Buyer inbox ID: ${buyerInboxId}`);
         
         try {
           console.log("⏳ Calling AgentMail webhook API...");
           const results = await Promise.all([
-            registerWebhook(demoInboxes.seller.inbox_id, webhookUrl),
-            registerWebhook(demoInboxes.buyer.inbox_id, webhookUrl),
+            registerWebhook(sellerInboxId, webhookUrl),
+            registerWebhook(buyerInboxId, webhookUrl),
           ]);
           console.log("✅ Webhook registration successful!");
           console.log("📋 Registration results:", JSON.stringify(results, null, 2));
@@ -332,8 +352,8 @@ Respond as a helpful sales person. Answer their questions professionally and try
       // Send first email from seller to buyer
       console.log("📮 Sending seller email to buyer...");
       const sellerEmailResult = await sendEmail({
-        inbox_id: demoInboxes.seller.inbox_id,
-        to: demoInboxes.buyer.email,
+        inbox_id: sellerInboxId,
+        to: buyerEmail,
         subject: "Streamline Your Sales Qualification Process",
         text: sellerMessage.text,
       });
@@ -344,8 +364,8 @@ Respond as a helpful sales person. Answer their questions professionally and try
 
       res.json({
         success: true,
-        seller: demoInboxes.seller.email,
-        buyer: demoInboxes.buyer.email,
+        seller: sellerEmail,
+        buyer: buyerEmail,
         message: "Demo initialized - webhooks will handle buyer response",
       });
     } catch (error) {
@@ -357,14 +377,17 @@ Respond as a helpful sales person. Answer their questions professionally and try
   // Fetch demo messages
   app.get("/api/demo/messages", async (req, res) => {
     try {
-      if (!demoInboxes.seller || !demoInboxes.buyer) {
+      // Load latest session from database
+      const session = await storage.getLatestDemoSession();
+      
+      if (!session) {
         return res.json({ messages: [], initialized: false });
       }
 
       // Fetch messages from both inboxes (list gives us message IDs)
       const [sellerMessages, buyerMessages] = await Promise.all([
-        listMessages(demoInboxes.seller.inbox_id),
-        listMessages(demoInboxes.buyer.inbox_id),
+        listMessages(session.sellerInboxId),
+        listMessages(session.buyerInboxId),
       ]);
 
       // AgentMail returns all messages for the pod (not per-inbox)
@@ -376,7 +399,7 @@ Respond as a helpful sales person. Answer their questions professionally and try
         messageList.map(async (msg: any) => {
           try {
             // getMessage returns full text/html content
-            const fullMsg = await getMessage(demoInboxes.seller.inbox_id, msg.messageId);
+            const fullMsg = await getMessage(session.sellerInboxId, msg.messageId);
             const fullText = fullMsg.text || msg.preview;
             
             // Strip quoted email history for cleaner display
@@ -404,8 +427,8 @@ Respond as a helpful sales person. Answer their questions professionally and try
       res.json({
         messages: allMessages,
         initialized: true,
-        seller: demoInboxes.seller.email,
-        buyer: demoInboxes.buyer.email,
+        seller: session.sellerEmail,
+        buyer: session.buyerEmail,
       });
     } catch (error) {
       console.error("Error fetching messages:", error);
