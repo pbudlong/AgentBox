@@ -260,12 +260,9 @@ export default function LiveDemo() {
                   <div className="space-y-2">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs text-muted-foreground">From: {msg.from}</p>
+                        <p className="text-xs text-muted-foreground">To: {msg.to}</p>
                         <p className="font-semibold text-foreground mt-1">{msg.subject}</p>
                       </div>
-                      <span className="text-xs text-muted-foreground whitespace-nowrap">
-                        {msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString() : ''}
-                      </span>
                     </div>
                     <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
                       {msg.body}
@@ -294,12 +291,9 @@ export default function LiveDemo() {
                   <div className="space-y-2">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs text-muted-foreground">From: {msg.from}</p>
+                        <p className="text-xs text-muted-foreground">To: {msg.to}</p>
                         <p className="font-semibold text-foreground mt-1">{msg.subject}</p>
                       </div>
-                      <span className="text-xs text-muted-foreground whitespace-nowrap">
-                        {msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString() : ''}
-                      </span>
                     </div>
                     <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
                       {msg.body}
@@ -312,8 +306,13 @@ export default function LiveDemo() {
         </div>
       )}
 
-      {/* Profile Data Section - Only show when there's an actual conversation (seller + buyer messages) */}
-      {isInitialized && sellerMessages.length > 0 && buyerMessages.length > 0 && (
+      {/* Profile Data Section - Only show when conversation is concluded with meeting scheduled */}
+      {isInitialized && liveMessages.some(m => 
+        m.subject?.toLowerCase().includes('meeting confirmed') || 
+        m.subject?.toLowerCase().includes('confirmed:') ||
+        m.body?.toLowerCase().includes('✓ confirmed') ||
+        m.body?.toLowerCase().includes('meeting confirmed')
+      ) && (
         <div className="bg-background border-t border-border">
         {/* Header */}
         <div className="px-8 py-8 border-b border-border">
