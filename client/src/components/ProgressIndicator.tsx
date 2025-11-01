@@ -5,9 +5,8 @@ const steps = [
   { id: 1, name: "Cover", path: "/" },
   { id: 2, name: "Problem", path: "/problem" },
   { id: 3, name: "Demo", path: "/demo" },
-  { id: 4, name: "Results", path: "/results" },
-  { id: 5, name: "Setup", path: "/setup" },
-  { id: 6, name: "Tech", path: "/tech" },
+  { id: 4, name: "Profiles", path: "/profiles" },
+  { id: 5, name: "Tech", path: "/tech" },
 ];
 
 export default function ProgressIndicator() {
