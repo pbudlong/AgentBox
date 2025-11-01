@@ -126,7 +126,8 @@ export default function LiveDemo() {
         from: m.from,
         to: m.to,
         subject: m.subject || "No Subject",
-        body: m.text || m.html || "",
+        // AgentMail's listMessages() returns 'preview' field, not 'text' or 'html'
+        body: m.preview || m.text || m.html || "",
         timestamp: new Date(m.createdAt || m.created_at || Date.now()),
         raw: m, // Keep raw message for debugging
       }));
@@ -311,8 +312,8 @@ export default function LiveDemo() {
         </div>
       )}
 
-      {/* Profile Data Section - Only show when initialized and there are messages */}
-      {isInitialized && liveMessages.length > 0 && (
+      {/* Profile Data Section - Only show when there's an actual conversation (seller + buyer messages) */}
+      {isInitialized && sellerMessages.length > 0 && buyerMessages.length > 0 && (
         <div className="bg-background border-t border-border">
         {/* Header */}
         <div className="px-8 py-8 border-b border-border">
