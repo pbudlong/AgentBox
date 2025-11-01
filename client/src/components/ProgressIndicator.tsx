@@ -3,7 +3,7 @@ import { CheckCircle2, Circle } from "lucide-react";
 
 const steps = [
   { id: 1, name: "Cover", path: "/" },
-  { id: 2, name: "Problem", path: "/problem" },
+  { id: 2, name: "Use Case", path: "/problem" },
   { id: 3, name: "Demo", path: "/demo" },
   { id: 4, name: "Profiles", path: "/profiles" },
   { id: 5, name: "Tech", path: "/tech" },
