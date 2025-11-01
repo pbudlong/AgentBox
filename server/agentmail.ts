@@ -26,7 +26,7 @@ export async function createInbox(username: string, displayName: string) {
 
   return await agentmail.inboxes.create({
     username,
-    domain: "agentbox.ai", // Using agentbox.ai domain
+    domain: "agentmail.to",
     displayName,
   });
 }
