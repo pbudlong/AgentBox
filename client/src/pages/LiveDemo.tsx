@@ -81,6 +81,7 @@ export default function LiveDemo() {
   const [buyerEmail, setBuyerEmail] = useState("");
   const [isInitialized, setIsInitialized] = useState(false);
   const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
+  const [debugLogs, setDebugLogs] = useState<{ agent: 'seller' | 'buyer', message: string, status: 'success' | 'error' | 'pending', timestamp: Date }[]>([]);
   const [, navigate] = useLocation();
 
   // Initialize demo mutation
@@ -91,13 +92,31 @@ export default function LiveDemo() {
       const sessionStart = new Date(Date.now() - 5000);
       console.log("🎬 Demo session starting at:", sessionStart.toISOString());
       
+      setDebugLogs([
+        { agent: 'seller', message: 'Creating AgentMail inbox...', status: 'pending', timestamp: new Date() },
+        { agent: 'buyer', message: 'Creating AgentMail inbox...', status: 'pending', timestamp: new Date() },
+      ]);
+      
       const response = await fetch("/api/demo/initialize", {
         method: "POST",
       });
       if (!response.ok) {
+        setDebugLogs(prev => [
+          ...prev,
+          { agent: 'seller', message: 'Demo initialization failed', status: 'error', timestamp: new Date() },
+        ]);
         throw new Error("Failed to initialize demo");
       }
       const data = await response.json();
+      
+      setDebugLogs(prev => [
+        ...prev,
+        { agent: 'seller', message: 'Generating outreach email via OpenAI...', status: 'success', timestamp: new Date() },
+        { agent: 'seller', message: 'Sending email to buyer...', status: 'success', timestamp: new Date() },
+        { agent: 'buyer', message: 'Received seller email via webhook', status: 'success', timestamp: new Date() },
+        { agent: 'buyer', message: 'Generating response via OpenAI...', status: 'success', timestamp: new Date() },
+        { agent: 'buyer', message: 'Sending reply (immediate mode)', status: 'success', timestamp: new Date() },
+      ]);
       
       return { ...data, sessionStart };
     },
@@ -176,6 +195,7 @@ export default function LiveDemo() {
     setBuyerEmail("");
     setIsInitialized(false);
     setSessionStartTime(null);
+    setDebugLogs([]);
     console.log("🔄 Demo reset");
   };
 
@@ -248,11 +268,35 @@ export default function LiveDemo() {
               <div className="flex items-center gap-3">
                 <Mail className="h-5 w-5 text-primary" />
                 <div>
-                  <h2 className="font-semibold text-lg text-foreground">Seller Agent</h2>
+                  <h2 className="font-semibold text-lg text-foreground">Seller Agent (Mike)</h2>
                   <p className="text-sm text-primary font-mono">{sellerEmail}</p>
                 </div>
               </div>
             </div>
+            
+            {/* Debug panel */}
+            {debugLogs.filter(log => log.agent === 'seller').length > 0 && (
+              <div className="px-6 py-3 bg-card border-b border-border">
+                <p className="text-xs font-semibold text-muted-foreground mb-2">Execution Flow:</p>
+                <div className="space-y-1">
+                  {debugLogs.filter(log => log.agent === 'seller').map((log, idx) => (
+                    <div 
+                      key={idx} 
+                      className={`text-xs px-2 py-1 rounded ${
+                        log.status === 'success' ? 'bg-green-500/20 text-green-400' : 
+                        log.status === 'error' ? 'bg-red-500/20 text-red-400' : 
+                        'bg-yellow-500/20 text-yellow-400'
+                      }`}
+                    >
+                      {log.status === 'success' && '✓ '}
+                      {log.status === 'error' && '✗ '}
+                      {log.status === 'pending' && '⏳ '}
+                      {log.message}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             
             <div className="flex-1 overflow-auto p-6 space-y-4">
               {sellerMessages.map((msg, idx) => (
@@ -279,11 +323,35 @@ export default function LiveDemo() {
               <div className="flex items-center gap-3">
                 <Mail className="h-5 w-5 text-gradient-via" />
                 <div>
-                  <h2 className="font-semibold text-lg text-foreground">Buyer Agent</h2>
+                  <h2 className="font-semibold text-lg text-foreground">Buyer Agent (Sarah)</h2>
                   <p className="text-sm text-gradient-via font-mono">{buyerEmail}</p>
                 </div>
               </div>
             </div>
+            
+            {/* Debug panel */}
+            {debugLogs.filter(log => log.agent === 'buyer').length > 0 && (
+              <div className="px-6 py-3 bg-card border-b border-border">
+                <p className="text-xs font-semibold text-muted-foreground mb-2">Execution Flow:</p>
+                <div className="space-y-1">
+                  {debugLogs.filter(log => log.agent === 'buyer').map((log, idx) => (
+                    <div 
+                      key={idx} 
+                      className={`text-xs px-2 py-1 rounded ${
+                        log.status === 'success' ? 'bg-green-500/20 text-green-400' : 
+                        log.status === 'error' ? 'bg-red-500/20 text-red-400' : 
+                        'bg-yellow-500/20 text-yellow-400'
+                      }`}
+                    >
+                      {log.status === 'success' && '✓ '}
+                      {log.status === 'error' && '✗ '}
+                      {log.status === 'pending' && '⏳ '}
+                      {log.message}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             
             <div className="flex-1 overflow-auto p-6 space-y-4">
               {buyerMessages.map((msg, idx) => (

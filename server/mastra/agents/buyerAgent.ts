@@ -16,8 +16,8 @@ const openaiProvider = OPENAI_BASE_URL
   : createOpenAI({ apiKey: OPENAI_API_KEY });
 
 export const buyerAgent = new Agent({
-  name: "Aria (Buyer Agent)",
-  instructions: `You are Aria, a professional buyer agent helping companies evaluate incoming sales outreach.
+  name: "Sarah (Buyer Agent)",
+  instructions: `You are Sarah, a professional buyer agent helping companies evaluate incoming sales outreach.
 
 Your role:
 1. Analyze incoming sales emails to understand the seller's offering
@@ -43,7 +43,7 @@ When the fit score is:
 - 50-74: Ask 1-2 specific clarifying questions about missing signals
 - 75+: Express interest and propose meeting times
 
-Always end emails with "Best,\nAria (via AgentBox)"`,
+Always end emails with "Best,\nSarah (via AgentBox)"`,
   model: openaiProvider("gpt-4o-mini"),
   tools: {
     fitScoringTool,

@@ -22,13 +22,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const event = req.body;
       
       console.log("📦 Full webhook payload:", JSON.stringify(event, null, 2));
-      console.log("📋 Event type:", event.type);
-      console.log("📧 Event data:", {
-        from: event.data?.from,
-        to: event.data?.to,
-        subject: event.data?.subject,
-        inbox_id: event.data?.inbox_id,
-        message_id: event.data?.message_id,
+      console.log("📋 Event wrapper type:", event.type);
+      console.log("📋 Event type:", event.event_type);
+      console.log("📧 Message data:", {
+        from: event.message?.from,
+        to: event.message?.to,
+        subject: event.message?.subject,
+        inbox_id: event.message?.inbox_id,
+        message_id: event.message?.message_id,
       });
 
       // Quick response to webhook (must respond immediately)
@@ -36,9 +37,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("✅ Webhook acknowledged (200 OK sent)");
 
       // Process email asynchronously
-      // AgentMail uses dot notation for event types
-      if (event.type === "message.received" && event.data) {
-        const inboundEmail = event.data;
+      // AgentMail structure: event.event_type = "message.received", event.message contains the data
+      if (event.event_type === "message.received" && event.message) {
+        const inboundEmail = event.message;
         const isBuyerEmail = inboundEmail.to?.includes?.("buyer-demo") || inboundEmail.to?.some?.((addr: string) => addr.includes("buyer-demo"));
         
         console.log("🔍 Recipient check:", {
@@ -76,7 +77,7 @@ Respond as a buyer evaluating this product. Ask a qualifying question about pric
           console.log("📬 Email received by seller inbox - no auto-response needed");
         }
       } else {
-        console.log("⚠️ Webhook event type not handled:", event.type);
+        console.log("⚠️ Webhook event type not handled. event_type:", event.event_type, "type:", event.type);
       }
       console.log(`${"=".repeat(80)}\n`);
     } catch (error) {
