@@ -86,21 +86,27 @@ export default function LiveDemo() {
   // Initialize demo mutation
   const initMutation = useMutation({
     mutationFn: async () => {
+      // Set session start time BEFORE sending the email
+      // Subtract 5 seconds to account for any clock skew or processing time
+      const sessionStart = new Date(Date.now() - 5000);
+      console.log("🎬 Demo session starting at:", sessionStart.toISOString());
+      
       const response = await fetch("/api/demo/initialize", {
         method: "POST",
       });
       if (!response.ok) {
         throw new Error("Failed to initialize demo");
       }
-      return await response.json();
+      const data = await response.json();
+      
+      return { ...data, sessionStart };
     },
     onSuccess: (data: any) => {
-      const now = new Date();
-      setSessionStartTime(now);
+      setSessionStartTime(data.sessionStart);
       setSellerEmail(data.seller);
       setBuyerEmail(data.buyer);
       setIsInitialized(true);
-      console.log("🎬 Demo session started at:", now.toISOString());
+      console.log("✅ Demo session started, filtering messages after:", data.sessionStart.toISOString());
       queryClient.invalidateQueries({ queryKey: ["/api/demo/messages"] });
     },
   });
