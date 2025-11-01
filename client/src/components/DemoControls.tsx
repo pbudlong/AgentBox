@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Play, RotateCcw } from "lucide-react";
+import { Play, RotateCcw, ArrowRight } from "lucide-react";
 import type { Status } from "@shared/schema";
 
 interface DemoControlsProps {
@@ -8,9 +8,11 @@ interface DemoControlsProps {
   onReset: () => void;
   threadStatus: Status;
   isRunning: boolean;
+  showNext?: boolean;
+  onNext?: () => void;
 }
 
-export default function DemoControls({ onStart, onReset, threadStatus, isRunning }: DemoControlsProps) {
+export default function DemoControls({ onStart, onReset, threadStatus, isRunning, showNext, onNext }: DemoControlsProps) {
   const getStatusBadgeVariant = () => {
     switch (threadStatus) {
       case "collecting": return "secondary";
@@ -65,8 +67,20 @@ export default function DemoControls({ onStart, onReset, threadStatus, isRunning
           </Badge>
         </div>
 
-        {/* Right: Placeholder for future controls */}
-        <div className="w-32" />
+        {/* Right: Next button or placeholder */}
+        {showNext && onNext ? (
+          <Button
+            onClick={onNext}
+            size="default"
+            className="hover-elevate active-elevate-2"
+            data-testid="button-next-profiles"
+          >
+            See Profile Matching
+            <ArrowRight className="h-4 w-4 ml-2" />
+          </Button>
+        ) : (
+          <div className="w-32" />
+        )}
       </div>
     </div>
   );

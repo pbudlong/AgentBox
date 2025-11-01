@@ -50,29 +50,19 @@ export default function Cover() {
             </div>
           </div>
 
-          {/* Brand name and Tagline */}
-          <div className="relative inline-block mb-12">
-            <h1 
-              className="text-7xl md:text-8xl font-bold bg-gradient-to-r from-gradient-from via-gradient-via to-gradient-to bg-clip-text text-transparent"
-              style={{ letterSpacing: '-0.02em', lineHeight: '1.1' }}
-              data-testid="text-brand-name"
-            >
-              AgentBox
-            </h1>
-            
-            {/* Tagline - positioned to align with logo */}
-            <p 
-              className="absolute text-lg md:text-xl text-muted-foreground font-light whitespace-nowrap"
-              style={{ 
-                top: '100%',
-                left: '37%',
-                marginTop: '0.5rem'
-              }}
-              data-testid="text-tagline"
-            >
-              Email That Thinks Like You
-            </p>
-          </div>
+          {/* Brand name */}
+          <h1 
+            className="text-7xl md:text-8xl font-bold mb-3 bg-gradient-to-r from-gradient-from via-gradient-via to-gradient-to bg-clip-text text-transparent"
+            style={{ letterSpacing: '-0.02em', lineHeight: '1.1' }}
+            data-testid="text-brand-name"
+          >
+            AgentBox
+          </h1>
+
+          {/* Tagline */}
+          <p className="text-xl md:text-2xl text-muted-foreground mb-12 font-light" data-testid="text-tagline">
+            Email That Thinks Like You
+          </p>
 
           {/* Hackathon badge */}
           <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-card border border-card-border mb-12">

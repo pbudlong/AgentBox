@@ -153,6 +153,8 @@ export default function Demo() {
         onReset={resetDemo}
         threadStatus={threadStatus}
         isRunning={isRunning}
+        showNext={showCalendar && !isRunning}
+        onNext={() => navigate("/profiles")}
       />
 
       {/* Two-pane email viewer */}
@@ -204,20 +206,6 @@ export default function Demo() {
         </div>
       )}
 
-      {/* Next step CTA - appears when demo completes */}
-      {showCalendar && !isRunning && (
-        <div className="fixed bottom-8 left-8 z-30">
-          <Button 
-            size="lg"
-            className="text-lg px-8 h-12 hover-elevate active-elevate-2 shadow-lg"
-            onClick={() => navigate("/profiles")}
-            data-testid="button-next-profiles"
-          >
-            See Profile Matching
-            <ArrowRight className="ml-2 h-5 w-5" />
-          </Button>
-        </div>
-      )}
     </div>
   );
 }
