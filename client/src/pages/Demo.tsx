@@ -210,10 +210,10 @@ export default function Demo() {
           <Button 
             size="lg"
             className="text-lg px-8 h-12 hover-elevate active-elevate-2 shadow-lg"
-            onClick={() => navigate("/results")}
-            data-testid="button-next-results"
+            onClick={() => navigate("/profiles")}
+            data-testid="button-next-profiles"
           >
-            See the Results
+            See Profile Matching
             <ArrowRight className="ml-2 h-5 w-5" />
           </Button>
         </div>
