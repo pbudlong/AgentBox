@@ -92,30 +92,26 @@ export default function LiveDemo() {
       const sessionStart = new Date(Date.now() - 5000);
       console.log("🎬 Demo session starting at:", sessionStart.toISOString());
       
-      setDebugLogs([
-        { agent: 'seller', message: 'Creating AgentMail inbox...', status: 'pending', timestamp: new Date() },
-        { agent: 'buyer', message: 'Creating AgentMail inbox...', status: 'pending', timestamp: new Date() },
-      ]);
-      
       const response = await fetch("/api/demo/initialize", {
         method: "POST",
       });
       if (!response.ok) {
-        setDebugLogs(prev => [
-          ...prev,
+        setDebugLogs([
           { agent: 'seller', message: 'Demo initialization failed', status: 'error', timestamp: new Date() },
         ]);
         throw new Error("Failed to initialize demo");
       }
       const data = await response.json();
       
-      setDebugLogs(prev => [
-        ...prev,
-        { agent: 'seller', message: 'Generating outreach email via OpenAI...', status: 'success', timestamp: new Date() },
-        { agent: 'seller', message: 'Sending email to buyer...', status: 'success', timestamp: new Date() },
-        { agent: 'buyer', message: 'Received seller email via webhook', status: 'success', timestamp: new Date() },
-        { agent: 'buyer', message: 'Generating response via OpenAI...', status: 'success', timestamp: new Date() },
-        { agent: 'buyer', message: 'Sending reply (immediate mode)', status: 'success', timestamp: new Date() },
+      // Set all debug logs at once (after successful initialization)
+      setDebugLogs([
+        { agent: 'seller', message: '✓ Created AgentMail inbox', status: 'success', timestamp: new Date() },
+        { agent: 'buyer', message: '✓ Created AgentMail inbox', status: 'success', timestamp: new Date() },
+        { agent: 'seller', message: '✓ Generated outreach email via OpenAI', status: 'success', timestamp: new Date() },
+        { agent: 'seller', message: '✓ Sent email to buyer', status: 'success', timestamp: new Date() },
+        { agent: 'buyer', message: '✓ Received seller email', status: 'success', timestamp: new Date() },
+        { agent: 'buyer', message: '✓ Generated response via OpenAI', status: 'success', timestamp: new Date() },
+        { agent: 'buyer', message: '✓ Sent reply (immediate mode)', status: 'success', timestamp: new Date() },
       ]);
       
       return { ...data, sessionStart };
@@ -140,20 +136,33 @@ export default function LiveDemo() {
   // Update messages from real API data
   useEffect(() => {
     if (messagesData && (messagesData as any).initialized) {
-      const allMessages = ((messagesData as any).messages || []).map((m: any, idx: number) => ({
-        id: m.messageId || m.message_id || `msg-${idx}`,
-        from: m.from,
-        to: m.to,
-        subject: m.subject || "No Subject",
-        // AgentMail: getMessage returns full 'text', fallback to 'preview' from list
-        body: m.text || m.preview || m.html || "",
-        timestamp: new Date(m.createdAt || m.created_at || Date.now()),
-        raw: m, // Keep raw message for debugging
-      }));
+      const allMessages = ((messagesData as any).messages || []).map((m: any, idx: number) => {
+        const messageTimestamp = new Date(m.createdAt || m.created_at || Date.now());
+        return {
+          id: m.messageId || m.message_id || `msg-${idx}`,
+          from: m.from,
+          to: m.to,
+          subject: m.subject || "No Subject",
+          // AgentMail: getMessage returns full 'text', fallback to 'preview' from list
+          body: m.text || m.preview || m.html || "",
+          timestamp: messageTimestamp,
+          raw: m, // Keep raw message for debugging
+        };
+      });
       
       // Only show messages from the current session (sent after session start)
       const sessionMessages = sessionStartTime 
-        ? allMessages.filter((m: any) => m.timestamp >= sessionStartTime)
+        ? allMessages.filter((m: any) => {
+            const msgTime = m.timestamp.getTime();
+            const sessionTime = sessionStartTime.getTime();
+            const isAfterSession = msgTime >= sessionTime;
+            
+            if (!isAfterSession) {
+              console.log(`🗑️ Filtering out old message from ${m.timestamp.toISOString()} (session: ${sessionStartTime.toISOString()})`);
+            }
+            
+            return isAfterSession;
+          })
         : allMessages;
       
       // Deduplicate by message ID
