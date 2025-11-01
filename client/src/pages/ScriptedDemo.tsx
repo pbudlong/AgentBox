@@ -157,7 +157,7 @@ export default function ScriptedDemo() {
     setCurrentMessageIndex(0);
     setTypingProgress(0);
     setIsPlaying(false);
-    setHasAutoStarted(false);
+    setHasAutoStarted(true); // Keep true to prevent auto-start after reset
     localStorage.removeItem(STORAGE_KEY);
   };
 
