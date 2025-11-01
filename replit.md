@@ -37,9 +37,12 @@ Preferred communication style: Simple, everyday language.
 - Real-time updates through polling (2-3 second intervals planned)
 
 **Key Page Structure:**
-- Multi-step flow: Cover → Problem/Solution → Demo → Results → Setup → Tech Stack
-- Progress indicator showing user's current position in the flow
+- 5-step demo flow: Cover → Use Case → Demo → Profiles → Tech Stack
+- Progress indicator showing user's current position in the flow (clickable navigation)
+- Cover page with centered logo and aligned tagline
+- Use Case page with AgentBox logo in header space (absolute positioned)
 - Side-by-side email client viewer for demonstrating agent conversations
+- Side-by-side profile viewer showing seller and buyer data models
 - Fit score visualization with signal indicators
 
 ### Backend Architecture
