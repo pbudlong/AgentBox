@@ -22,6 +22,18 @@ const sponsors = [
     description: "Powers the conversational agents with LLM capabilities for qualification, clarification, and meeting coordination.",
     status: "integrated",
   },
+  {
+    name: "Perplexity",
+    role: "Research & Context",
+    description: "Enriches agent knowledge with real-time company research, market context, and industry insights for better qualification.",
+    status: "integrated",
+  },
+  {
+    name: "Replit",
+    role: "Hosting & Deployment",
+    description: "Full-stack hosting platform with integrated AI tools, automatic scaling, and seamless deployment for rapid prototyping.",
+    status: "integrated",
+  },
 ];
 
 const implemented = [
@@ -94,7 +106,7 @@ export default function TechStack() {
             Tech Stack
           </h2>
           <p className="text-muted-foreground text-lg">
-            Built for YC HackHalloween 2024
+            Built for AgentMail's HackHalloween @YC
           </p>
         </div>
 

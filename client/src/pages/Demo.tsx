@@ -1,9 +1,12 @@
-import { useState, useEffect } from "react";
-import Navigation from "@/components/Navigation";
+import { useState } from "react";
+import ProgressIndicator from "@/components/ProgressIndicator";
 import DemoControls from "@/components/DemoControls";
 import EmailPane from "@/components/EmailPane";
 import CalendarEventCard from "@/components/CalendarEventCard";
 import FitScoreIndicator from "@/components/FitScoreIndicator";
+import { Button } from "@/components/ui/button";
+import { ArrowRight } from "lucide-react";
+import { useLocation } from "wouter";
 import type { EmailMessage, Status } from "@shared/schema";
 
 //todo: remove mock functionality
@@ -138,10 +141,11 @@ export default function Demo() {
   ];
 
   const fitScore = threadStatus === "approved" ? 85 : 68;
+  const [, navigate] = useLocation();
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navigation />
+    <div className="min-h-screen flex flex-col bg-background pt-16">
+      <ProgressIndicator />
       
       {/* Demo controls */}
       <DemoControls
@@ -197,6 +201,21 @@ export default function Demo() {
             gcalUrl="https://calendar.google.com/calendar/r/eventedit"
             summary="Strong fit based on industry alignment (B2B SaaS), company size match (50-200 employees), Salesforce integration capability, and budget compatibility. Both parties are looking for Q1 2025 implementation."
           />
+        </div>
+      )}
+
+      {/* Next step CTA - appears when demo completes */}
+      {showCalendar && !isRunning && (
+        <div className="fixed bottom-8 left-8 z-30">
+          <Button 
+            size="lg"
+            className="text-lg px-8 h-12 hover-elevate active-elevate-2 shadow-lg"
+            onClick={() => navigate("/results")}
+            data-testid="button-next-results"
+          >
+            See the Results
+            <ArrowRight className="ml-2 h-5 w-5" />
+          </Button>
         </div>
       )}
     </div>
