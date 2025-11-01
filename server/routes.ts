@@ -13,6 +13,9 @@ let demoInboxes: {
 // Track webhook events for debugging
 let webhookEvents: Array<{ timestamp: Date; from: string; to: string; subject: string; status: string }> = [];
 
+// Track processed event IDs to prevent duplicates
+const processedEventIds = new Set<string>();
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // AgentMail webhook endpoint for inbound emails
   app.post("/webhooks/agentmail", async (req, res) => {
@@ -27,6 +30,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("📦 Full webhook payload:", JSON.stringify(event, null, 2));
       console.log("📋 Event wrapper type:", event.type);
       console.log("📋 Event type:", event.event_type);
+      console.log("📋 Event ID:", event.event_id);
       console.log("📧 Message data:", {
         from: event.message?.from,
         to: event.message?.to,
@@ -38,6 +42,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Quick response to webhook (must respond immediately)
       res.status(200).json({ success: true });
       console.log("✅ Webhook acknowledged (200 OK sent)");
+
+      // Check for duplicate events
+      if (event.event_id && processedEventIds.has(event.event_id)) {
+        console.log("⚠️ Duplicate webhook event detected, skipping:", event.event_id);
+        console.log(`${"=".repeat(80)}\n`);
+        return;
+      }
+      
+      // Mark event as processed
+      if (event.event_id) {
+        processedEventIds.add(event.event_id);
+      }
 
       // Process email asynchronously
       // AgentMail structure: event.event_type = "message.received", event.message contains the data
@@ -113,8 +129,9 @@ Respond as a buyer evaluating this product. Ask a qualifying question about pric
     try {
       console.log("Initializing demo inboxes...");
       
-      // Clear previous webhook events
+      // Clear previous webhook events and processed IDs
       webhookEvents = [];
+      processedEventIds.clear();
 
       // Create FRESH inboxes with timestamp to avoid old messages
       const timestamp = Date.now();
