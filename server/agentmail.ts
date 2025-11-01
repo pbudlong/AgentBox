@@ -112,3 +112,35 @@ export async function findInboxByEmail(email: string) {
   
   return found;
 }
+
+export async function registerWebhook(inbox_id: string, webhookUrl: string) {
+  if (!agentmail || !apiKey) {
+    throw new Error("AgentMail not configured");
+  }
+
+  console.log(`Registering webhook for inbox ${inbox_id} at ${webhookUrl}`);
+
+  // Call AgentMail API to register webhook
+  const response = await fetch("https://api.agentmail.to/v0/webhooks", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      inbox_id: inbox_id,
+      url: webhookUrl,
+      events: ["message_received"],
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    console.error("Failed to register webhook:", error);
+    throw new Error(`Webhook registration failed: ${error}`);
+  }
+
+  const result = await response.json();
+  console.log("Webhook registered successfully:", result);
+  return result;
+}

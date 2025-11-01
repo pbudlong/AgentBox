@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { buyerAgent, sellerAgent } from "./mastra/index";
-import { replyToEmail, type InboundEmail, createInbox, sendEmail, listMessages, findInboxByEmail } from "./agentmail";
+import { replyToEmail, type InboundEmail, createInbox, sendEmail, listMessages, findInboxByEmail, registerWebhook } from "./agentmail";
 
 // In-memory storage for demo inbox IDs
 let demoInboxes: {
@@ -14,47 +14,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // AgentMail webhook endpoint for inbound emails
   app.post("/webhooks/agentmail", async (req, res) => {
     try {
-      const inboundEmail: InboundEmail = req.body;
+      const event = req.body;
       
-      console.log("Received inbound email:", {
-        from: inboundEmail.from,
-        to: inboundEmail.to,
-        subject: inboundEmail.subject,
+      console.log("🔔 Webhook received:", {
+        type: event.type,
+        from: event.data?.from,
+        to: event.data?.to,
+        subject: event.data?.subject,
       });
 
-      // Quick response to webhook
-      res.json({ success: true, message: "Email received" });
+      // Quick response to webhook (must respond immediately)
+      res.status(200).json({ success: true });
 
       // Process email asynchronously
-      const isBuyerEmail = inboundEmail.to.includes("buyer-demo");
-      
-      // Only auto-respond if buyer receives an email
-      if (isBuyerEmail && demoInboxes.buyer) {
-        console.log("Buyer received email, generating response...");
+      if (event.type === "message_received" && event.data) {
+        const inboundEmail = event.data;
+        const isBuyerEmail = inboundEmail.to?.includes?.("buyer-demo") || inboundEmail.to?.some?.((addr: string) => addr.includes("buyer-demo"));
         
-        const emailBody = inboundEmail.text || inboundEmail.html || "";
-        const prompt = `You received a sales outreach email:
+        // Only auto-respond if buyer receives an email
+        if (isBuyerEmail && demoInboxes.buyer) {
+          console.log("📧 Buyer received email, generating response...");
+          
+          const emailBody = inboundEmail.text || inboundEmail.html || "";
+          const prompt = `You received a sales outreach email:
 From: ${inboundEmail.from}
 Subject: ${inboundEmail.subject}
 Body: ${emailBody}
 
 Respond as a buyer evaluating this product. Ask a qualifying question about pricing, features, or implementation. Keep it under 80 words.`;
 
-        const response = await buyerAgent.generate(prompt);
-        
-        // Send reply
-        await replyToEmail({
-          inbox_id: inboundEmail.inbox_id,
-          message_id: inboundEmail.message_id,
-          text: response.text,
-        });
+          const response = await buyerAgent.generate(prompt);
+          
+          // Send reply
+          await replyToEmail({
+            inbox_id: inboundEmail.inbox_id,
+            message_id: inboundEmail.message_id,
+            text: response.text,
+          });
 
-        console.log("Buyer response sent successfully");
-      } else {
-        console.log("Email received by seller, no auto-response needed");
+          console.log("✅ Buyer response sent successfully");
+        } else {
+          console.log("📬 Email received by seller, no auto-response needed");
+        }
       }
     } catch (error) {
-      console.error("Error processing webhook:", error);
+      console.error("❌ Error processing webhook:", error);
     }
   });
 
@@ -118,6 +122,25 @@ Respond as a buyer evaluating this product. Ask a qualifying question about pric
       }
 
       console.log("Inboxes ready:", demoInboxes);
+
+      // Register webhooks for both inboxes
+      const replitDomain = process.env.REPLIT_DEV_DOMAIN;
+      if (replitDomain) {
+        const webhookUrl = `https://${replitDomain}/webhooks/agentmail`;
+        console.log(`🔗 Registering webhooks at: ${webhookUrl}`);
+        
+        try {
+          await Promise.all([
+            registerWebhook(demoInboxes.seller.inbox_id, webhookUrl),
+            registerWebhook(demoInboxes.buyer.inbox_id, webhookUrl),
+          ]);
+          console.log("✅ Webhooks registered for both inboxes");
+        } catch (webhookError) {
+          console.error("⚠️ Webhook registration failed (demo will continue without webhooks):", webhookError);
+        }
+      } else {
+        console.warn("⚠️ REPLIT_DEV_DOMAIN not found - webhooks not registered");
+      }
 
       // Generate seller's first email using agent
       const sellerMessage = await sellerAgent.generate(
