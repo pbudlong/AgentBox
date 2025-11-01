@@ -256,11 +256,11 @@ export default function LiveDemo() {
       <div className="bg-background border-t border-border">
         {/* Header */}
         <div className="px-8 py-8 border-b border-border">
-          <div className="max-w-7xl mx-auto">
+          <div className="max-w-7xl mx-auto text-center">
             <h2 className="text-4xl font-bold mb-3 bg-gradient-to-r from-purple-400 to-orange-400 bg-clip-text text-transparent">
               How Agents Match Buyer & Seller
             </h2>
-            <p className="text-lg text-muted-foreground max-w-3xl">
+            <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
               AgentBox uses a structured data model to evaluate fit across 8 signals. Here's how each side's profile is built and matched.
             </p>
           </div>

@@ -154,8 +154,8 @@ export default function ScriptedDemo() {
   const [visibleMessages, setVisibleMessages] = useState<Message[]>(initialState?.visibleMessages || []);
   const [currentMessageIndex, setCurrentMessageIndex] = useState(initialState?.currentMessageIndex || 0);
   const [typingProgress, setTypingProgress] = useState(initialState?.typingProgress || 0);
-  const [isPlaying, setIsPlaying] = useState(initialState?.isPlaying || false);
-  const [hasAutoStarted, setHasAutoStarted] = useState(!!initialState);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [hasAutoStarted, setHasAutoStarted] = useState(false);
   const [, navigate] = useLocation();
 
   const currentMessage = DEMO_MESSAGES[currentMessageIndex];
@@ -171,7 +171,7 @@ export default function ScriptedDemo() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }, [visibleMessages, currentMessageIndex, typingProgress, isPlaying]);
 
-  // Auto-start on first load with delay
+  // Auto-start on page load with delay
   useEffect(() => {
     if (!hasAutoStarted) {
       const timeout = setTimeout(() => {
@@ -182,6 +182,13 @@ export default function ScriptedDemo() {
       return () => clearTimeout(timeout);
     }
   }, [hasAutoStarted]);
+
+  // Clear localStorage when navigating away to ensure fresh start next time
+  useEffect(() => {
+    return () => {
+      localStorage.removeItem(STORAGE_KEY);
+    };
+  }, []);
 
   // Typewriter effect
   useEffect(() => {
@@ -384,19 +391,20 @@ export default function ScriptedDemo() {
         </div>
       </div>
 
-      {/* Profile Data Section */}
-      <div className="bg-background border-t border-border">
-        {/* Header */}
-        <div className="px-8 py-8 border-b border-border">
-          <div className="max-w-7xl mx-auto">
-            <h2 className="text-4xl font-bold mb-3 bg-gradient-to-r from-purple-400 to-orange-400 bg-clip-text text-transparent">
-              How Agents Match Buyer & Seller
-            </h2>
-            <p className="text-lg text-muted-foreground max-w-3xl">
-              AgentBox uses a structured data model to evaluate fit across 8 signals. Here's how each side's profile is built and matched.
-            </p>
+      {/* Profile Data Section - Only show when demo is complete */}
+      {visibleMessages.length === DEMO_MESSAGES.length && (
+        <div className="bg-background border-t border-border">
+          {/* Header */}
+          <div className="px-8 py-8 border-b border-border">
+            <div className="max-w-7xl mx-auto text-center">
+              <h2 className="text-4xl font-bold mb-3 bg-gradient-to-r from-purple-400 to-orange-400 bg-clip-text text-transparent">
+                How Agents Match Buyer & Seller
+              </h2>
+              <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+                AgentBox uses a structured data model to evaluate fit across 8 signals. Here's how each side's profile is built and matched.
+              </p>
+            </div>
           </div>
-        </div>
 
         {/* Side-by-side profile viewer */}
         <div className="flex border-b border-border" style={{ height: '500px' }}>
@@ -444,7 +452,8 @@ export default function ScriptedDemo() {
             </div>
           </div>
         </div>
-      </div>
+        </div>
+      )}
     </div>
   );
 }
