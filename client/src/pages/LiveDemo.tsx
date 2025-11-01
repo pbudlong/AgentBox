@@ -104,15 +104,13 @@ export default function LiveDemo() {
       }
       const data = await response.json();
       
-      // Set all debug logs at once (after successful initialization)
+      // Set initial debug logs (webhooks will be added dynamically)
       setDebugLogs([
         { agent: 'seller', message: 'Created fresh AgentMail inbox', status: 'success', timestamp: new Date() },
         { agent: 'buyer', message: 'Created fresh AgentMail inbox', status: 'success', timestamp: new Date() },
         { agent: 'seller', message: 'Generated outreach email via OpenAI', status: 'success', timestamp: new Date() },
         { agent: 'seller', message: 'Sent email to buyer', status: 'success', timestamp: new Date() },
-        { agent: 'buyer', message: 'Buyer agent received email (immediate mode)', status: 'success', timestamp: new Date() },
-        { agent: 'buyer', message: 'Generated response via OpenAI', status: 'success', timestamp: new Date() },
-        { agent: 'buyer', message: 'Sent reply email (NOT via webhook)', status: 'error', timestamp: new Date() },
+        { agent: 'buyer', message: 'Waiting for webhook...', status: 'pending', timestamp: new Date(), isWebhookPlaceholder: true } as any,
       ]);
       
       return { ...data, sessionStart };
@@ -141,10 +139,51 @@ export default function LiveDemo() {
     refetchInterval: 2000,
   });
 
-  // Update webhook events
+  // Update webhook events and merge with debug logs
   useEffect(() => {
     if (webhooksData && (webhooksData as any).webhooks) {
-      setWebhookEvents((webhooksData as any).webhooks);
+      const webhooks = (webhooksData as any).webhooks;
+      setWebhookEvents(webhooks);
+      
+      // Merge webhooks inline with execution flow
+      setDebugLogs(prevLogs => {
+        // Remove existing webhook entries and placeholder
+        const baseLogs = prevLogs.filter((log: any) => !log.isWebhook && !log.isWebhookPlaceholder);
+        
+        // Add webhook events chronologically
+        const newLogs = [...baseLogs];
+        
+        webhooks.forEach((webhook: any) => {
+          const webhookLog: any = {
+            agent: webhook.to?.includes('buyer') ? 'buyer' : 'seller',
+            message: 'Webhook received',
+            status: webhook.status?.includes('success') ? 'success' : webhook.status?.includes('error') ? 'error' : 'pending',
+            timestamp: new Date(webhook.timestamp),
+            isWebhook: true,
+            webhookData: webhook,
+          };
+          
+          // Insert webhook at correct chronological position
+          if (webhookLog.agent === 'buyer') {
+            // Buyer webhook goes after "Sent email to buyer" (seller step 4)
+            const insertIndex = newLogs.findIndex((log: any) => log.message === 'Sent email to buyer') + 1;
+            newLogs.splice(insertIndex, 0, webhookLog);
+            
+            // Add buyer's response steps after webhook if successful
+            if (webhook.status?.includes('success')) {
+              newLogs.splice(insertIndex + 1, 0, 
+                { agent: 'buyer', message: 'Generated response via OpenAI', status: 'success', timestamp: new Date(webhook.timestamp) } as any,
+                { agent: 'buyer', message: 'Sent reply email via webhook', status: 'success', timestamp: new Date(webhook.timestamp) } as any
+              );
+            }
+          } else if (webhookLog.agent === 'seller') {
+            // Seller webhook goes at the end (after buyer sends reply)
+            newLogs.push(webhookLog);
+          }
+        });
+        
+        return newLogs;
+      });
     }
   }, [webhooksData]);
 
@@ -300,87 +339,67 @@ export default function LiveDemo() {
             </div>
             
             {/* Debug panel */}
-            {debugLogs.filter(log => log.agent === 'seller').length > 0 && (
+            {debugLogs.filter((log: any) => log.agent === 'seller').length > 0 && (
               <div className="px-6 py-3 bg-card border-b border-border">
                 <p className="text-xs font-semibold text-muted-foreground mb-2">Execution Flow:</p>
                 <div className="space-y-1">
-                  {debugLogs.filter(log => log.agent === 'seller').map((log, idx) => (
-                    <div 
-                      key={idx} 
-                      className={`text-xs px-2 py-1 rounded ${
-                        log.status === 'success' ? 'bg-green-500/20 text-green-400' : 
-                        log.status === 'error' ? 'bg-red-500/20 text-red-400' : 
-                        'bg-yellow-500/20 text-yellow-400'
-                      }`}
-                    >
-                      {log.status === 'success' && '✓ '}
-                      {log.status === 'error' && '✗ '}
-                      {log.status === 'pending' && '⏳ '}
-                      {log.message}
-                    </div>
-                  ))}
-                </div>
-                
-                {/* Webhook status */}
-                {webhookEvents.length > 0 && (
-                  <div className="mt-3 pt-3 border-t border-border">
-                    <p className="text-xs font-semibold text-muted-foreground mb-2">Webhook Events:</p>
-                    <div className="space-y-2">
-                      {webhookEvents.filter((e: any) => e.to?.includes('seller')).map((event: any, idx: number) => (
+                  {debugLogs.filter((log: any) => log.agent === 'seller').map((log: any, idx) => (
+                    <div key={idx}>
+                      {!log.isWebhook ? (
                         <div 
-                          key={idx} 
-                          className={`text-xs rounded overflow-hidden ${
-                            event.status?.includes('success') ? 'bg-green-500/10 border border-green-500/30' : 
-                            event.status?.includes('error') ? 'bg-red-500/10 border border-red-500/30' : 
-                            event.status?.includes('ignored') ? 'bg-gray-500/10 border border-gray-500/30' :
-                            'bg-blue-500/10 border border-blue-500/30'
+                          className={`text-xs px-2 py-1 rounded ${
+                            log.status === 'success' ? 'bg-green-500/20 text-green-400' : 
+                            log.status === 'error' ? 'bg-red-500/20 text-red-400' : 
+                            'bg-yellow-500/20 text-yellow-400'
                           }`}
                         >
+                          {log.status === 'success' && '✓ '}
+                          {log.status === 'error' && '✗ '}
+                          {log.status === 'pending' && '⏳ '}
+                          {log.message}
+                        </div>
+                      ) : (
+                        <div className={`text-xs rounded overflow-hidden ${
+                          log.webhookData.status?.includes('success') ? 'bg-green-500/10 border border-green-500/30' : 
+                          log.webhookData.status?.includes('error') ? 'bg-red-500/10 border border-red-500/30' : 
+                          'bg-gray-500/10 border border-gray-500/30'
+                        }`}>
                           <div className={`px-2 py-1 font-semibold ${
-                            event.status?.includes('success') ? 'bg-green-500/20 text-green-400' : 
-                            event.status?.includes('error') ? 'bg-red-500/20 text-red-400' : 
-                            event.status?.includes('ignored') ? 'bg-gray-500/20 text-gray-400' :
-                            'bg-blue-500/20 text-blue-400'
+                            log.webhookData.status?.includes('success') ? 'bg-green-500/20 text-green-400' : 
+                            log.webhookData.status?.includes('error') ? 'bg-red-500/20 text-red-400' : 
+                            'bg-gray-500/20 text-gray-400'
                           }`}>
-                            {event.status?.includes('success') && '✓ '}
-                            {event.status?.includes('error') && '✗ '}
-                            Webhook {event.status}
+                            🔔 Webhook {log.webhookData.status}
                           </div>
-                          <div className="px-2 py-2 font-mono text-[10px] space-y-1">
-                            <div className="text-muted-foreground">
-                              <span className="opacity-60">Event ID:</span> {event.event_id?.substring(0, 20)}...
-                            </div>
-                            <div className="text-muted-foreground">
-                              <span className="opacity-60">From:</span> {event.from}
-                            </div>
-                            <div className="text-muted-foreground">
-                              <span className="opacity-60">To:</span> {event.to}
-                            </div>
-                            <details className="mt-1">
-                              <summary className="cursor-pointer text-primary hover:underline">
-                                View Full Payload & Response
-                              </summary>
+                          <details className="px-2 py-2 font-mono text-[10px]">
+                            <summary className="cursor-pointer text-primary hover:underline">
+                              View Details
+                            </summary>
+                            <div className="mt-2 space-y-1">
+                              <div className="text-muted-foreground">
+                                <span className="opacity-60">Event ID:</span> {log.webhookData.event_id?.substring(0, 20)}...
+                              </div>
+                              <div className="text-muted-foreground">
+                                <span className="opacity-60">From:</span> {log.webhookData.from}
+                              </div>
+                              <div className="text-muted-foreground">
+                                <span className="opacity-60">To:</span> {log.webhookData.to}
+                              </div>
                               <div className="mt-2 p-2 bg-background/50 rounded border border-border max-h-40 overflow-auto">
                                 <div className="mb-2">
                                   <div className="font-semibold text-primary mb-1">Request Payload:</div>
-                                  <pre className="whitespace-pre-wrap break-all">
-                                    {JSON.stringify(event.payload, null, 2)}
-                                  </pre>
-                                </div>
-                                <div>
-                                  <div className="font-semibold text-primary mb-1">Response:</div>
-                                  <pre className="whitespace-pre-wrap break-all">
-                                    {JSON.stringify(event.response, null, 2)}
+                                  <pre className="whitespace-pre-wrap break-all text-[9px]">
+                                    {JSON.stringify(log.webhookData.payload, null, 2)}
                                   </pre>
                                 </div>
                               </div>
-                            </details>
-                          </div>
+                            </div>
+                          </details>
                         </div>
-                      ))}
+                      )}
                     </div>
-                  </div>
-                )}
+                  ))}
+                </div>
               </div>
             )}
             
@@ -416,87 +435,67 @@ export default function LiveDemo() {
             </div>
             
             {/* Debug panel */}
-            {debugLogs.filter(log => log.agent === 'buyer').length > 0 && (
+            {debugLogs.filter((log: any) => log.agent === 'buyer').length > 0 && (
               <div className="px-6 py-3 bg-card border-b border-border">
                 <p className="text-xs font-semibold text-muted-foreground mb-2">Execution Flow:</p>
                 <div className="space-y-1">
-                  {debugLogs.filter(log => log.agent === 'buyer').map((log, idx) => (
-                    <div 
-                      key={idx} 
-                      className={`text-xs px-2 py-1 rounded ${
-                        log.status === 'success' ? 'bg-green-500/20 text-green-400' : 
-                        log.status === 'error' ? 'bg-red-500/20 text-red-400' : 
-                        'bg-yellow-500/20 text-yellow-400'
-                      }`}
-                    >
-                      {log.status === 'success' && '✓ '}
-                      {log.status === 'error' && '✗ '}
-                      {log.status === 'pending' && '⏳ '}
-                      {log.message}
-                    </div>
-                  ))}
-                </div>
-                
-                {/* Webhook status */}
-                {webhookEvents.length > 0 && (
-                  <div className="mt-3 pt-3 border-t border-border">
-                    <p className="text-xs font-semibold text-muted-foreground mb-2">Webhook Events:</p>
-                    <div className="space-y-2">
-                      {webhookEvents.filter((e: any) => e.to?.includes('buyer')).map((event: any, idx: number) => (
+                  {debugLogs.filter((log: any) => log.agent === 'buyer').map((log: any, idx) => (
+                    <div key={idx}>
+                      {!log.isWebhook ? (
                         <div 
-                          key={idx} 
-                          className={`text-xs rounded overflow-hidden ${
-                            event.status?.includes('success') ? 'bg-green-500/10 border border-green-500/30' : 
-                            event.status?.includes('error') ? 'bg-red-500/10 border border-red-500/30' : 
-                            event.status?.includes('ignored') ? 'bg-gray-500/10 border border-gray-500/30' :
-                            'bg-blue-500/10 border border-blue-500/30'
+                          className={`text-xs px-2 py-1 rounded ${
+                            log.status === 'success' ? 'bg-green-500/20 text-green-400' : 
+                            log.status === 'error' ? 'bg-red-500/20 text-red-400' : 
+                            'bg-yellow-500/20 text-yellow-400'
                           }`}
                         >
+                          {log.status === 'success' && '✓ '}
+                          {log.status === 'error' && '✗ '}
+                          {log.status === 'pending' && '⏳ '}
+                          {log.message}
+                        </div>
+                      ) : (
+                        <div className={`text-xs rounded overflow-hidden ${
+                          log.webhookData.status?.includes('success') ? 'bg-green-500/10 border border-green-500/30' : 
+                          log.webhookData.status?.includes('error') ? 'bg-red-500/10 border border-red-500/30' : 
+                          'bg-gray-500/10 border border-gray-500/30'
+                        }`}>
                           <div className={`px-2 py-1 font-semibold ${
-                            event.status?.includes('success') ? 'bg-green-500/20 text-green-400' : 
-                            event.status?.includes('error') ? 'bg-red-500/20 text-red-400' : 
-                            event.status?.includes('ignored') ? 'bg-gray-500/20 text-gray-400' :
-                            'bg-blue-500/20 text-blue-400'
+                            log.webhookData.status?.includes('success') ? 'bg-green-500/20 text-green-400' : 
+                            log.webhookData.status?.includes('error') ? 'bg-red-500/20 text-red-400' : 
+                            'bg-gray-500/20 text-gray-400'
                           }`}>
-                            {event.status?.includes('success') && '✓ '}
-                            {event.status?.includes('error') && '✗ '}
-                            Webhook {event.status}
+                            🔔 Webhook {log.webhookData.status}
                           </div>
-                          <div className="px-2 py-2 font-mono text-[10px] space-y-1">
-                            <div className="text-muted-foreground">
-                              <span className="opacity-60">Event ID:</span> {event.event_id?.substring(0, 20)}...
-                            </div>
-                            <div className="text-muted-foreground">
-                              <span className="opacity-60">From:</span> {event.from}
-                            </div>
-                            <div className="text-muted-foreground">
-                              <span className="opacity-60">To:</span> {event.to}
-                            </div>
-                            <details className="mt-1">
-                              <summary className="cursor-pointer text-primary hover:underline">
-                                View Full Payload & Response
-                              </summary>
+                          <details className="px-2 py-2 font-mono text-[10px]">
+                            <summary className="cursor-pointer text-primary hover:underline">
+                              View Details
+                            </summary>
+                            <div className="mt-2 space-y-1">
+                              <div className="text-muted-foreground">
+                                <span className="opacity-60">Event ID:</span> {log.webhookData.event_id?.substring(0, 20)}...
+                              </div>
+                              <div className="text-muted-foreground">
+                                <span className="opacity-60">From:</span> {log.webhookData.from}
+                              </div>
+                              <div className="text-muted-foreground">
+                                <span className="opacity-60">To:</span> {log.webhookData.to}
+                              </div>
                               <div className="mt-2 p-2 bg-background/50 rounded border border-border max-h-40 overflow-auto">
                                 <div className="mb-2">
                                   <div className="font-semibold text-primary mb-1">Request Payload:</div>
-                                  <pre className="whitespace-pre-wrap break-all">
-                                    {JSON.stringify(event.payload, null, 2)}
-                                  </pre>
-                                </div>
-                                <div>
-                                  <div className="font-semibold text-primary mb-1">Response:</div>
-                                  <pre className="whitespace-pre-wrap break-all">
-                                    {JSON.stringify(event.response, null, 2)}
+                                  <pre className="whitespace-pre-wrap break-all text-[9px]">
+                                    {JSON.stringify(log.webhookData.payload, null, 2)}
                                   </pre>
                                 </div>
                               </div>
-                            </details>
-                          </div>
+                            </div>
+                          </details>
                         </div>
-                      ))}
+                      )}
                     </div>
-                  </div>
-                )}
+                  ))}
+                </div>
               </div>
             )}
             

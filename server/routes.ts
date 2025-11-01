@@ -68,7 +68,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // AgentMail structure: event.event_type = "message.received", event.message contains the data
       if (event.event_type === "message.received" && event.message) {
         const inboundEmail = event.message;
-        const isBuyerEmail = inboundEmail.to?.includes?.("buyer-demo") || inboundEmail.to?.some?.((addr: string) => addr.includes("buyer-demo"));
+        
+        // Check which inbox RECEIVED the email (inbox_id is the recipient)
+        const receivedByBuyer = inboundEmail.inbox_id === demoInboxes.buyer?.inbox_id;
+        const receivedBySeller = inboundEmail.inbox_id === demoInboxes.seller?.inbox_id;
+        
+        const receiverName = receivedByBuyer ? 'buyer' : receivedBySeller ? 'seller' : 'unknown';
+        
+        console.log("🔍 Webhook received:", {
+          inbox_id: inboundEmail.inbox_id,
+          from: inboundEmail.from,
+          to: inboundEmail.to,
+          receivedBy: receiverName,
+          buyerInbox: demoInboxes.buyer?.inbox_id,
+          sellerInbox: demoInboxes.seller?.inbox_id,
+        });
         
         // Log webhook event for debugging
         webhookEvents.push({
@@ -76,21 +90,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           from: inboundEmail.from || 'unknown',
           to: Array.isArray(inboundEmail.to) ? inboundEmail.to.join(', ') : (inboundEmail.to || 'unknown'),
           subject: inboundEmail.subject || 'No subject',
-          status: isBuyerEmail ? 'processing' : 'ignored (seller inbox)',
+          status: receivedByBuyer ? 'processing (buyer received)' : receivedBySeller ? 'received (seller inbox)' : 'unknown inbox',
           event_id: event.event_id || 'unknown',
           payload: event,
           response: { success: true }
         });
         
-        console.log("🔍 Recipient check:", {
-          to: inboundEmail.to,
-          isBuyerEmail,
-          buyerInboxExists: !!demoInboxes.buyer,
-        });
-        
-        // Only auto-respond if buyer receives an email
-        if (isBuyerEmail && demoInboxes.buyer) {
-          console.log("📧 Buyer inbox received email - generating response...");
+        // Buyer receives email → generate reply
+        if (receivedByBuyer && demoInboxes.buyer) {
+          console.log("📧 BUYER INBOX received email from seller - generating response...");
           
           const emailBody = inboundEmail.text || inboundEmail.html || "";
           const prompt = `You received a sales outreach email:
@@ -105,7 +113,7 @@ Respond as a buyer evaluating this product. Ask a qualifying question about pric
           console.log("💬 Buyer response generated:", response.text.substring(0, 100) + "...");
           
           // Send reply
-          console.log("📮 Sending buyer reply...");
+          console.log("📮 Sending buyer reply via webhook...");
           await replyToEmail({
             inbox_id: inboundEmail.inbox_id,
             message_id: inboundEmail.message_id,
@@ -113,10 +121,16 @@ Respond as a buyer evaluating this product. Ask a qualifying question about pric
           });
 
           // Update webhook event status
-          webhookEvents[webhookEvents.length - 1].status = 'success (generated reply)';
+          webhookEvents[webhookEvents.length - 1].status = 'success (buyer replied)';
           console.log("✅ Buyer response sent successfully via webhook");
-        } else {
-          console.log("📬 Email received by seller inbox - no auto-response needed");
+        } 
+        // Seller receives email → just log (no auto-response)
+        else if (receivedBySeller) {
+          console.log("📬 SELLER INBOX received email from buyer - logged (no auto-response)");
+          webhookEvents[webhookEvents.length - 1].status = 'received (seller inbox)';
+        }
+        else {
+          console.log("⚠️ Email received by unknown inbox");
         }
       } else {
         webhookEvents.push({
@@ -243,39 +257,14 @@ Respond as a buyer evaluating this product. Ask a qualifying question about pric
       });
       console.log("✅ Seller email sent successfully");
       console.log("📋 Email result:", JSON.stringify(sellerEmailResult, null, 2));
-
-      // IMMEDIATE BUYER RESPONSE (Hybrid Approach - Guarantees Demo Works)
-      // This ensures the demo always shows a conversation, even if webhooks fail
-      console.log("\n🔄 IMMEDIATE BUYER RESPONSE (Fallback Strategy)");
-      console.log("🤖 Generating buyer's response...");
-      
-      const buyerResponsePrompt = `You received a sales outreach email:
-From: ${demoInboxes.seller.email}
-Subject: Streamline Your Sales Qualification Process
-Body: ${sellerMessage.text}
-
-Respond as a buyer evaluating this product. Ask a qualifying question about pricing, features, or implementation. Keep it under 80 words.`;
-
-      const buyerResponse = await buyerAgent.generate(buyerResponsePrompt);
-      console.log("✅ Buyer response generated:", buyerResponse.text.substring(0, 100) + "...");
-
-      // Send buyer's reply
-      console.log("📮 Sending buyer response...");
-      const buyerEmailResult = await sendEmail({
-        inbox_id: demoInboxes.buyer.inbox_id,
-        to: demoInboxes.seller.email,
-        subject: "Re: Streamline Your Sales Qualification Process",
-        text: buyerResponse.text,
-      });
-      console.log("✅ Buyer response sent successfully (immediate mode)");
-      console.log("📋 Buyer email result:", JSON.stringify(buyerEmailResult, null, 2));
+      console.log("⏳ Waiting for buyer webhook to fire and generate response...");
       console.log("=".repeat(80) + "\n");
 
       res.json({
         success: true,
         seller: demoInboxes.seller.email,
         buyer: demoInboxes.buyer.email,
-        message: "Demo initialized successfully with immediate buyer response",
+        message: "Demo initialized - webhooks will handle buyer response",
       });
     } catch (error) {
       console.error("Error initializing demo:", error);

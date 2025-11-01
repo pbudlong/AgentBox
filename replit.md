@@ -180,6 +180,14 @@ Preferred communication style: Simple, everyday language.
   - Webhook endpoint handles AgentMail's `message.received` event structure
   - Production-ready: Uses REPLIT_DEV_DOMAIN (dev) or REPLIT_DOMAINS (production)
   - Comprehensive logging: All phases logged with clear visual separators for debugging
+- ✅ **UI Refactor: Webhooks now inline chronologically** (Nov 1, 2025):
+  - Removed separate "Webhook Events" section
+  - Webhooks now appear inline within execution flow at correct chronological position
+  - Buyer webhook appears after "Sent email to buyer" (seller's step 4)
+  - Seller webhook appears at end after buyer sends reply
+  - Each webhook is expandable with event ID, from/to addresses, and full payload details
+  - Placeholder "Waiting for webhook..." shows until buyer webhook arrives
+  - Both seller and buyer panes use identical rendering logic for consistency
 
 **Testing:**
 - End-to-end test confirmed both agents communicate via real emails
