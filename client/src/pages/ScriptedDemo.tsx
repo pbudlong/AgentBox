@@ -240,6 +240,16 @@ export default function ScriptedDemo() {
     setIsPlaying(!isPlaying);
   };
 
+  const handlePlayClick = () => {
+    // If demo is complete, restart it
+    if (visibleMessages.length === DEMO_MESSAGES.length) {
+      startDemo();
+    } else {
+      // Otherwise toggle play/pause
+      togglePlayPause();
+    }
+  };
+
   const skipAhead = () => {
     setVisibleMessages(DEMO_MESSAGES);
     setCurrentMessageIndex(DEMO_MESSAGES.length);
@@ -260,7 +270,7 @@ export default function ScriptedDemo() {
           <Button 
             onClick={(e) => {
               e.stopPropagation();
-              togglePlayPause();
+              handlePlayClick();
             }}
             className="hover-elevate active-elevate-2"
             data-testid="button-play-pause"
@@ -312,7 +322,7 @@ export default function ScriptedDemo() {
       {/* Two-pane viewer */}
       <div 
         className="flex-1 flex cursor-pointer" 
-        onClick={togglePlayPause}
+        onClick={handlePlayClick}
         data-testid="demo-viewer"
       >
         {/* Seller pane */}
