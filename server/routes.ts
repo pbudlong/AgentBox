@@ -76,19 +76,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(200).json({ success: true });
       console.log("✅ Webhook acknowledged (200 OK sent)");
 
-      // Check for duplicate events
-      if (event.event_id && processedEventIds.has(event.event_id)) {
-        console.log("⚠️ Duplicate webhook event detected, skipping:", event.event_id);
-        console.log(`${"=".repeat(80)}\n`);
-        return;
-      }
-      
-      // Mark event as processed
-      if (event.event_id) {
-        processedEventIds.add(event.event_id);
-      }
-
       // Process email asynchronously
+      // NOTE: We removed event_id duplicate detection because AgentMail sends
+      // the SAME event_id when replaying messages. Instead, we rely on:
+      // 1. Timestamp filtering (ignore messages older than session)
+      // 2. Exchange count limits (stop after MAX_EXCHANGES)
+      // 3. Database persistence (survives server restarts)
       // AgentMail structure: event.event_type = "message.received", event.message contains the data
       if (event.event_type === "message.received" && event.message) {
         const inboundEmail = event.message;
