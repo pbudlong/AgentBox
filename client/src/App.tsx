@@ -13,12 +13,34 @@ import LiveDemo from "@/pages/LiveDemo";
 import TechStackPage from "@/pages/TechStackPage";
 import NotFound from "@/pages/not-found";
 
+const pageOrder = ["/", "/problem", "/buyer", "/seller", "/demo", "/live", "/tech"];
+
 function Router() {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [location]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const currentIndex = pageOrder.indexOf(location);
+      if (currentIndex === -1) return;
+
+      if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+        if (currentIndex < pageOrder.length - 1) {
+          setLocation(pageOrder[currentIndex + 1]);
+        }
+      } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+        if (currentIndex > 0) {
+          setLocation(pageOrder[currentIndex - 1]);
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [location, setLocation]);
 
   return (
     <Switch>
