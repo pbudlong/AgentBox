@@ -80,7 +80,6 @@ export default function LiveDemo() {
   const [sellerEmail, setSellerEmail] = useState("");
   const [buyerEmail, setBuyerEmail] = useState("");
   const [isInitialized, setIsInitialized] = useState(false);
-  const [hasAutoStarted, setHasAutoStarted] = useState(false);
   const [, navigate] = useLocation();
 
   // Initialize demo mutation
@@ -133,17 +132,12 @@ export default function LiveDemo() {
     m.from.includes(buyerEmail) || m.to.includes(buyerEmail)
   );
 
-  // Auto-start on page load with delay
-  useEffect(() => {
-    if (!hasAutoStarted && !isInitialized) {
-      const timeout = setTimeout(() => {
-        initMutation.mutate();
-        setHasAutoStarted(true);
-      }, 500); // 500ms delay to let page load
-      
-      return () => clearTimeout(timeout);
-    }
-  }, [hasAutoStarted, isInitialized]);
+  const resetDemo = () => {
+    setLiveMessages([]);
+    setSellerEmail("");
+    setBuyerEmail("");
+    setIsInitialized(false);
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -162,16 +156,29 @@ export default function LiveDemo() {
             {!initMutation.isPending && <Sparkles className="h-4 w-4 mr-2" />}
             {isInitialized ? "Watching Live Agents" : "Start Live Demo"}
           </Button>
+          
+          {isInitialized && (
+            <Button 
+              onClick={resetDemo}
+              variant="outline"
+              className="hover-elevate active-elevate-2"
+              data-testid="button-reset-live-demo"
+            >
+              Reset
+            </Button>
+          )}
         </div>
         
-        <Button 
-          onClick={() => navigate("/tech")}
-          className="hover-elevate active-elevate-2"
-          data-testid="button-next-tech"
-        >
-          See Tech Stack
-          <ArrowRight className="ml-2 h-5 w-5" />
-        </Button>
+        {liveMessages.length > 0 && (
+          <Button 
+            onClick={() => navigate("/tech")}
+            className="hover-elevate active-elevate-2"
+            data-testid="button-next-tech"
+          >
+            See Tech Stack
+            <ArrowRight className="ml-2 h-5 w-5" />
+          </Button>
+        )}
       </div>
 
       {/* Status message */}
