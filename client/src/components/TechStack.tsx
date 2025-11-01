@@ -8,13 +8,13 @@ const sponsors = [
     name: "AgentMail",
     role: "Core Email Infrastructure",
     description: "Provides @agentbox.ai email addresses, SMTP/IMAP handling, and thread management for agent-to-agent conversations.",
-    status: "planned",
+    status: "integrated",
   },
   {
     name: "Convex.dev",
     role: "Real-time Backend",
     description: "Handles state management, thread synchronization, scoring calculations, and real-time updates between agents.",
-    status: "planned",
+    status: "integrated",
   },
   {
     name: "Mastra / OpenAI",
@@ -46,54 +46,62 @@ const implemented = [
     description: "Professional UI components with dark mode support",
   },
   {
-    name: "Express Server",
-    description: "Backend API structure ready for integration",
+    name: "Express + AgentMail Webhooks",
+    description: "Backend API with inbound email processing endpoints",
   },
   {
-    name: "Replit AI Integration",
-    description: "OpenAI integration via Replit credits (no API key needed)",
+    name: "Mastra AI Agent Framework",
+    description: "Buyer and seller agents with tool-calling capabilities",
+  },
+  {
+    name: "Perplexity Research Tool",
+    description: "Company enrichment for enhanced qualification",
+  },
+  {
+    name: "8-Signal Fit Scoring Engine",
+    description: "Weighted scoring algorithm for match quality",
   },
 ];
 
 const simulated = [
   {
     feature: "Email Conversations",
-    note: "Mock data shows agent threading, currently hardcoded message flow",
+    note: "Demo uses mock data - real agents respond to webhooks via AgentMail API",
   },
   {
-    feature: "Fit Score Calculation",
-    note: "Visual scoring system built, scoring logic needs Convex integration",
+    feature: "Real-time UI Updates",
+    note: "Convex provides live data sync (requires manual npx convex dev setup)",
   },
   {
     feature: "Calendar Integration",
-    note: "UI ready for .ics generation and Google Calendar links",
+    note: "UI ready for .ics generation and Google Calendar deep links",
   },
   {
-    feature: "Agent Decision Making",
-    note: "Demo shows state transitions, needs OpenAI agent framework",
+    feature: "Profile Onboarding",
+    note: "Profile creation flow with Perplexity enrichment ready to build",
   },
 ];
 
 const remaining = [
   {
-    task: "AgentMail Integration",
-    description: "Connect real @agentbox.ai emails with SMTP/IMAP handlers",
+    task: "Convex Real-time Sync",
+    description: "Run npx convex dev locally to enable live thread updates and persistent storage",
   },
   {
-    task: "Convex Backend",
-    description: "Implement real-time state sync, scoring engine, and data persistence",
+    task: "AgentMail Inbox Creation",
+    description: "Build UI for users to claim their @agentbox.ai email addresses",
   },
   {
-    task: "Mastra Agent Orchestration",
-    description: "Build LLM-powered agents with tool-calling for email composition and decision-making",
+    task: "Profile Management",
+    description: "Create forms for buyers/sellers to configure qualification preferences",
   },
   {
-    task: "Calendar + CRM Webhooks",
-    description: "Generate .ics files, sync with Google Calendar, export to Salesforce/HubSpot",
+    task: "Calendar File Generation",
+    description: "Generate .ics files and Google Calendar event links from meeting proposals",
   },
   {
-    task: "User Onboarding Flow",
-    description: "Profile setup, preference configuration, and email claiming",
+    task: "Production Deployment",
+    description: "Configure webhooks, domain verification, and scale testing",
   },
 ];
 
