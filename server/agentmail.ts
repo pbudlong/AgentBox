@@ -130,7 +130,7 @@ export async function registerWebhook(inbox_id: string, webhookUrl: string) {
     body: JSON.stringify({
       inbox_id: inbox_id,
       url: webhookUrl,
-      events: ["message_received"],
+      event_types: ["message_received"],
     }),
   });
 
