@@ -111,6 +111,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return;
         }
         
+        // Check if message is older than session (AgentMail replays historical messages)
+        const messageTimestamp = new Date(inboundEmail.created_at || inboundEmail.timestamp);
+        const sessionTimestamp = new Date(session.createdAt);
+        
+        if (messageTimestamp < sessionTimestamp) {
+          console.log("⏮️ Ignoring old message from before session creation:", {
+            messageTime: messageTimestamp.toISOString(),
+            sessionTime: sessionTimestamp.toISOString(),
+            from: inboundEmail.from,
+            subject: inboundEmail.subject
+          });
+          webhookEvents.push({
+            timestamp: new Date(),
+            from: inboundEmail.from || 'unknown',
+            to: Array.isArray(inboundEmail.to) ? inboundEmail.to.join(', ') : (inboundEmail.to || 'unknown'),
+            subject: inboundEmail.subject || 'No subject',
+            status: 'ignored (message older than session)',
+            event_id: event.event_id || 'unknown',
+            payload: event,
+            response: { success: true }
+          });
+          return;
+        }
+        
         // Check which inbox RECEIVED the email (inbox_id is the recipient)
         const receivedByBuyer = inboundEmail.inbox_id === session.buyerInboxId;
         const receivedBySeller = inboundEmail.inbox_id === session.sellerInboxId;
