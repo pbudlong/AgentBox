@@ -36,7 +36,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("✅ Webhook acknowledged (200 OK sent)");
 
       // Process email asynchronously
-      if (event.type === "message_received" && event.data) {
+      // AgentMail uses dot notation for event types
+      if (event.type === "message.received" && event.data) {
         const inboundEmail = event.data;
         const isBuyerEmail = inboundEmail.to?.includes?.("buyer-demo") || inboundEmail.to?.some?.((addr: string) => addr.includes("buyer-demo"));
         
