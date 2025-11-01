@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import ProgressIndicator from "@/components/ProgressIndicator";
 import DemoControls from "@/components/DemoControls";
 import EmailPane from "@/components/EmailPane";
 import CalendarEventCard from "@/components/CalendarEventCard";
 import FitScoreIndicator from "@/components/FitScoreIndicator";
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 import { useLocation } from "wouter";
 import type { EmailMessage, Status } from "@shared/schema";
 
@@ -74,15 +76,78 @@ export default function Demo() {
   const [showScore, setShowScore] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
   const [showCalendarModal, setShowCalendarModal] = useState(false);
-  const [currentStep, setCurrentStep] = useState(0);
+  const [liveMode, setLiveMode] = useState(false);
+  const [sellerEmail, setSellerEmail] = useState("");
+  const [buyerEmail, setBuyerEmail] = useState("");
+  const [, navigate] = useLocation();
 
-  const sellerMessages = messages.filter(m => 
-    m.from === 'pete.b.seller@agentbox.ai' || m.to === 'pete.b.seller@agentbox.ai'
-  );
+  // Initialize demo mutation
+  const initMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch("/api/demo/initialize", {
+        method: "POST",
+      });
+      return await response.json();
+    },
+    onSuccess: (data: any) => {
+      setSellerEmail(data.seller);
+      setBuyerEmail(data.buyer);
+      setLiveMode(true);
+      setIsRunning(true);
+      queryClient.invalidateQueries({ queryKey: ["/api/demo/messages"] });
+    },
+  });
+
+  // Poll for messages when in live mode
+  const { data: messagesData } = useQuery({
+    queryKey: ["/api/demo/messages"],
+    enabled: liveMode,
+    refetchInterval: 3000, // Poll every 3 seconds
+  });
+
+  // Update messages from real API data
+  useEffect(() => {
+    if (messagesData && (messagesData as any).initialized) {
+      const realMessages = ((messagesData as any).messages || []).map((m: any, idx: number) => ({
+        id: m.message_id || `msg-${idx}`,
+        from: m.from,
+        to: m.to,
+        subject: m.subject || "No Subject",
+        body: m.text || m.html || "",
+        timestamp: new Date(m.created_at),
+        threadId: "live-demo",
+      }));
+      
+      setMessages(realMessages);
+      
+      // Show score after first exchange
+      if (realMessages.length >= 2) {
+        setShowScore(true);
+      }
+      
+      // Update status based on message count
+      if (realMessages.length >= 4) {
+        setThreadStatus("approved");
+      }
+      
+      // Stop running indicator after initial message
+      if (realMessages.length > 0 && isRunning) {
+        setTimeout(() => setIsRunning(false), 2000);
+      }
+    }
+  }, [messagesData, isRunning]);
+
+  const sellerMessages = liveMode
+    ? messages.filter(m => m.from.includes(sellerEmail) || m.to.includes(sellerEmail))
+    : messages.filter(m => 
+        m.from === 'pete.b.seller@agentbox.ai' || m.to === 'pete.b.seller@agentbox.ai'
+      );
   
-  const buyerMessages = messages.filter(m => 
-    m.from === 'aria.h.buyer@agentbox.ai' || m.to === 'aria.h.buyer@agentbox.ai'
-  );
+  const buyerMessages = liveMode
+    ? messages.filter(m => m.from.includes(buyerEmail) || m.to.includes(buyerEmail))
+    : messages.filter(m => 
+        m.from === 'aria.h.buyer@agentbox.ai' || m.to === 'aria.h.buyer@agentbox.ai'
+      );
 
   const runDemo = async () => {
     // First, completely reset state
@@ -91,7 +156,6 @@ export default function Demo() {
     setShowCalendar(false);
     setShowCalendarModal(false);
     setThreadStatus("collecting");
-    setCurrentStep(0);
     
     // Small delay to ensure state is cleared
     await new Promise(resolve => setTimeout(resolve, 100));
@@ -137,7 +201,14 @@ export default function Demo() {
     setShowScore(false);
     setShowCalendar(false);
     setShowCalendarModal(false);
-    setCurrentStep(0);
+    setLiveMode(false);
+    setSellerEmail("");
+    setBuyerEmail("");
+  };
+
+  const startLiveDemo = () => {
+    resetDemo();
+    initMutation.mutate();
   };
 
   const mockSignals = [
@@ -150,7 +221,6 @@ export default function Demo() {
   ];
 
   const fitScore = threadStatus === "approved" ? 85 : 68;
-  const [, navigate] = useLocation();
 
   return (
     <div className="min-h-screen flex flex-col bg-background pt-16">
@@ -166,6 +236,8 @@ export default function Demo() {
         onNext={() => navigate("/profiles")}
         showCalendar={showCalendar && !isRunning}
         onViewCalendar={() => setShowCalendarModal(true)}
+        onStartLive={startLiveDemo}
+        liveMode={liveMode}
       />
 
       {/* Two-pane email viewer */}
@@ -175,7 +247,7 @@ export default function Demo() {
           <div className="w-1/2 border-r border-border bg-card/30">
             <EmailPane
               title="Seller Agent"
-              email="pete.b.seller@agentbox.ai"
+              email={liveMode && sellerEmail ? sellerEmail : "pete.b.seller@agentbox.ai"}
               messages={sellerMessages}
               status={isRunning && sellerMessages.length < buyerMessages.length ? "thinking" : "idle"}
             />
@@ -185,7 +257,7 @@ export default function Demo() {
           <div className="w-1/2 bg-card/50">
             <EmailPane
               title="Buyer Agent"
-              email="aria.h.buyer@agentbox.ai"
+              email={liveMode && buyerEmail ? buyerEmail : "aria.h.buyer@agentbox.ai"}
               messages={buyerMessages}
               status={isRunning && buyerMessages.length < sellerMessages.length ? "thinking" : "idle"}
             />

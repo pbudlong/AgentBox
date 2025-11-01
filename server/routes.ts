@@ -66,15 +66,15 @@ Respond as a buyer evaluating this product. Ask a qualifying question about pric
       // Create seller inbox
       const sellerInbox = await createInbox("seller-demo", "AgentBox Seller");
       demoInboxes.seller = {
-        inbox_id: sellerInbox.inbox_id,
-        email: `${sellerInbox.username}@${sellerInbox.domain}`,
+        inbox_id: (sellerInbox as any).inbox_id,
+        email: (sellerInbox as any).email,
       };
 
       // Create buyer inbox
       const buyerInbox = await createInbox("buyer-demo", "AgentBox Buyer");
       demoInboxes.buyer = {
-        inbox_id: buyerInbox.inbox_id,
-        email: `${buyerInbox.username}@${buyerInbox.domain}`,
+        inbox_id: (buyerInbox as any).inbox_id,
+        email: (buyerInbox as any).email,
       };
 
       console.log("Inboxes created:", demoInboxes);

@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Play, RotateCcw, ArrowRight, Calendar } from "lucide-react";
+import { Play, RotateCcw, ArrowRight, Calendar, Sparkles } from "lucide-react";
 import type { Status } from "@shared/schema";
 
 interface DemoControlsProps {
@@ -12,9 +12,11 @@ interface DemoControlsProps {
   onNext?: () => void;
   showCalendar?: boolean;
   onViewCalendar?: () => void;
+  onStartLive?: () => void;
+  liveMode?: boolean;
 }
 
-export default function DemoControls({ onStart, onReset, threadStatus, isRunning, showNext, onNext, showCalendar, onViewCalendar }: DemoControlsProps) {
+export default function DemoControls({ onStart, onReset, threadStatus, isRunning, showNext, onNext, showCalendar, onViewCalendar, onStartLive, liveMode }: DemoControlsProps) {
   const getStatusBadgeVariant = () => {
     switch (threadStatus) {
       case "collecting": return "secondary";
@@ -40,14 +42,27 @@ export default function DemoControls({ onStart, onReset, threadStatus, isRunning
       <div className="h-full flex items-center justify-between max-w-7xl mx-auto">
         {/* Left: Control buttons */}
         <div className="flex items-center gap-4">
+          {onStartLive && (
+            <Button
+              onClick={onStartLive}
+              disabled={isRunning}
+              variant="default"
+              className="hover-elevate active-elevate-2"
+              data-testid="button-start-live-demo"
+            >
+              <Sparkles className="h-4 w-4 mr-2" />
+              {liveMode ? "Watching Live Agents" : "Start Live Demo"}
+            </Button>
+          )}
           <Button
             onClick={onStart}
-            disabled={isRunning}
+            disabled={isRunning || liveMode}
+            variant={liveMode ? "outline" : "default"}
             className="hover-elevate active-elevate-2"
             data-testid="button-start-demo"
           >
             <Play className="h-4 w-4 mr-2" />
-            Start Demo Thread
+            {liveMode ? "Scripted Demo" : "Start Scripted Demo"}
           </Button>
           
           <Button

@@ -42,7 +42,12 @@ export async function sendEmail(params: {
     throw new Error("AgentMail not configured");
   }
 
-  return await agentmail.inboxes.messages.send(params);
+  return await agentmail.inboxes.messages.send(params.inbox_id, {
+    to: [params.to],
+    subject: params.subject,
+    text: params.text,
+    html: params.html,
+  });
 }
 
 export async function replyToEmail(params: {
@@ -55,7 +60,14 @@ export async function replyToEmail(params: {
     throw new Error("AgentMail not configured");
   }
 
-  return await agentmail.inboxes.messages.reply(params);
+  return await agentmail.inboxes.messages.reply(
+    params.inbox_id,
+    params.message_id,
+    {
+      text: params.text,
+      html: params.html,
+    }
+  );
 }
 
 export async function listMessages(inbox_id: string) {
@@ -63,5 +75,5 @@ export async function listMessages(inbox_id: string) {
     throw new Error("AgentMail not configured");
   }
 
-  return await agentmail.inboxes.messages.list({ inbox_id });
+  return await agentmail.inboxes.messages.list(inbox_id);
 }
