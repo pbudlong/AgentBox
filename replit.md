@@ -60,12 +60,18 @@ Preferred communication style: Simple, everyday language.
 - JSON request/response format with error handling
 
 **Storage Layer:**
-- In-memory storage implementation (`MemStorage`) for development
-- Drizzle ORM configured for PostgreSQL (production-ready)
-- Schema includes User model with support for AgentBox-specific types (Profile, ThreadState, Status)
-- Migration system via drizzle-kit
+- PostgreSQL database with Drizzle ORM (Neon serverless)
+- Database connection in `server/db.ts` using drizzle-orm/neon-http
+- Production-ready persistence for demo sessions
+- Migration system via drizzle-kit (npm run db:push)
 
 **Data Models:**
+- `users`: User authentication (username, password)
+- `demo_sessions`: Persist inbox IDs and exchange count across deployments
+  - `sellerInboxId`, `sellerEmail`: Seller inbox details
+  - `buyerInboxId`, `buyerEmail`: Buyer inbox details
+  - `exchangeCount`: Tracks conversation progress (prevents infinite loops)
+  - Enables webhooks to work in production by persisting state
 - `SellerProfile` & `BuyerProfile`: Store user preferences (industry, company size, geo, budget, timing, tech stack)
 - `ThreadState`: Track email conversation state, fit scores, missing information, and meeting details
 - `Status` enum: collecting | approved | declined | scheduled
@@ -163,6 +169,14 @@ Preferred communication style: Simple, everyday language.
 - Error handling for AlreadyExistsError gracefully falls back to listing/finding existing inboxes
 
 **Recent Fixes (Nov 1, 2025):**
+- ✅ **Implemented database persistence for production webhooks** (Nov 1, 2025):
+  - Created `demo_sessions` table to persist inbox IDs and exchange count
+  - Replaced in-memory storage with PostgreSQL database queries
+  - Webhooks now load session from database using inbox_id lookup
+  - Exchange counter persists across server restarts/deployments
+  - Fixes production webhook failures caused by lost in-memory state
+  - Created `server/db.ts` with Drizzle connection to Neon database
+  - Storage interface methods: `createDemoSession()`, `getDemoSessionByInboxId()`, `getLatestDemoSession()`, `incrementExchangeCount()`
 - ✅ **Fixed infinite loop bug** (Nov 1, 2025):
   - Added exchange counter to limit conversation to 4 exchanges maximum (5 total emails: seller → buyer → seller → buyer → seller → STOP)
   - Both buyer and seller webhook handlers now check exchange count before responding
