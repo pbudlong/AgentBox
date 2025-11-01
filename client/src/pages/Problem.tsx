@@ -31,7 +31,7 @@ export default function Problem() {
               <div className="space-y-4">
                 <div className="p-5 rounded-lg bg-card border border-card-border">
                   <p className="text-lg text-foreground leading-relaxed">
-                    Aren't you <span className="text-destructive font-semibold">tired of salespeople bombarding your inbox</span> with lazy, templated emails that show zero understanding of your actual needs?
+                    Aren't you <span className="text-destructive font-semibold">tired of salespeople bombarding your inbox</span> with lazy emails that show no understanding of your actual needs?
                   </p>
                 </div>
 
