@@ -82,6 +82,7 @@ export default function LiveDemo() {
   const [isInitialized, setIsInitialized] = useState(false);
   const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
   const [debugLogs, setDebugLogs] = useState<{ agent: 'seller' | 'buyer', message: string, status: 'success' | 'error' | 'pending', timestamp: Date }[]>([]);
+  const [webhookEvents, setWebhookEvents] = useState<any[]>([]);
   const [, navigate] = useLocation();
 
   // Initialize demo mutation
@@ -105,13 +106,13 @@ export default function LiveDemo() {
       
       // Set all debug logs at once (after successful initialization)
       setDebugLogs([
-        { agent: 'seller', message: '✓ Created AgentMail inbox', status: 'success', timestamp: new Date() },
-        { agent: 'buyer', message: '✓ Created AgentMail inbox', status: 'success', timestamp: new Date() },
-        { agent: 'seller', message: '✓ Generated outreach email via OpenAI', status: 'success', timestamp: new Date() },
-        { agent: 'seller', message: '✓ Sent email to buyer', status: 'success', timestamp: new Date() },
-        { agent: 'buyer', message: '✓ Received seller email', status: 'success', timestamp: new Date() },
-        { agent: 'buyer', message: '✓ Generated response via OpenAI', status: 'success', timestamp: new Date() },
-        { agent: 'buyer', message: '✓ Sent reply (immediate mode)', status: 'success', timestamp: new Date() },
+        { agent: 'seller', message: 'Created fresh AgentMail inbox', status: 'success', timestamp: new Date() },
+        { agent: 'buyer', message: 'Created fresh AgentMail inbox', status: 'success', timestamp: new Date() },
+        { agent: 'seller', message: 'Generated outreach email via OpenAI', status: 'success', timestamp: new Date() },
+        { agent: 'seller', message: 'Sent email to buyer', status: 'success', timestamp: new Date() },
+        { agent: 'buyer', message: 'Buyer agent received email (immediate response)', status: 'success', timestamp: new Date() },
+        { agent: 'buyer', message: 'Generated response via OpenAI', status: 'success', timestamp: new Date() },
+        { agent: 'buyer', message: 'Sent reply email', status: 'success', timestamp: new Date() },
       ]);
       
       return { ...data, sessionStart };
@@ -132,6 +133,20 @@ export default function LiveDemo() {
     enabled: isInitialized,
     refetchInterval: 3000,
   });
+
+  // Poll for webhook events when initialized
+  const { data: webhooksData } = useQuery({
+    queryKey: ["/api/demo/webhooks"],
+    enabled: isInitialized,
+    refetchInterval: 2000,
+  });
+
+  // Update webhook events
+  useEffect(() => {
+    if (webhooksData && (webhooksData as any).webhooks) {
+      setWebhookEvents((webhooksData as any).webhooks);
+    }
+  }, [webhooksData]);
 
   // Update messages from real API data
   useEffect(() => {
@@ -205,6 +220,7 @@ export default function LiveDemo() {
     setIsInitialized(false);
     setSessionStartTime(null);
     setDebugLogs([]);
+    setWebhookEvents([]);
     console.log("🔄 Demo reset");
   };
 
@@ -304,6 +320,30 @@ export default function LiveDemo() {
                     </div>
                   ))}
                 </div>
+                
+                {/* Webhook status */}
+                {webhookEvents.length > 0 && (
+                  <div className="mt-3 pt-3 border-t border-border">
+                    <p className="text-xs font-semibold text-muted-foreground mb-2">Webhook Events:</p>
+                    <div className="space-y-1">
+                      {webhookEvents.filter((e: any) => e.from?.includes('buyer') || e.to?.includes('seller')).map((event: any, idx: number) => (
+                        <div 
+                          key={idx} 
+                          className={`text-xs px-2 py-1 rounded ${
+                            event.status === 'success' ? 'bg-green-500/20 text-green-400' : 
+                            event.status?.includes('error') ? 'bg-red-500/20 text-red-400' : 
+                            event.status?.includes('ignored') ? 'bg-gray-500/20 text-gray-400' :
+                            'bg-blue-500/20 text-blue-400'
+                          }`}
+                        >
+                          {event.status === 'success' && '✓ '}
+                          {event.status?.includes('error') && '✗ '}
+                          Webhook: {event.status}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
             
@@ -359,6 +399,30 @@ export default function LiveDemo() {
                     </div>
                   ))}
                 </div>
+                
+                {/* Webhook status */}
+                {webhookEvents.length > 0 && (
+                  <div className="mt-3 pt-3 border-t border-border">
+                    <p className="text-xs font-semibold text-muted-foreground mb-2">Webhook Events:</p>
+                    <div className="space-y-1">
+                      {webhookEvents.filter((e: any) => e.from?.includes('seller') || e.to?.includes('buyer')).map((event: any, idx: number) => (
+                        <div 
+                          key={idx} 
+                          className={`text-xs px-2 py-1 rounded ${
+                            event.status === 'success' ? 'bg-green-500/20 text-green-400' : 
+                            event.status?.includes('error') ? 'bg-red-500/20 text-red-400' : 
+                            event.status?.includes('ignored') ? 'bg-gray-500/20 text-gray-400' :
+                            'bg-blue-500/20 text-blue-400'
+                          }`}
+                        >
+                          {event.status === 'success' && '✓ '}
+                          {event.status?.includes('error') && '✗ '}
+                          Webhook: {event.status}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
             

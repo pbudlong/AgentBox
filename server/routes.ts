@@ -4,11 +4,14 @@ import { storage } from "./storage";
 import { buyerAgent, sellerAgent } from "./mastra/index";
 import { replyToEmail, type InboundEmail, createInbox, sendEmail, listMessages, getMessage, findInboxByEmail, registerWebhook } from "./agentmail";
 
-// In-memory storage for demo inbox IDs
+// In-memory storage for demo inbox IDs and webhook events
 let demoInboxes: {
   seller?: { inbox_id: string; email: string };
   buyer?: { inbox_id: string; email: string };
 } = {};
+
+// Track webhook events for debugging
+let webhookEvents: Array<{ timestamp: Date; from: string; to: string; subject: string; status: string }> = [];
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // AgentMail webhook endpoint for inbound emails
@@ -42,6 +45,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const inboundEmail = event.message;
         const isBuyerEmail = inboundEmail.to?.includes?.("buyer-demo") || inboundEmail.to?.some?.((addr: string) => addr.includes("buyer-demo"));
         
+        // Log webhook event for debugging
+        webhookEvents.push({
+          timestamp: new Date(),
+          from: inboundEmail.from || 'unknown',
+          to: Array.isArray(inboundEmail.to) ? inboundEmail.to.join(', ') : (inboundEmail.to || 'unknown'),
+          subject: inboundEmail.subject || 'No subject',
+          status: isBuyerEmail ? 'processing' : 'ignored (seller inbox)'
+        });
+        
         console.log("🔍 Recipient check:", {
           to: inboundEmail.to,
           isBuyerEmail,
@@ -72,11 +84,20 @@ Respond as a buyer evaluating this product. Ask a qualifying question about pric
             text: response.text,
           });
 
+          // Update webhook event status
+          webhookEvents[webhookEvents.length - 1].status = 'success';
           console.log("✅ Buyer response sent successfully via webhook");
         } else {
           console.log("📬 Email received by seller inbox - no auto-response needed");
         }
       } else {
+        webhookEvents.push({
+          timestamp: new Date(),
+          from: 'unknown',
+          to: 'unknown',
+          subject: 'Unknown event',
+          status: 'error (unhandled event type)'
+        });
         console.log("⚠️ Webhook event type not handled. event_type:", event.event_type, "type:", event.type);
       }
       console.log(`${"=".repeat(80)}\n`);
@@ -91,60 +112,32 @@ Respond as a buyer evaluating this product. Ask a qualifying question about pric
   app.post("/api/demo/initialize", async (req, res) => {
     try {
       console.log("Initializing demo inboxes...");
+      
+      // Clear previous webhook events
+      webhookEvents = [];
 
-      // Create or reuse seller inbox
-      try {
-        const sellerInbox = await createInbox("seller-demo", "AgentBox Seller");
-        demoInboxes.seller = {
-          inbox_id: (sellerInbox as any).inbox_id,
-          email: (sellerInbox as any).email,
-        };
-        console.log("Created new seller inbox:", demoInboxes.seller.email);
-      } catch (error: any) {
-        // If inbox already exists, find it by email
-        if (error?.status === 403 || error?.message?.includes("already exists")) {
-          console.log("Seller inbox already exists, fetching existing inbox...");
-          const existingInbox = await findInboxByEmail("seller-demo@agentmail.to");
-          if (existingInbox) {
-            demoInboxes.seller = {
-              inbox_id: (existingInbox as any).inboxId, // inboxId contains the email
-              email: (existingInbox as any).inboxId,
-            };
-            console.log("Reusing seller inbox:", demoInboxes.seller.email);
-          } else {
-            throw new Error("Seller inbox exists but could not be found");
-          }
-        } else {
-          throw error;
-        }
-      }
+      // Create FRESH inboxes with timestamp to avoid old messages
+      const timestamp = Date.now();
+      const sellerInboxName = `seller-${timestamp}`;
+      const buyerInboxName = `buyer-${timestamp}`;
+      
+      console.log("Creating fresh inboxes:", sellerInboxName, buyerInboxName);
 
-      // Create or reuse buyer inbox
-      try {
-        const buyerInbox = await createInbox("buyer-demo", "AgentBox Buyer");
-        demoInboxes.buyer = {
-          inbox_id: (buyerInbox as any).inbox_id,
-          email: (buyerInbox as any).email,
-        };
-        console.log("Created new buyer inbox:", demoInboxes.buyer.email);
-      } catch (error: any) {
-        // If inbox already exists, find it by email
-        if (error?.status === 403 || error?.message?.includes("already exists")) {
-          console.log("Buyer inbox already exists, fetching existing inbox...");
-          const existingInbox = await findInboxByEmail("buyer-demo@agentmail.to");
-          if (existingInbox) {
-            demoInboxes.buyer = {
-              inbox_id: (existingInbox as any).inboxId, // inboxId contains the email
-              email: (existingInbox as any).inboxId,
-            };
-            console.log("Reusing buyer inbox:", demoInboxes.buyer.email);
-          } else {
-            throw new Error("Buyer inbox exists but could not be found");
-          }
-        } else {
-          throw error;
-        }
-      }
+      // Create seller inbox
+      const sellerInbox = await createInbox(sellerInboxName, "Mike (Seller)");
+      demoInboxes.seller = {
+        inbox_id: (sellerInbox as any).inbox_id,
+        email: (sellerInbox as any).email,
+      };
+      console.log("Created new seller inbox:", demoInboxes.seller.email);
+
+      // Create buyer inbox
+      const buyerInbox = await createInbox(buyerInboxName, "Sarah (Buyer)");
+      demoInboxes.buyer = {
+        inbox_id: (buyerInbox as any).inbox_id,
+        email: (buyerInbox as any).email,
+      };
+      console.log("Created new buyer inbox:", demoInboxes.buyer.email);
 
       console.log("Inboxes ready:", demoInboxes);
 
@@ -308,6 +301,11 @@ Respond as a buyer evaluating this product. Ask a qualifying question about pric
       console.error("Error fetching messages:", error);
       res.status(500).json({ error: "Failed to fetch messages" });
     }
+  });
+
+  // Get webhook events for debugging
+  app.get("/api/demo/webhooks", (req, res) => {
+    res.json({ webhooks: webhookEvents });
   });
 
   const httpServer = createServer(app);
