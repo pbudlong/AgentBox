@@ -163,8 +163,14 @@ Preferred communication style: Simple, everyday language.
 - Error handling for AlreadyExistsError gracefully falls back to listing/finding existing inboxes
 
 **Known Issues:**
-- Minor UI timestamp formatting shows "Invalid Date" (cosmetic only)
+- Buyer agent auto-response via webhook needs configuration (separate from data display)
 - Future improvement: Add pagination to listInboxes() for scalability
+
+**Recent Fixes (Nov 1, 2025):**
+- ✅ Fixed duplicate message bug: AgentMail's listMessages() is pod-scoped and returns all messages regardless of inbox_id
+- ✅ Solution: Client-side filtering by message.from address (seller pane shows messages FROM seller, buyer pane shows messages FROM buyer)
+- ✅ Fixed timestamp parsing to handle both camelCase (createdAt) and snake_case (created_at) formats
+- ✅ Removed unnecessary inbox field tagging in backend since API doesn't support per-inbox filtering
 
 **Testing:**
 - End-to-end test confirmed both agents communicate via real emails
