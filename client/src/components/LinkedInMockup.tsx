@@ -15,7 +15,7 @@ export default function LinkedInMockup() {
   };
 
   return (
-    <section className="py-20 px-8">
+    <section className="py-10 px-8">
       <div className="max-w-4xl mx-auto">
         <h2 className="text-3xl md:text-4xl font-semibold mb-4 text-center" data-testid="text-discovery-heading">
           Discovery Made Simple

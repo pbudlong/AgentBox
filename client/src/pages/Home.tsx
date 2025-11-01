@@ -4,6 +4,7 @@ import ValuePropositionCards from "@/components/ValuePropositionCards";
 import HowItWorks from "@/components/HowItWorks";
 import LinkedInMockup from "@/components/LinkedInMockup";
 import TrustSection from "@/components/TrustSection";
+import TechStack from "@/components/TechStack";
 import Footer from "@/components/Footer";
 
 export default function Home() {
@@ -15,6 +16,7 @@ export default function Home() {
       <HowItWorks />
       <LinkedInMockup />
       <TrustSection />
+      <TechStack />
       <Footer />
     </div>
   );

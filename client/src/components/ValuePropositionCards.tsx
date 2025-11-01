@@ -39,7 +39,7 @@ const buyerBenefits = [
 
 export default function ValuePropositionCards() {
   return (
-    <section className="py-20 px-8">
+    <section className="py-4 px-8">
       <div className="max-w-7xl mx-auto">
         {/* Why Sellers */}
         <div className="mb-20">
