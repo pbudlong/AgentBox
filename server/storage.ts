@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type DemoSession, type InsertDemoSession, demoSessions } from "@shared/schema";
+import { type User, type InsertUser, type DemoSession, type InsertDemoSession, demoSessions, type ProcessedWebhookEvent, processedWebhookEvents } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { db } from "./db";
 import { eq, desc, sql } from "drizzle-orm";
@@ -16,6 +16,10 @@ export interface IStorage {
   getDemoSessionByInboxId(inboxId: string): Promise<DemoSession | undefined>;
   getLatestDemoSession(): Promise<DemoSession | undefined>;
   incrementExchangeCount(sessionId: string): Promise<void>;
+  
+  // Webhook event tracking methods (for production duplicate prevention)
+  hasProcessedWebhookEvent(eventId: string): Promise<boolean>;
+  markWebhookEventProcessed(eventId: string): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
@@ -72,6 +76,22 @@ export class MemStorage implements IStorage {
       .update(demoSessions)
       .set({ exchangeCount: sql`${demoSessions.exchangeCount} + 1` })
       .where(eq(demoSessions.id, sessionId));
+  }
+
+  async hasProcessedWebhookEvent(eventId: string): Promise<boolean> {
+    const results = await db
+      .select()
+      .from(processedWebhookEvents)
+      .where(eq(processedWebhookEvents.eventId, eventId))
+      .limit(1);
+    return results.length > 0;
+  }
+
+  async markWebhookEventProcessed(eventId: string): Promise<void> {
+    await db
+      .insert(processedWebhookEvents)
+      .values({ eventId })
+      .onConflictDoNothing(); // Ignore if already exists
   }
 }
 

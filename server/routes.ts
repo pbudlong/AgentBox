@@ -76,16 +76,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(200).json({ success: true });
       console.log("✅ Webhook acknowledged (200 OK sent)");
 
-      // Check for duplicate events (using in-memory Set)
-      if (event.event_id && processedEventIds.has(event.event_id)) {
-        console.log("⚠️ Duplicate webhook event detected, skipping:", event.event_id);
-        console.log(`${"=".repeat(80)}\n`);
-        return;
-      }
-      
-      // Mark event as processed
+      // Check for duplicate events (two-tier: memory first, then database)
+      // Memory check is fast for dev, DB check ensures production works after restarts
       if (event.event_id) {
+        // Fast path: check in-memory Set first
+        if (processedEventIds.has(event.event_id)) {
+          console.log("⚠️ Duplicate webhook (in-memory), skipping:", event.event_id);
+          console.log(`${"=".repeat(80)}\n`);
+          return;
+        }
+        
+        // Slow path: check database (for production after server restarts)
+        const alreadyProcessed = await storage.hasProcessedWebhookEvent(event.event_id);
+        if (alreadyProcessed) {
+          console.log("⚠️ Duplicate webhook (database), skipping:", event.event_id);
+          console.log(`${"=".repeat(80)}\n`);
+          return;
+        }
+        
+        // Mark as processed in both memory and database
         processedEventIds.add(event.event_id);
+        await storage.markWebhookEventProcessed(event.event_id);
+        console.log("✅ Event marked as processed:", event.event_id);
       }
 
       // Process email asynchronously

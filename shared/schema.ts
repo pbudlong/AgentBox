@@ -36,6 +36,19 @@ export const insertDemoSessionSchema = createInsertSchema(demoSessions).omit({
 export type InsertDemoSession = z.infer<typeof insertDemoSessionSchema>;
 export type DemoSession = typeof demoSessions.$inferSelect;
 
+// Processed webhook events table to prevent duplicate processing after server restarts
+export const processedWebhookEvents = pgTable("processed_webhook_events", {
+  eventId: text("event_id").primaryKey(),
+  processedAt: text("processed_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const insertProcessedWebhookEventSchema = createInsertSchema(processedWebhookEvents).omit({
+  processedAt: true,
+});
+
+export type InsertProcessedWebhookEvent = z.infer<typeof insertProcessedWebhookEventSchema>;
+export type ProcessedWebhookEvent = typeof processedWebhookEvents.$inferSelect;
+
 // AgentBox types
 export type Party = "seller" | "buyer";
 export type Status = "collecting" | "approved" | "declined" | "scheduled";
