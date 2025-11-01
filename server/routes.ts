@@ -12,7 +12,7 @@ let demoInboxes: {
 
 // Track number of exchanges to prevent infinite loops
 let exchangeCount = 0;
-const MAX_EXCHANGES = 2; // Seller sends 1, buyer replies 1, seller replies 1, stop
+const MAX_EXCHANGES = 4; // Seller sends 1, buyer replies 1, seller replies 1, buyer replies 1, seller replies 1, stop
 
 // Track webhook events for debugging
 let webhookEvents: Array<{ 

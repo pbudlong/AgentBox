@@ -164,7 +164,7 @@ Preferred communication style: Simple, everyday language.
 
 **Recent Fixes (Nov 1, 2025):**
 - ✅ **Fixed infinite loop bug** (Nov 1, 2025):
-  - Added exchange counter to limit conversation to 2 exchanges maximum (seller sends → buyer replies → seller replies → STOP)
+  - Added exchange counter to limit conversation to 4 exchanges maximum (5 total emails: seller → buyer → seller → buyer → seller → STOP)
   - Both buyer and seller webhook handlers now check exchange count before responding
   - Exchange counter resets when initializing new demo
   - Prevents agents from replying endlessly to each other
