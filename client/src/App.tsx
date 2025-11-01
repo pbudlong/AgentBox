@@ -7,8 +7,7 @@ import { useEffect } from "react";
 import Cover from "@/pages/Cover";
 import ProblemSolution from "@/pages/ProblemSolution";
 import Demo from "@/pages/Demo";
-import Results from "@/pages/Results";
-import Setup from "@/pages/Setup";
+import Profiles from "@/pages/Profiles";
 import TechStackPage from "@/pages/TechStackPage";
 import NotFound from "@/pages/not-found";
 
@@ -18,8 +17,7 @@ function Router() {
       <Route path="/" component={Cover} />
       <Route path="/problem" component={ProblemSolution} />
       <Route path="/demo" component={Demo} />
-      <Route path="/results" component={Results} />
-      <Route path="/setup" component={Setup} />
+      <Route path="/profiles" component={Profiles} />
       <Route path="/tech" component={TechStackPage} />
       <Route component={NotFound} />
     </Switch>
