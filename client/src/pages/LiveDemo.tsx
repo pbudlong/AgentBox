@@ -80,6 +80,7 @@ export default function LiveDemo() {
   const [sellerEmail, setSellerEmail] = useState("");
   const [buyerEmail, setBuyerEmail] = useState("");
   const [isInitialized, setIsInitialized] = useState(false);
+  const [hasAutoStarted, setHasAutoStarted] = useState(false);
   const [, navigate] = useLocation();
 
   // Initialize demo mutation
@@ -131,6 +132,18 @@ export default function LiveDemo() {
   const buyerMessages = liveMessages.filter(m => 
     m.from.includes(buyerEmail) || m.to.includes(buyerEmail)
   );
+
+  // Auto-start on page load with delay
+  useEffect(() => {
+    if (!hasAutoStarted && !isInitialized) {
+      const timeout = setTimeout(() => {
+        initMutation.mutate();
+        setHasAutoStarted(true);
+      }, 500); // 500ms delay to let page load
+      
+      return () => clearTimeout(timeout);
+    }
+  }, [hasAutoStarted, isInitialized]);
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -252,8 +265,9 @@ export default function LiveDemo() {
         </div>
       )}
 
-      {/* Profile Data Section */}
-      <div className="bg-background border-t border-border">
+      {/* Profile Data Section - Only show when there are messages */}
+      {liveMessages.length > 0 && (
+        <div className="bg-background border-t border-border">
         {/* Header */}
         <div className="px-8 py-8 border-b border-border">
           <div className="max-w-7xl mx-auto text-center">
@@ -315,7 +329,8 @@ export default function LiveDemo() {
             </div>
           </div>
         </div>
-      </div>
+        </div>
+      )}
     </div>
   );
 }
