@@ -66,13 +66,50 @@ const DEMO_MESSAGES: Message[] = [
 ];
 
 export default function ScriptedDemo() {
-  const [visibleMessages, setVisibleMessages] = useState<Message[]>([]);
-  const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
-  const [typingProgress, setTypingProgress] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const STORAGE_KEY = 'scriptedDemoState';
+  
+  // Load initial state from localStorage
+  const loadState = () => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (e) {
+      console.error('Failed to load demo state', e);
+    }
+    return null;
+  };
+
+  const initialState = loadState();
+  
+  const [visibleMessages, setVisibleMessages] = useState<Message[]>(initialState?.visibleMessages || []);
+  const [currentMessageIndex, setCurrentMessageIndex] = useState(initialState?.currentMessageIndex || 0);
+  const [typingProgress, setTypingProgress] = useState(initialState?.typingProgress || 0);
+  const [isPlaying, setIsPlaying] = useState(initialState?.isPlaying || false);
+  const [hasAutoStarted, setHasAutoStarted] = useState(!!initialState);
   const [, navigate] = useLocation();
 
   const currentMessage = DEMO_MESSAGES[currentMessageIndex];
+
+  // Save state to localStorage whenever it changes
+  useEffect(() => {
+    const state = {
+      visibleMessages,
+      currentMessageIndex,
+      typingProgress,
+      isPlaying
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }, [visibleMessages, currentMessageIndex, typingProgress, isPlaying]);
+
+  // Auto-start on first load
+  useEffect(() => {
+    if (!hasAutoStarted) {
+      setIsPlaying(true);
+      setHasAutoStarted(true);
+    }
+  }, [hasAutoStarted]);
 
   // Typewriter effect
   useEffect(() => {
@@ -88,15 +125,15 @@ export default function ScriptedDemo() {
 
     if (typingProgress < fullText.length) {
       const timeout = setTimeout(() => {
-        setTypingProgress(prev => prev + 1);
+        setTypingProgress((prev: number) => prev + 1);
       }, 15); // 15ms per character for typewriter effect
 
       return () => clearTimeout(timeout);
     } else {
       // Message complete, move to next after delay
       const timeout = setTimeout(() => {
-        setVisibleMessages(prev => [...prev, message]);
-        setCurrentMessageIndex(prev => prev + 1);
+        setVisibleMessages((prev: Message[]) => [...prev, message]);
+        setCurrentMessageIndex((prev: number) => prev + 1);
         setTypingProgress(0);
       }, 800);
 
@@ -116,6 +153,12 @@ export default function ScriptedDemo() {
     setCurrentMessageIndex(0);
     setTypingProgress(0);
     setIsPlaying(false);
+    setHasAutoStarted(false);
+    localStorage.removeItem(STORAGE_KEY);
+  };
+
+  const togglePlayPause = () => {
+    setIsPlaying(!isPlaying);
   };
 
   const sellerMessages = visibleMessages.filter(m => m.side === 'seller');
@@ -129,16 +172,21 @@ export default function ScriptedDemo() {
       <div className="pt-16 px-8 py-4 border-b border-border flex items-center justify-between">
         <div className="flex gap-3">
           <Button 
-            onClick={startDemo}
-            disabled={isPlaying}
+            onClick={(e) => {
+              e.stopPropagation();
+              togglePlayPause();
+            }}
             className="hover-elevate active-elevate-2"
             data-testid="button-start-scripted"
           >
             <Sparkles className="h-4 w-4 mr-2" />
-            {isPlaying ? "Playing..." : "Play Scripted Demo"}
+            {isPlaying ? "Pause" : "Play"}
           </Button>
           <Button 
-            onClick={resetDemo}
+            onClick={(e) => {
+              e.stopPropagation();
+              resetDemo();
+            }}
             variant="outline"
             className="hover-elevate active-elevate-2"
             data-testid="button-reset-scripted"
@@ -160,7 +208,11 @@ export default function ScriptedDemo() {
       </div>
 
       {/* Two-pane viewer */}
-      <div className="flex-1 flex">
+      <div 
+        className="flex-1 flex cursor-pointer" 
+        onClick={togglePlayPause}
+        data-testid="demo-viewer"
+      >
         {/* Seller pane */}
         <div className="w-1/2 border-r border-border bg-card/30 flex flex-col">
           <div className="p-6 border-b border-border bg-background/50">
