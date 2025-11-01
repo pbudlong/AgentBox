@@ -2,7 +2,13 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { buyerAgent, sellerAgent } from "./mastra/index";
-import { replyToEmail, type InboundEmail } from "./agentmail";
+import { replyToEmail, type InboundEmail, createInbox, sendEmail, listMessages } from "./agentmail";
+
+// In-memory storage for demo inbox IDs
+let demoInboxes: {
+  seller?: { inbox_id: string; email: string };
+  buyer?: { inbox_id: string; email: string };
+} = {};
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // AgentMail webhook endpoint for inbound emails
@@ -16,66 +22,118 @@ export async function registerRoutes(app: Express): Promise<Server> {
         subject: inboundEmail.subject,
       });
 
-      // Determine which agent should handle this email
-      const isBuyerEmail = inboundEmail.to.includes("buyer");
-      const agent = isBuyerEmail ? buyerAgent : sellerAgent;
+      // Quick response to webhook
+      res.json({ success: true, message: "Email received" });
+
+      // Process email asynchronously
+      const isBuyerEmail = inboundEmail.to.includes("buyer-demo");
       
-      // Generate agent response
-      const emailBody = inboundEmail.text || inboundEmail.html || "";
-      const prompt = `You received an email:
+      // Only auto-respond if buyer receives an email
+      if (isBuyerEmail && demoInboxes.buyer) {
+        console.log("Buyer received email, generating response...");
+        
+        const emailBody = inboundEmail.text || inboundEmail.html || "";
+        const prompt = `You received a sales outreach email:
 From: ${inboundEmail.from}
 Subject: ${inboundEmail.subject}
 Body: ${emailBody}
 
-Generate an appropriate response based on your role and instructions.`;
+Respond as a buyer evaluating this product. Ask a qualifying question about pricing, features, or implementation. Keep it under 80 words.`;
 
-      const response = await agent.generate(prompt);
-      
-      // Send reply via AgentMail
-      await replyToEmail({
-        inbox_id: inboundEmail.inbox_id,
-        message_id: inboundEmail.message_id,
-        text: response.text,
-      });
+        const response = await buyerAgent.generate(prompt);
+        
+        // Send reply
+        await replyToEmail({
+          inbox_id: inboundEmail.inbox_id,
+          message_id: inboundEmail.message_id,
+          text: response.text,
+        });
 
-      console.log("Agent response sent successfully");
-      res.json({ success: true, message: "Email processed" });
+        console.log("Buyer response sent successfully");
+      } else {
+        console.log("Email received by seller, no auto-response needed");
+      }
     } catch (error) {
       console.error("Error processing webhook:", error);
-      res.status(500).json({ error: "Failed to process email" });
     }
   });
 
-  // API endpoint to get demo thread messages
-  app.get("/api/threads/:threadId", async (req, res) => {
+  // Initialize demo inboxes and start conversation
+  app.post("/api/demo/initialize", async (req, res) => {
     try {
-      // For now, return mock data - will be replaced with real storage
-      res.json({
-        threadId: req.params.threadId,
-        status: "collecting",
-        messages: [],
-      });
-    } catch (error) {
-      console.error("Error fetching thread:", error);
-      res.status(500).json({ error: "Failed to fetch thread" });
-    }
-  });
+      console.log("Initializing demo inboxes...");
 
-  // API endpoint to create a test demo conversation
-  app.post("/api/demo/start", async (req, res) => {
-    try {
-      // This will trigger a demo conversation between buyer and seller agents
+      // Create seller inbox
+      const sellerInbox = await createInbox("seller-demo", "AgentBox Seller");
+      demoInboxes.seller = {
+        inbox_id: sellerInbox.inbox_id,
+        email: `${sellerInbox.username}@${sellerInbox.domain}`,
+      };
+
+      // Create buyer inbox
+      const buyerInbox = await createInbox("buyer-demo", "AgentBox Buyer");
+      demoInboxes.buyer = {
+        inbox_id: buyerInbox.inbox_id,
+        email: `${buyerInbox.username}@${buyerInbox.domain}`,
+      };
+
+      console.log("Inboxes created:", demoInboxes);
+
+      // Generate seller's first email using agent
       const sellerMessage = await sellerAgent.generate(
-        "Write a brief introduction email to a potential buyer who works at a B2B SaaS company. Keep it under 100 words."
+        "Write a brief sales outreach email to a potential B2B SaaS buyer. Introduce a product that helps with sales qualification. Keep it under 100 words and professional."
       );
+
+      // Send first email from seller to buyer
+      await sendEmail({
+        inbox_id: demoInboxes.seller.inbox_id,
+        to: demoInboxes.buyer.email,
+        subject: "Streamline Your Sales Qualification Process",
+        text: sellerMessage.text,
+      });
+
+      console.log("Initial email sent from seller to buyer");
 
       res.json({
         success: true,
-        message: sellerMessage.text,
+        seller: demoInboxes.seller.email,
+        buyer: demoInboxes.buyer.email,
+        message: "Demo initialized successfully",
       });
     } catch (error) {
-      console.error("Error starting demo:", error);
-      res.status(500).json({ error: "Failed to start demo" });
+      console.error("Error initializing demo:", error);
+      res.status(500).json({ error: "Failed to initialize demo" });
+    }
+  });
+
+  // Fetch demo messages
+  app.get("/api/demo/messages", async (req, res) => {
+    try {
+      if (!demoInboxes.seller || !demoInboxes.buyer) {
+        return res.json({ messages: [], initialized: false });
+      }
+
+      // Fetch messages from both inboxes
+      const [sellerMessages, buyerMessages] = await Promise.all([
+        listMessages(demoInboxes.seller.inbox_id),
+        listMessages(demoInboxes.buyer.inbox_id),
+      ]);
+
+      // Combine and sort by timestamp
+      const allMessages = [
+        ...(sellerMessages.messages || []).map((m: any) => ({ ...m, inbox: "seller" })),
+        ...(buyerMessages.messages || []).map((m: any) => ({ ...m, inbox: "buyer" })),
+      ].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+
+      res.json({
+        messages: allMessages,
+        initialized: true,
+        seller: demoInboxes.seller.email,
+        buyer: demoInboxes.buyer.email,
+      });
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+      res.status(500).json({ error: "Failed to fetch messages" });
     }
   });
 
