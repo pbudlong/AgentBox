@@ -80,6 +80,7 @@ export default function LiveDemo() {
   const [sellerEmail, setSellerEmail] = useState("");
   const [buyerEmail, setBuyerEmail] = useState("");
   const [isInitialized, setIsInitialized] = useState(false);
+  const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
   const [, navigate] = useLocation();
 
   // Initialize demo mutation
@@ -94,9 +95,12 @@ export default function LiveDemo() {
       return await response.json();
     },
     onSuccess: (data: any) => {
+      const now = new Date();
+      setSessionStartTime(now);
       setSellerEmail(data.seller);
       setBuyerEmail(data.buyer);
       setIsInitialized(true);
+      console.log("🎬 Demo session started at:", now.toISOString());
       queryClient.invalidateQueries({ queryKey: ["/api/demo/messages"] });
     },
   });
@@ -111,18 +115,30 @@ export default function LiveDemo() {
   // Update messages from real API data
   useEffect(() => {
     if (messagesData && (messagesData as any).initialized) {
-      const realMessages = ((messagesData as any).messages || []).map((m: any, idx: number) => ({
+      const allMessages = ((messagesData as any).messages || []).map((m: any, idx: number) => ({
         id: m.messageId || m.message_id || `msg-${idx}`,
         from: m.from,
         to: m.to,
         subject: m.subject || "No Subject",
         body: m.text || m.html || "",
         timestamp: new Date(m.createdAt || m.created_at || Date.now()),
+        raw: m, // Keep raw message for debugging
       }));
       
-      setLiveMessages(realMessages);
+      // Only show messages from the current session (sent after session start)
+      const sessionMessages = sessionStartTime 
+        ? allMessages.filter(m => m.timestamp >= sessionStartTime)
+        : allMessages;
+      
+      console.log("📊 Total messages from API:", allMessages.length);
+      console.log("📊 Session messages (after filter):", sessionMessages.length);
+      if (allMessages.length > 0 && sessionMessages.length < allMessages.length) {
+        console.log("🗑️ Filtered out", allMessages.length - sessionMessages.length, "historical messages");
+      }
+      
+      setLiveMessages(sessionMessages);
     }
-  }, [messagesData]);
+  }, [messagesData, sessionStartTime]);
 
   // Filter messages by from/to addresses (AgentMail returns all messages for the pod)
   // Seller pane: Messages FROM seller (seller's sent emails)
@@ -140,6 +156,8 @@ export default function LiveDemo() {
     setSellerEmail("");
     setBuyerEmail("");
     setIsInitialized(false);
+    setSessionStartTime(null);
+    console.log("🔄 Demo reset");
   };
 
   return (

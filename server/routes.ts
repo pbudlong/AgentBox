@@ -167,6 +167,15 @@ Respond as a buyer evaluating this product. Ask a qualifying question about pric
         return dateA - dateB;
       });
 
+      // Debug: Log first 2 messages to inspect structure
+      if (allMessages.length > 0) {
+        console.log("\n🔍 DEBUG: First 2 messages structure:");
+        allMessages.slice(0, 2).forEach((msg: any, idx: number) => {
+          console.log(`\nMessage ${idx + 1}:`, JSON.stringify(msg, null, 2));
+        });
+        console.log(`\n📧 Total messages in system: ${allMessages.length}\n`);
+      }
+
       res.json({
         messages: allMessages,
         initialized: true,
