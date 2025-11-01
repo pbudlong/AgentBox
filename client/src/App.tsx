@@ -27,11 +27,11 @@ function Router() {
       const currentIndex = pageOrder.indexOf(location);
       if (currentIndex === -1) return;
 
-      if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+      if (e.key === "ArrowRight") {
         if (currentIndex < pageOrder.length - 1) {
           setLocation(pageOrder[currentIndex + 1]);
         }
-      } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+      } else if (e.key === "ArrowLeft") {
         if (currentIndex > 0) {
           setLocation(pageOrder[currentIndex - 1]);
         }
