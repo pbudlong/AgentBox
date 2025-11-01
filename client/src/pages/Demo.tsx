@@ -85,11 +85,18 @@ export default function Demo() {
   );
 
   const runDemo = async () => {
-    setIsRunning(true);
+    // First, completely reset state
     setMessages([]);
     setShowScore(false);
     setShowCalendar(false);
+    setShowCalendarModal(false);
+    setThreadStatus("collecting");
     setCurrentStep(0);
+    
+    // Small delay to ensure state is cleared
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    setIsRunning(true);
 
     // Step 1: Initial seller email
     await new Promise(resolve => setTimeout(resolve, 1000));
@@ -162,38 +169,42 @@ export default function Demo() {
       />
 
       {/* Two-pane email viewer */}
-      <div className="flex-1 flex">
-        {/* Left: Seller pane */}
-        <div className="w-1/2 border-r border-border bg-card/30">
-          <EmailPane
-            title="Seller Agent"
-            email="pete.b.seller@agentbox.ai"
-            messages={sellerMessages}
-            status={isRunning && sellerMessages.length < buyerMessages.length ? "thinking" : "idle"}
-          />
+      <div className="flex-1 flex flex-col">
+        <div className="flex flex-1">
+          {/* Left: Seller pane */}
+          <div className="w-1/2 border-r border-border bg-card/30">
+            <EmailPane
+              title="Seller Agent"
+              email="pete.b.seller@agentbox.ai"
+              messages={sellerMessages}
+              status={isRunning && sellerMessages.length < buyerMessages.length ? "thinking" : "idle"}
+            />
+          </div>
+
+          {/* Right: Buyer pane */}
+          <div className="w-1/2 bg-card/50">
+            <EmailPane
+              title="Buyer Agent"
+              email="aria.h.buyer@agentbox.ai"
+              messages={buyerMessages}
+              status={isRunning && buyerMessages.length < sellerMessages.length ? "thinking" : "idle"}
+            />
+          </div>
         </div>
 
-        {/* Right: Buyer pane */}
-        <div className="w-1/2 bg-card/50">
-          <EmailPane
-            title="Buyer Agent"
-            email="aria.h.buyer@agentbox.ai"
-            messages={buyerMessages}
-            status={isRunning && buyerMessages.length < sellerMessages.length ? "thinking" : "idle"}
-          />
-        </div>
+        {/* Fit score indicator underneath emails */}
+        {showScore && (
+          <div className="border-t border-border bg-background/50 p-8 flex justify-center">
+            <div className="w-full max-w-md">
+              <FitScoreIndicator
+                score={fitScore}
+                signals={mockSignals}
+                threshold={70}
+              />
+            </div>
+          </div>
+        )}
       </div>
-
-      {/* Floating fit score indicator */}
-      {showScore && (
-        <div className="fixed bottom-8 right-8 w-80 z-30">
-          <FitScoreIndicator
-            score={fitScore}
-            signals={mockSignals}
-            threshold={70}
-          />
-        </div>
-      )}
 
       {/* Calendar event card modal - only shows when button clicked */}
       {showCalendarModal && showCalendar && (
