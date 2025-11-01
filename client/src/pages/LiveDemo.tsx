@@ -118,21 +118,21 @@ export default function LiveDemo() {
         subject: m.subject || "No Subject",
         body: m.text || m.html || "",
         timestamp: new Date(m.createdAt || m.created_at || Date.now()),
-        inbox: m.inbox,
       }));
       
       setLiveMessages(realMessages);
     }
   }, [messagesData]);
 
-  // Seller pane: Show messages FROM seller (seller's sent messages)
+  // Filter messages by from/to addresses (AgentMail returns all messages for the pod)
+  // Seller pane: Messages FROM seller (seller's sent emails)
   const sellerMessages = liveMessages.filter(m => 
-    m.from && m.from.includes(sellerEmail)
+    m.from && (m.from.includes('seller-demo@agentmail.to') || m.from.includes(sellerEmail))
   );
   
-  // Buyer pane: Show messages TO or FROM buyer (buyer's inbox and replies)
+  // Buyer pane: Messages FROM buyer (buyer's replies)  
   const buyerMessages = liveMessages.filter(m => 
-    (m.from && m.from.includes(buyerEmail)) || (m.to && m.to.includes(buyerEmail))
+    m.from && (m.from.includes('buyer-demo@agentmail.to') || m.from.includes(buyerEmail))
   );
 
   const resetDemo = () => {
@@ -223,7 +223,7 @@ export default function LiveDemo() {
                   <div className="space-y-2">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs text-muted-foreground">To: {msg.to}</p>
+                        <p className="text-xs text-muted-foreground">From: {msg.from}</p>
                         <p className="font-semibold text-foreground mt-1">{msg.subject}</p>
                       </div>
                       <span className="text-xs text-muted-foreground whitespace-nowrap">
@@ -257,7 +257,7 @@ export default function LiveDemo() {
                   <div className="space-y-2">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs text-muted-foreground">To: {msg.to}</p>
+                        <p className="text-xs text-muted-foreground">From: {msg.from}</p>
                         <p className="font-semibold text-foreground mt-1">{msg.subject}</p>
                       </div>
                       <span className="text-xs text-muted-foreground whitespace-nowrap">

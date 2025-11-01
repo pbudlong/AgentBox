@@ -159,16 +159,9 @@ Respond as a buyer evaluating this product. Ask a qualifying question about pric
         listMessages(demoInboxes.buyer.inbox_id),
       ]);
 
-      // Debug: Log first message structure to understand field names
-      if (sellerMessages.messages && sellerMessages.messages.length > 0) {
-        console.log("Sample AgentMail message structure:", JSON.stringify(sellerMessages.messages[0], null, 2));
-      }
-
-      // Combine and sort by timestamp
-      const allMessages = [
-        ...(sellerMessages.messages || []).map((m: any) => ({ ...m, inbox: "seller" })),
-        ...(buyerMessages.messages || []).map((m: any) => ({ ...m, inbox: "buyer" })),
-      ].sort((a, b) => {
+      // AgentMail returns all messages for the pod (not per-inbox)
+      // So both listMessages calls return the same data - just use one
+      const allMessages = (sellerMessages.messages || []).sort((a: any, b: any) => {
         const dateA = new Date(a.createdAt || a.created_at).getTime();
         const dateB = new Date(b.createdAt || b.created_at).getTime();
         return dateA - dateB;

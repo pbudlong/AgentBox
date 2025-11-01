@@ -24,11 +24,14 @@ export async function createInbox(username: string, displayName: string) {
     throw new Error("AgentMail not configured");
   }
 
-  return await agentmail.inboxes.create({
+  const result = await agentmail.inboxes.create({
     username,
     domain: "agentmail.to",
     displayName,
   });
+  
+  console.log("Created inbox result:", JSON.stringify(result, null, 2));
+  return result;
 }
 
 export async function sendEmail(params: {
@@ -75,7 +78,10 @@ export async function listMessages(inbox_id: string) {
     throw new Error("AgentMail not configured");
   }
 
-  return await agentmail.inboxes.messages.list(inbox_id);
+  console.log("Calling listMessages with inbox_id:", inbox_id);
+  const result = await agentmail.inboxes.messages.list(inbox_id);
+  console.log("listMessages returned", result.messages?.length || 0, "messages for inbox:", inbox_id);
+  return result;
 }
 
 export async function listInboxes() {
@@ -98,6 +104,8 @@ export async function findInboxByEmail(email: string) {
   
   if (found) {
     console.log("Found existing inbox:", email);
+    console.log("Inbox object keys:", Object.keys(found));
+    console.log("Inbox object:", JSON.stringify(found, null, 2));
   } else {
     console.log("Inbox not found:", email);
   }
