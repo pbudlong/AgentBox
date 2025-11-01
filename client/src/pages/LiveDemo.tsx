@@ -286,7 +286,7 @@ export default function LiveDemo() {
         {/* Fit Score Section */}
         <div className="px-8 py-8">
           <div className="max-w-7xl mx-auto">
-            <div className="flex items-center justify-between gap-8">
+            <div className="flex items-center justify-center gap-8">
               <div className="flex-1 max-w-md">
                 <FitScoreIndicator
                   score={85}
@@ -303,11 +303,16 @@ export default function LiveDemo() {
                   threshold={70}
                 />
               </div>
-              <div className="flex-1">
-                <h3 className="text-2xl font-semibold mb-3 text-foreground">8-Signal Fit Scoring</h3>
-                <p className="text-base text-muted-foreground">
-                  Agents compute a weighted score across all signals. When the score exceeds the threshold, meeting times are proposed automatically.
-                </p>
+              <div>
+                <Button 
+                  size="lg"
+                  onClick={() => navigate("/tech")}
+                  className="hover-elevate active-elevate-2"
+                  data-testid="button-view-tech-stack"
+                >
+                  <ArrowRight className="mr-2 h-5 w-5" />
+                  View Tech Stack
+                </Button>
               </div>
             </div>
           </div>
