@@ -187,7 +187,7 @@ export default function LiveDemo() {
       {/* Status message */}
       {!isInitialized && (
         <div className="p-8 text-center">
-          <p className="text-muted-foreground">
+          <p className="text-foreground text-lg font-bold">
             Click "Start Live Demo" to watch real AI agents communicate via email
           </p>
         </div>
