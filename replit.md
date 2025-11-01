@@ -97,12 +97,14 @@ Preferred communication style: Simple, everyday language.
 
 ### External Dependencies
 
-**Planned Third-Party Integrations:**
-- **AgentMail**: Core email infrastructure for @agentbox.ai addresses, SMTP/IMAP handling, webhook delivery
-- **Convex.dev**: Real-time backend for state synchronization, live thread updates, and agent coordination
-- **OpenAI / Mastra**: LLM-based agent intelligence for natural language processing, qualification logic, and conversation management
-- **Perplexity**: Company research and enrichment to enhance qualification signals
-- **Calendar APIs**: Google Calendar and Outlook integration for automatic meeting scheduling
+**Active Third-Party Integrations:**
+- **AgentMail**: Core email infrastructure for @agentbox.ai addresses (API key configured via AGENTMAIL_API_KEY secret)
+  - Note: Using manual API key setup instead of Replit connector integration
+- **Convex.dev**: Real-time backend for state synchronization (requires manual `npx convex dev` in local terminal)
+  - Note: Cannot auto-initialize in non-interactive environment - user must run locally
+- **OpenAI / Mastra**: LLM-based agent intelligence (using AI_INTEGRATIONS_OPENAI_API_KEY from Replit integration)
+- **Perplexity**: Company research and enrichment (API key configured via PERPLEXITY_API_KEY secret)
+- **Calendar APIs**: Google Calendar and Outlook integration for automatic meeting scheduling (planned)
 
 **Current Dependencies:**
 - **Neon Database**: PostgreSQL serverless database (@neondatabase/serverless)
