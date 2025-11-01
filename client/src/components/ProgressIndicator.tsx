@@ -1,5 +1,5 @@
 import { useLocation } from "wouter";
-import { CheckCircle2, Circle } from "lucide-react";
+import { CheckCircle2, Circle, ChevronRight } from "lucide-react";
 
 const steps = [
   { id: 1, name: "Cover", path: "/" },
@@ -52,13 +52,7 @@ export default function ProgressIndicator() {
                 </button>
                 
                 {index < steps.length - 1 && (
-                  <div className="flex-1 h-0.5 mx-2 bg-border">
-                    <div 
-                      className={`h-full transition-all duration-500 ${
-                        isCompleted ? 'bg-primary w-full' : 'bg-transparent w-0'
-                      }`}
-                    />
-                  </div>
+                  <ChevronRight className="h-3 w-3 text-muted-foreground/50 mx-1 flex-shrink-0" />
                 )}
               </div>
             );

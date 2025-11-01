@@ -43,8 +43,8 @@ export default function Cover() {
           {/* Logo */}
           <div className="flex justify-center mb-8">
             <div className="relative">
-              <div className="p-6 rounded-2xl bg-gradient-to-br from-primary/20 to-gradient-via/20 border border-primary/30 backdrop-blur-sm">
-                <Mail className="h-24 w-24 text-primary" />
+              <div className="p-4 rounded-2xl bg-gradient-to-br from-primary/20 to-gradient-via/20 border border-primary/30 backdrop-blur-sm">
+                <Mail className="h-12 w-12 text-primary" />
               </div>
               <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full" />
             </div>
@@ -65,11 +65,12 @@ export default function Cover() {
           </p>
 
           {/* Hackathon badge */}
-          <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-card border border-card-border mb-12">
+          <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-card border border-card-border mb-8">
             <span className="text-sm text-muted-foreground">Built for</span>
             <span className="font-semibold bg-gradient-to-r from-gradient-from to-gradient-via bg-clip-text text-transparent" data-testid="text-hackathon">
               AgentMail's HackHalloween @YC
             </span>
+            <span className="text-sm text-muted-foreground">exclusively with Replit</span>
           </div>
 
           {/* CTA */}
