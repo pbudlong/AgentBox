@@ -162,10 +162,6 @@ Preferred communication style: Simple, everyday language.
 - Mastra agents (buyerAgent, sellerAgent) use tools for fit scoring and company research
 - Error handling for AlreadyExistsError gracefully falls back to listing/finding existing inboxes
 
-**Known Issues:**
-- Buyer agent auto-response via webhook needs configuration (separate from data display)
-- Future improvement: Add pagination to listInboxes() for scalability
-
 **Recent Fixes (Nov 1, 2025):**
 - ✅ Fixed historical message accumulation bug: Implemented session-based filtering to show only current conversation
   - Session timestamp set 5 seconds before demo initialization to ensure new messages are captured
@@ -177,6 +173,11 @@ Preferred communication style: Simple, everyday language.
 - ✅ Solution: Client-side filtering by message.from address (seller pane shows messages FROM seller, buyer pane shows messages FROM buyer)
 - ✅ Fixed timestamp parsing to handle both camelCase (createdAt) and snake_case (created_at) formats
 - ✅ Enhanced CTA styling: Made "Click Start Live Demo" text bold and larger for better visibility
+- ✅ Implemented webhook registration: Webhooks auto-register on demo initialization
+  - Fixed API payload: Changed from `events` to `event_types` array
+  - Webhook endpoint handles AgentMail's `message_received` event structure
+  - Buyer agent auto-responds when webhook fires (no polling needed)
+  - Production-ready: Uses REPLIT_DEV_DOMAIN (dev) or REPLIT_DOMAINS (production)
 
 **Testing:**
 - End-to-end test confirmed both agents communicate via real emails

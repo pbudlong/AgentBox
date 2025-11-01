@@ -124,7 +124,14 @@ Respond as a buyer evaluating this product. Ask a qualifying question about pric
       console.log("Inboxes ready:", demoInboxes);
 
       // Register webhooks for both inboxes
-      const replitDomain = process.env.REPLIT_DEV_DOMAIN;
+      // In development: use REPLIT_DEV_DOMAIN
+      // In production: use REPLIT_DOMAINS (comma-separated list)
+      let replitDomain = process.env.REPLIT_DEV_DOMAIN;
+      if (!replitDomain && process.env.REPLIT_DOMAINS) {
+        // Production: extract first domain from comma-separated list
+        replitDomain = process.env.REPLIT_DOMAINS.split(',')[0];
+      }
+
       if (replitDomain) {
         const webhookUrl = `https://${replitDomain}/webhooks/agentmail`;
         console.log(`🔗 Registering webhooks at: ${webhookUrl}`);
@@ -139,7 +146,7 @@ Respond as a buyer evaluating this product. Ask a qualifying question about pric
           console.error("⚠️ Webhook registration failed (demo will continue without webhooks):", webhookError);
         }
       } else {
-        console.warn("⚠️ REPLIT_DEV_DOMAIN not found - webhooks not registered");
+        console.warn("⚠️ No Replit domain found - webhooks not registered");
       }
 
       // Generate seller's first email using agent
