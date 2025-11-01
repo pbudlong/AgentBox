@@ -103,11 +103,15 @@ export default function ScriptedDemo() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }, [visibleMessages, currentMessageIndex, typingProgress, isPlaying]);
 
-  // Auto-start on first load
+  // Auto-start on first load with delay
   useEffect(() => {
     if (!hasAutoStarted) {
-      setIsPlaying(true);
-      setHasAutoStarted(true);
+      const timeout = setTimeout(() => {
+        setIsPlaying(true);
+        setHasAutoStarted(true);
+      }, 500); // 500ms delay to let page load
+      
+      return () => clearTimeout(timeout);
     }
   }, [hasAutoStarted]);
 
@@ -126,7 +130,7 @@ export default function ScriptedDemo() {
     if (typingProgress < fullText.length) {
       const timeout = setTimeout(() => {
         setTypingProgress((prev: number) => prev + 1);
-      }, 15); // 15ms per character for typewriter effect
+      }, 20); // 20ms per character for typewriter effect (33% slower)
 
       return () => clearTimeout(timeout);
     } else {
@@ -243,8 +247,8 @@ export default function ScriptedDemo() {
             ))}
             
             {/* Currently typing message on seller side */}
-            {isPlaying && currentMessage?.side === 'seller' && typingProgress > 0 && (
-              <Card className="p-4 border-primary/40 bg-card animate-pulse">
+            {currentMessage?.side === 'seller' && typingProgress > 0 && currentMessageIndex < DEMO_MESSAGES.length && (
+              <Card className="p-4 border-primary/40 bg-card">
                 <div className="space-y-2">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
@@ -292,8 +296,8 @@ export default function ScriptedDemo() {
             ))}
             
             {/* Currently typing message on buyer side */}
-            {isPlaying && currentMessage?.side === 'buyer' && typingProgress > 0 && (
-              <Card className="p-4 border-gradient-via/40 bg-card animate-pulse">
+            {currentMessage?.side === 'buyer' && typingProgress > 0 && currentMessageIndex < DEMO_MESSAGES.length && (
+              <Card className="p-4 border-gradient-via/40 bg-card">
                 <div className="space-y-2">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
