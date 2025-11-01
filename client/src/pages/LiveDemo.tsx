@@ -272,8 +272,8 @@ export default function LiveDemo() {
         </div>
       )}
 
-      {/* Profile Data Section - Only show when there are messages */}
-      {liveMessages.length > 0 && (
+      {/* Profile Data Section - Only show when initialized and there are messages */}
+      {isInitialized && liveMessages.length > 0 && (
         <div className="bg-background border-t border-border">
         {/* Header */}
         <div className="px-8 py-8 border-b border-border">

@@ -240,6 +240,13 @@ export default function ScriptedDemo() {
     setIsPlaying(!isPlaying);
   };
 
+  const skipAhead = () => {
+    setVisibleMessages(DEMO_MESSAGES);
+    setCurrentMessageIndex(DEMO_MESSAGES.length);
+    setTypingProgress(0);
+    setIsPlaying(false);
+  };
+
   const sellerMessages = visibleMessages.filter(m => m.side === 'seller');
   const buyerMessages = visibleMessages.filter(m => m.side === 'buyer');
 
@@ -256,11 +263,27 @@ export default function ScriptedDemo() {
               togglePlayPause();
             }}
             className="hover-elevate active-elevate-2"
-            data-testid="button-start-scripted"
+            data-testid="button-play-pause"
           >
             <Sparkles className="h-4 w-4 mr-2" />
             {isPlaying ? "Pause" : "Play"}
           </Button>
+          
+          {visibleMessages.length < DEMO_MESSAGES.length && (
+            <Button 
+              onClick={(e) => {
+                e.stopPropagation();
+                skipAhead();
+              }}
+              variant="outline"
+              className="hover-elevate active-elevate-2"
+              data-testid="button-skip-ahead"
+            >
+              <ArrowRight className="h-4 w-4 mr-2" />
+              Skip Ahead
+            </Button>
+          )}
+          
           <Button 
             onClick={(e) => {
               e.stopPropagation();
