@@ -98,13 +98,14 @@ Preferred communication style: Simple, everyday language.
 ### External Dependencies
 
 **Active Third-Party Integrations:**
-- **AgentMail**: Core email infrastructure for @agentbox.ai addresses (API key configured via AGENTMAIL_API_KEY secret)
-  - Note: Using manual API key setup instead of Replit connector integration
-- **Convex.dev**: Real-time backend for state synchronization (requires manual `npx convex dev` in local terminal)
-  - Note: Cannot auto-initialize in non-interactive environment - user must run locally
+- **AgentMail**: Core email infrastructure for @agentmail.to addresses (API key configured via AGENTMAIL_API_KEY secret)
+  - Live demo uses seller-demo@agentmail.to and buyer-demo@agentmail.to
+  - API fields: `inboxId` (contains email address), `displayName`, `createdAt`, `updatedAt`
+  - Inbox reuse logic handles AlreadyExistsError by calling listInboxes() and finding by inboxId
 - **OpenAI / Mastra**: LLM-based agent intelligence (using AI_INTEGRATIONS_OPENAI_API_KEY from Replit integration)
+  - Configured via createOpenAI({ apiKey }) at provider level
+  - Powers buyer and seller agent responses with GPT-4
 - **Perplexity**: Company research and enrichment (API key configured via PERPLEXITY_API_KEY secret)
-- **Calendar APIs**: Google Calendar and Outlook integration for automatic meeting scheduling (planned)
 
 **Current Dependencies:**
 - **Neon Database**: PostgreSQL serverless database (@neondatabase/serverless)
@@ -139,3 +140,33 @@ Preferred communication style: Simple, everyday language.
 - Progress indicators for multi-step flows
 - Responsive grid layouts (3-column features, 2-column comparisons)
 - Fixed 2-column demo viewer (non-responsive side-by-side display)
+
+## Live Demo Implementation
+
+**Status:** ✅ Fully functional with real agent-to-agent email communication
+
+**Flow:**
+1. User clicks "Start Live Demo" button on /demo page
+2. POST /api/demo/initialize creates/reuses demo inboxes at agentmail.to
+3. Seller agent generates personalized email via OpenAI (GPT-4)
+4. Email sent from seller-demo@agentmail.to to buyer-demo@agentmail.to
+5. Frontend polls GET /api/demo/messages every 3 seconds
+6. Webhook receives buyer's incoming email, triggers auto-response
+7. Buyer agent generates reply via Mastra + OpenAI
+8. Messages appear in real-time in side-by-side viewer
+
+**Key Technical Details:**
+- AgentMail inboxes persisted across server restarts (reused via findInboxByEmail)
+- Inbox lookup uses `inboxId` field (camelCase) which contains the email address
+- OpenAI provider configured with createOpenAI({ apiKey: AI_INTEGRATIONS_OPENAI_API_KEY })
+- Mastra agents (buyerAgent, sellerAgent) use tools for fit scoring and company research
+- Error handling for AlreadyExistsError gracefully falls back to listing/finding existing inboxes
+
+**Known Issues:**
+- Minor UI timestamp formatting shows "Invalid Date" (cosmetic only)
+- Future improvement: Add pagination to listInboxes() for scalability
+
+**Testing:**
+- End-to-end test confirmed both agents communicate via real emails
+- Live messages appear in both seller and buyer panes
+- Button state transitions correctly (Start → Watching Live Agents)
