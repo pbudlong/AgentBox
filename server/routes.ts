@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { buyerAgent, sellerAgent } from "./mastra/index";
-import { replyToEmail, type InboundEmail, createInbox, sendEmail, listMessages } from "./agentmail";
+import { replyToEmail, type InboundEmail, createInbox, sendEmail, listMessages, findInboxByEmail } from "./agentmail";
 
 // In-memory storage for demo inbox IDs
 let demoInboxes: {
@@ -63,21 +63,61 @@ Respond as a buyer evaluating this product. Ask a qualifying question about pric
     try {
       console.log("Initializing demo inboxes...");
 
-      // Create seller inbox
-      const sellerInbox = await createInbox("seller-demo", "AgentBox Seller");
-      demoInboxes.seller = {
-        inbox_id: (sellerInbox as any).inbox_id,
-        email: (sellerInbox as any).email,
-      };
+      // Create or reuse seller inbox
+      try {
+        const sellerInbox = await createInbox("seller-demo", "AgentBox Seller");
+        demoInboxes.seller = {
+          inbox_id: (sellerInbox as any).inbox_id,
+          email: (sellerInbox as any).email,
+        };
+        console.log("Created new seller inbox:", demoInboxes.seller.email);
+      } catch (error: any) {
+        // If inbox already exists, find it by email
+        if (error?.status === 403 || error?.message?.includes("already exists")) {
+          console.log("Seller inbox already exists, fetching existing inbox...");
+          const existingInbox = await findInboxByEmail("seller-demo@agentmail.to");
+          if (existingInbox) {
+            demoInboxes.seller = {
+              inbox_id: (existingInbox as any).inbox_id,
+              email: (existingInbox as any).email,
+            };
+            console.log("Found existing seller inbox:", demoInboxes.seller.email, "ID:", demoInboxes.seller.inbox_id);
+          } else {
+            throw new Error("Seller inbox exists but could not be found");
+          }
+        } else {
+          throw error;
+        }
+      }
 
-      // Create buyer inbox
-      const buyerInbox = await createInbox("buyer-demo", "AgentBox Buyer");
-      demoInboxes.buyer = {
-        inbox_id: (buyerInbox as any).inbox_id,
-        email: (buyerInbox as any).email,
-      };
+      // Create or reuse buyer inbox
+      try {
+        const buyerInbox = await createInbox("buyer-demo", "AgentBox Buyer");
+        demoInboxes.buyer = {
+          inbox_id: (buyerInbox as any).inbox_id,
+          email: (buyerInbox as any).email,
+        };
+        console.log("Created new buyer inbox:", demoInboxes.buyer.email);
+      } catch (error: any) {
+        // If inbox already exists, find it by email
+        if (error?.status === 403 || error?.message?.includes("already exists")) {
+          console.log("Buyer inbox already exists, fetching existing inbox...");
+          const existingInbox = await findInboxByEmail("buyer-demo@agentmail.to");
+          if (existingInbox) {
+            demoInboxes.buyer = {
+              inbox_id: (existingInbox as any).inbox_id,
+              email: (existingInbox as any).email,
+            };
+            console.log("Found existing buyer inbox:", demoInboxes.buyer.email, "ID:", demoInboxes.buyer.inbox_id);
+          } else {
+            throw new Error("Buyer inbox exists but could not be found");
+          }
+        } else {
+          throw error;
+        }
+      }
 
-      console.log("Inboxes created:", demoInboxes);
+      console.log("Inboxes ready:", demoInboxes);
 
       // Generate seller's first email using agent
       const sellerMessage = await sellerAgent.generate(

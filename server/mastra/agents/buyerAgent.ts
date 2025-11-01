@@ -1,5 +1,5 @@
 import { Agent } from "@mastra/core/agent";
-import { openai } from "@ai-sdk/openai";
+import { openai, createOpenAI } from "@ai-sdk/openai";
 import { fitScoringTool } from "../tools/fitScoringTool";
 import { perplexityEnrichmentTool } from "../tools/perplexityTool";
 
@@ -9,6 +9,11 @@ const OPENAI_BASE_URL = process.env.AI_INTEGRATIONS_OPENAI_BASE_URL;
 if (!OPENAI_API_KEY) {
   throw new Error("OpenAI API key not configured");
 }
+
+// Create OpenAI provider with custom config if needed
+const openaiProvider = OPENAI_BASE_URL 
+  ? createOpenAI({ apiKey: OPENAI_API_KEY, baseURL: OPENAI_BASE_URL })
+  : createOpenAI({ apiKey: OPENAI_API_KEY });
 
 export const buyerAgent = new Agent({
   name: "Aria (Buyer Agent)",
@@ -39,9 +44,7 @@ When the fit score is:
 - 75+: Express interest and propose meeting times
 
 Always end emails with "Best,\nAria (via AgentBox)"`,
-  model: OPENAI_BASE_URL 
-    ? openai("gpt-4o-mini", { baseURL: OPENAI_BASE_URL })
-    : openai("gpt-4o-mini"),
+  model: openaiProvider("gpt-4o-mini"),
   tools: {
     fitScoringTool,
     perplexityEnrichmentTool,

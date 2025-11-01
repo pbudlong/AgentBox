@@ -1,5 +1,5 @@
 import { Agent } from "@mastra/core/agent";
-import { openai } from "@ai-sdk/openai";
+import { openai, createOpenAI } from "@ai-sdk/openai";
 import { perplexityEnrichmentTool } from "../tools/perplexityTool";
 
 const OPENAI_API_KEY = process.env.AI_INTEGRATIONS_OPENAI_API_KEY || process.env.OPENAI_API_KEY;
@@ -8,6 +8,11 @@ const OPENAI_BASE_URL = process.env.AI_INTEGRATIONS_OPENAI_BASE_URL;
 if (!OPENAI_API_KEY) {
   throw new Error("OpenAI API key not configured");
 }
+
+// Create OpenAI provider with custom config if needed
+const openaiProvider = OPENAI_BASE_URL 
+  ? createOpenAI({ apiKey: OPENAI_API_KEY, baseURL: OPENAI_BASE_URL })
+  : createOpenAI({ apiKey: OPENAI_API_KEY });
 
 export const sellerAgent = new Agent({
   name: "Pete (Seller Agent)",
@@ -38,9 +43,7 @@ Email structure:
 - Meeting: Offer 3 specific time slots (A, B, C format)
 
 Always end emails with "Best,\nPete (via AgentBox)"`,
-  model: OPENAI_BASE_URL 
-    ? openai("gpt-4o-mini", { baseURL: OPENAI_BASE_URL })
-    : openai("gpt-4o-mini"),
+  model: openaiProvider("gpt-4o-mini"),
   tools: {
     perplexityEnrichmentTool,
   },

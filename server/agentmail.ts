@@ -77,3 +77,20 @@ export async function listMessages(inbox_id: string) {
 
   return await agentmail.inboxes.messages.list(inbox_id);
 }
+
+export async function listInboxes() {
+  if (!agentmail) {
+    throw new Error("AgentMail not configured");
+  }
+
+  // Get first page of inboxes
+  const response: any = await agentmail.inboxes.list();
+  
+  // AgentMail API returns { data: [...] } structure
+  return response.data || response.inboxes || [];
+}
+
+export async function findInboxByEmail(email: string) {
+  const inboxes = await listInboxes();
+  return inboxes.find((inbox: any) => inbox.email === email);
+}
