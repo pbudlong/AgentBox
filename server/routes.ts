@@ -159,11 +159,20 @@ Respond as a buyer evaluating this product. Ask a qualifying question about pric
         listMessages(demoInboxes.buyer.inbox_id),
       ]);
 
+      // Debug: Log first message structure to understand field names
+      if (sellerMessages.messages && sellerMessages.messages.length > 0) {
+        console.log("Sample AgentMail message structure:", JSON.stringify(sellerMessages.messages[0], null, 2));
+      }
+
       // Combine and sort by timestamp
       const allMessages = [
         ...(sellerMessages.messages || []).map((m: any) => ({ ...m, inbox: "seller" })),
         ...(buyerMessages.messages || []).map((m: any) => ({ ...m, inbox: "buyer" })),
-      ].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+      ].sort((a, b) => {
+        const dateA = new Date(a.createdAt || a.created_at).getTime();
+        const dateB = new Date(b.createdAt || b.created_at).getTime();
+        return dateA - dateB;
+      });
 
       res.json({
         messages: allMessages,

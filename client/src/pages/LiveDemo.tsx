@@ -112,24 +112,27 @@ export default function LiveDemo() {
   useEffect(() => {
     if (messagesData && (messagesData as any).initialized) {
       const realMessages = ((messagesData as any).messages || []).map((m: any, idx: number) => ({
-        id: m.message_id || `msg-${idx}`,
+        id: m.messageId || m.message_id || `msg-${idx}`,
         from: m.from,
         to: m.to,
         subject: m.subject || "No Subject",
         body: m.text || m.html || "",
-        timestamp: new Date(m.created_at),
+        timestamp: new Date(m.createdAt || m.created_at || Date.now()),
+        inbox: m.inbox,
       }));
       
       setLiveMessages(realMessages);
     }
   }, [messagesData]);
 
+  // Seller pane: Show messages FROM seller (seller's sent messages)
   const sellerMessages = liveMessages.filter(m => 
-    m.from.includes(sellerEmail) || m.to.includes(sellerEmail)
+    m.from && m.from.includes(sellerEmail)
   );
   
+  // Buyer pane: Show messages TO or FROM buyer (buyer's inbox and replies)
   const buyerMessages = liveMessages.filter(m => 
-    m.from.includes(buyerEmail) || m.to.includes(buyerEmail)
+    (m.from && m.from.includes(buyerEmail)) || (m.to && m.to.includes(buyerEmail))
   );
 
   const resetDemo = () => {
