@@ -124,10 +124,33 @@ Respond as a buyer evaluating this product. Ask a qualifying question about pric
           webhookEvents[webhookEvents.length - 1].status = 'success (buyer replied)';
           console.log("✅ Buyer response sent successfully via webhook");
         } 
-        // Seller receives email → just log (no auto-response)
-        else if (receivedBySeller) {
-          console.log("📬 SELLER INBOX received email from buyer - logged (no auto-response)");
-          webhookEvents[webhookEvents.length - 1].status = 'received (seller inbox)';
+        // Seller receives email → generate reply
+        else if (receivedBySeller && demoInboxes.seller) {
+          console.log("📧 SELLER INBOX received email from buyer - generating response...");
+          
+          const emailBody = inboundEmail.text || inboundEmail.html || "";
+          const prompt = `You received a reply to your sales outreach:
+From: ${inboundEmail.from}
+Subject: ${inboundEmail.subject}
+Body: ${emailBody}
+
+Respond as a helpful sales person. Answer their questions professionally and try to move toward scheduling a meeting. Keep it under 100 words.`;
+
+          console.log("🤖 Calling seller agent...");
+          const response = await sellerAgent.generate(prompt);
+          console.log("💬 Seller response generated:", response.text.substring(0, 100) + "...");
+          
+          // Send reply
+          console.log("📮 Sending seller reply via webhook...");
+          await replyToEmail({
+            inbox_id: inboundEmail.inbox_id,
+            message_id: inboundEmail.message_id,
+            text: response.text,
+          });
+
+          // Update webhook event status
+          webhookEvents[webhookEvents.length - 1].status = 'success (seller replied)';
+          console.log("✅ Seller response sent successfully via webhook");
         }
         else {
           console.log("⚠️ Email received by unknown inbox");
