@@ -74,22 +74,16 @@ const implemented = [
   },
 ];
 
-const simulated = [
+const demoFeatures = [
   {
-    feature: "Email Conversations",
-    note: "Demo uses mock data - real agents respond to webhooks via AgentMail API",
+    feature: "Scripted Demo",
+    description: "Pre-written conversation showing qualification flow",
+    items: ["Static message history", "Fit score calculation demo", "Meeting scheduling UI"],
   },
   {
-    feature: "Real-time UI Updates",
-    note: "Convex provides live data sync (requires manual npx convex dev setup)",
-  },
-  {
-    feature: "Calendar Integration",
-    note: "UI ready for .ics generation and Google Calendar deep links",
-  },
-  {
-    feature: "Profile Onboarding",
-    note: "Profile creation flow with Perplexity enrichment ready to build",
+    feature: "Live Demo",
+    description: "Real AI agents communicating via actual emails",
+    items: ["AgentMail webhook delivery", "GPT-4 agent responses", "Database-persisted sessions", "Infinite loop prevention"],
   },
 ];
 
@@ -143,7 +137,7 @@ export default function TechStack() {
             <div className="space-y-6">
               {sponsors.map((sponsor, index) => (
                 <div key={index} className="border-l-2 border-primary/30 pl-4">
-                  <div className="flex items-center gap-2 mb-2">
+                  <div className="flex items-center gap-2 mb-2 flex-wrap">
                     <h4 className="font-semibold text-lg" data-testid={`text-sponsor-name-${index}`}>
                       {sponsor.name}
                     </h4>
@@ -153,6 +147,11 @@ export default function TechStack() {
                     >
                       {sponsor.status}
                     </Badge>
+                    {sponsor.liveDemo && (
+                      <Badge variant="outline" className="text-xs border-primary/50">
+                        Live Demo
+                      </Badge>
+                    )}
                   </div>
                   <p className="text-sm text-primary/80 mb-2">{sponsor.role}</p>
                   <p className="text-sm text-muted-foreground leading-relaxed" data-testid={`text-sponsor-desc-${index}`}>
@@ -177,10 +176,18 @@ export default function TechStack() {
               {implemented.map((tech, index) => (
                 <div key={index} className="flex items-start gap-3">
                   <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="font-semibold" data-testid={`text-implemented-name-${index}`}>
-                      {tech.name}
-                    </p>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="font-semibold" data-testid={`text-implemented-name-${index}`}>
+                        {tech.name}
+                      </p>
+                      {tech.demo === "live" && (
+                        <Badge variant="default" className="text-xs">Live Demo</Badge>
+                      )}
+                      {tech.demo === "both" && (
+                        <Badge variant="secondary" className="text-xs">Both</Badge>
+                      )}
+                    </div>
                     <p className="text-sm text-muted-foreground" data-testid={`text-implemented-desc-${index}`}>
                       {tech.description}
                     </p>
@@ -191,28 +198,38 @@ export default function TechStack() {
           </Card>
         </div>
 
-        {/* Simulated Features */}
+        {/* Demo Comparison */}
         <Card className="p-8 mb-8 bg-gradient-to-br from-gradient-to/5 to-transparent border-gradient-to/30">
           <div className="flex items-center gap-3 mb-6">
             <div className="p-2 rounded-lg bg-gradient-to/10">
               <Sparkles className="h-6 w-6 text-gradient-to" />
             </div>
-            <h3 className="text-2xl font-semibold" data-testid="text-simulated-heading">
-              Currently Simulated (Demo Only)
+            <h3 className="text-2xl font-semibold" data-testid="text-demo-comparison-heading">
+              Demo Comparison
             </h3>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {simulated.map((item, index) => (
-              <div key={index} className="flex items-start gap-3 p-4 rounded-lg bg-background/50">
-                <div className="w-2 h-2 rounded-full bg-gradient-to flex-shrink-0 mt-2" />
-                <div>
-                  <p className="font-semibold mb-1" data-testid={`text-simulated-feature-${index}`}>
-                    {item.feature}
-                  </p>
-                  <p className="text-sm text-muted-foreground" data-testid={`text-simulated-note-${index}`}>
-                    {item.note}
-                  </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {demoFeatures.map((demo, index) => (
+              <div key={index} className="p-6 rounded-lg bg-background/50 border border-card-border">
+                <div className="flex items-center gap-2 mb-3">
+                  <h4 className="font-semibold text-lg" data-testid={`text-demo-feature-${index}`}>
+                    {demo.feature}
+                  </h4>
+                  <Badge variant={index === 1 ? "default" : "secondary"} className="text-xs">
+                    {index === 1 ? "Production Ready" : "Static"}
+                  </Badge>
                 </div>
+                <p className="text-sm text-muted-foreground mb-4">
+                  {demo.description}
+                </p>
+                <ul className="space-y-2">
+                  {demo.items.map((item, itemIndex) => (
+                    <li key={itemIndex} className="flex items-start gap-2 text-sm">
+                      <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
             ))}
           </div>
