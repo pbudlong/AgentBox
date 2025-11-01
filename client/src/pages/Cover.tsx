@@ -64,25 +64,27 @@ export default function Cover() {
             Email That Thinks Like You
           </p>
 
-          {/* Hackathon badge */}
-          <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-card border border-card-border mb-8">
-            <span className="text-sm text-muted-foreground">Built for</span>
-            <span className="font-semibold bg-gradient-to-r from-gradient-from to-gradient-via bg-clip-text text-transparent" data-testid="text-hackathon">
-              AgentMail's HackHalloween @YC
-            </span>
-            <span className="text-sm text-muted-foreground">exclusively with Replit</span>
-          </div>
+          <div className="flex flex-col items-center gap-8">
+            {/* Hackathon badge */}
+            <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-card border border-card-border">
+              <span className="text-sm text-muted-foreground">Built for</span>
+              <span className="font-semibold bg-gradient-to-r from-gradient-from to-gradient-via bg-clip-text text-transparent" data-testid="text-hackathon">
+                AgentMail's HackHalloween @YC
+              </span>
+              <span className="text-sm text-muted-foreground">exclusively with Replit</span>
+            </div>
 
-          {/* CTA */}
-          <Button 
-            size="lg"
-            className="text-xl px-12 h-14 shadow-lg shadow-primary/20 hover-elevate active-elevate-2"
-            onClick={() => navigate("/problem")}
-            data-testid="button-start-demo"
-          >
-            Start Demo
-            <ArrowRight className="ml-3 h-6 w-6" />
-          </Button>
+            {/* CTA */}
+            <Button 
+              size="lg"
+              className="text-xl px-12 h-14 shadow-lg shadow-primary/20 hover-elevate active-elevate-2"
+              onClick={() => navigate("/problem")}
+              data-testid="button-start-demo"
+            >
+              Start Demo
+              <ArrowRight className="ml-3 h-6 w-6" />
+            </Button>
+          </div>
         </div>
       </div>
     </div>
