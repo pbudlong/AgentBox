@@ -167,10 +167,16 @@ Preferred communication style: Simple, everyday language.
 - Future improvement: Add pagination to listInboxes() for scalability
 
 **Recent Fixes (Nov 1, 2025):**
+- ✅ Fixed historical message accumulation bug: Implemented session-based filtering to show only current conversation
+  - Session timestamp set 5 seconds before demo initialization to ensure new messages are captured
+  - Filter messages by timestamp (only show messages sent after session start)
+  - Deduplicate by unique messageId to prevent any duplicates
+  - Added debug logging showing total vs. filtered message counts
+  - Result: Shows exactly 1 new message per session instead of 20+ accumulated historical messages
 - ✅ Fixed duplicate message bug: AgentMail's listMessages() is pod-scoped and returns all messages regardless of inbox_id
 - ✅ Solution: Client-side filtering by message.from address (seller pane shows messages FROM seller, buyer pane shows messages FROM buyer)
 - ✅ Fixed timestamp parsing to handle both camelCase (createdAt) and snake_case (created_at) formats
-- ✅ Removed unnecessary inbox field tagging in backend since API doesn't support per-inbox filtering
+- ✅ Enhanced CTA styling: Made "Click Start Live Demo" text bold and larger for better visibility
 
 **Testing:**
 - End-to-end test confirmed both agents communicate via real emails
