@@ -51,7 +51,7 @@ export default function ProgressIndicator() {
                 </button>
                 
                 {index < steps.length - 1 && (
-                  <ArrowRight className="h-3 w-3 text-muted-foreground/50 mx-1 flex-shrink-0" />
+                  <ArrowRight className="h-4 w-4 text-muted-foreground/50 mx-2 flex-shrink-0" />
                 )}
               </div>
             );
