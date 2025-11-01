@@ -16,6 +16,11 @@ export default {
         foreground: "hsl(var(--foreground) / <alpha-value>)",
         border: "hsl(var(--border) / <alpha-value>)",
         input: "hsl(var(--input) / <alpha-value>)",
+        gradient: {
+          from: "hsl(var(--gradient-from) / <alpha-value>)",
+          via: "hsl(var(--gradient-via) / <alpha-value>)",
+          to: "hsl(var(--gradient-to) / <alpha-value>)",
+        },
         card: {
           DEFAULT: "hsl(var(--card) / <alpha-value>)",
           foreground: "hsl(var(--card-foreground) / <alpha-value>)",
