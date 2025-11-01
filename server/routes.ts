@@ -125,17 +125,19 @@ Respond as a buyer evaluating this product. Ask a qualifying question about pric
 
       // Create seller inbox
       const sellerInbox = await createInbox(sellerInboxName, "Mike (Seller)");
+      console.log("Created inbox result:", JSON.stringify(sellerInbox, null, 2));
       demoInboxes.seller = {
-        inbox_id: (sellerInbox as any).inbox_id,
-        email: (sellerInbox as any).email,
+        inbox_id: (sellerInbox as any).inboxId, // AgentMail API uses camelCase
+        email: (sellerInbox as any).inboxId,    // inboxId IS the email address
       };
       console.log("Created new seller inbox:", demoInboxes.seller.email);
 
       // Create buyer inbox
       const buyerInbox = await createInbox(buyerInboxName, "Sarah (Buyer)");
+      console.log("Created inbox result:", JSON.stringify(buyerInbox, null, 2));
       demoInboxes.buyer = {
-        inbox_id: (buyerInbox as any).inbox_id,
-        email: (buyerInbox as any).email,
+        inbox_id: (buyerInbox as any).inboxId, // AgentMail API uses camelCase
+        email: (buyerInbox as any).inboxId,    // inboxId IS the email address
       };
       console.log("Created new buyer inbox:", demoInboxes.buyer.email);
 
