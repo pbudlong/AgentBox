@@ -162,8 +162,6 @@ export default function Demo() {
         onReset={resetDemo}
         threadStatus={threadStatus}
         isRunning={isRunning}
-        showNext={showCalendar && !isRunning}
-        onNext={() => navigate("/profiles")}
         showCalendar={showCalendar && !isRunning}
         onViewCalendar={() => setShowCalendarModal(true)}
       />
