@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, Download, ExternalLink, CheckCircle2 } from "lucide-react";
+import { Calendar, Download, ExternalLink, CheckCircle2, X } from "lucide-react";
 
 interface CalendarEventCardProps {
   title: string;
@@ -10,6 +10,7 @@ interface CalendarEventCardProps {
   icsUrl?: string;
   gcalUrl?: string;
   summary?: string;
+  onClose?: () => void;
 }
 
 export default function CalendarEventCard({ 
@@ -19,7 +20,8 @@ export default function CalendarEventCard({
   attendees,
   icsUrl,
   gcalUrl,
-  summary 
+  summary,
+  onClose
 }: CalendarEventCardProps) {
   const eventDate = new Date(whenISO);
   const formatDate = (date: Date) => {
@@ -34,7 +36,20 @@ export default function CalendarEventCard({
   };
 
   return (
-    <Card className="p-6 border-primary/30 bg-gradient-to-br from-primary/5 to-transparent shadow-lg shadow-primary/10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <Card className="p-6 border-primary/30 bg-gradient-to-br from-primary/5 to-transparent shadow-lg shadow-primary/10 animate-in fade-in slide-in-from-bottom-4 duration-500 relative">
+      {/* Close button */}
+      {onClose && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute top-4 right-4 h-8 w-8"
+          onClick={onClose}
+          data-testid="button-close-calendar"
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      )}
+      
       {/* Success header */}
       <div className="flex items-center gap-3 mb-6 pb-4 border-b border-primary/20">
         <div className="p-2 rounded-full bg-primary/10">

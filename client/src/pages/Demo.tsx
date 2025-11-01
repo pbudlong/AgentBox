@@ -73,6 +73,7 @@ export default function Demo() {
   const [isRunning, setIsRunning] = useState(false);
   const [showScore, setShowScore] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
+  const [showCalendarModal, setShowCalendarModal] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
 
   const sellerMessages = messages.filter(m => 
@@ -128,6 +129,7 @@ export default function Demo() {
     setIsRunning(false);
     setShowScore(false);
     setShowCalendar(false);
+    setShowCalendarModal(false);
     setCurrentStep(0);
   };
 
@@ -155,6 +157,8 @@ export default function Demo() {
         isRunning={isRunning}
         showNext={showCalendar && !isRunning}
         onNext={() => navigate("/profiles")}
+        showCalendar={showCalendar && !isRunning}
+        onViewCalendar={() => setShowCalendarModal(true)}
       />
 
       {/* Two-pane email viewer */}
@@ -191,19 +195,28 @@ export default function Demo() {
         </div>
       )}
 
-      {/* Calendar event card overlay */}
-      {showCalendar && (
-        <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 w-full max-w-2xl z-30 px-8">
-          <CalendarEventCard
-            title="AgentBox Intro Call - Sales Automation Platform"
-            whenISO={new Date(Date.now() + 1000 * 60 * 60 * 24 * 2).toISOString()}
-            durationMins={30}
-            attendees={['pete.b.seller@agentbox.ai', 'aria.h.buyer@agentbox.ai']}
-            icsUrl="/api/ics/demo-thread.ics"
-            gcalUrl="https://calendar.google.com/calendar/r/eventedit"
-            summary="Strong fit based on industry alignment (B2B SaaS), company size match (50-200 employees), Salesforce integration capability, and budget compatibility. Both parties are looking for Q1 2025 implementation."
+      {/* Calendar event card modal - only shows when button clicked */}
+      {showCalendarModal && showCalendar && (
+        <>
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40"
+            onClick={() => setShowCalendarModal(false)}
           />
-        </div>
+          {/* Modal */}
+          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl z-50 px-8">
+            <CalendarEventCard
+              title="AgentBox Intro Call - Sales Automation Platform"
+              whenISO={new Date(Date.now() + 1000 * 60 * 60 * 24 * 2).toISOString()}
+              durationMins={30}
+              attendees={['pete.b.seller@agentbox.ai', 'aria.h.buyer@agentbox.ai']}
+              icsUrl="/api/ics/demo-thread.ics"
+              gcalUrl="https://calendar.google.com/calendar/r/eventedit"
+              summary="Strong fit based on industry alignment (B2B SaaS), company size match (50-200 employees), Salesforce integration capability, and budget compatibility. Both parties are looking for Q1 2025 implementation."
+              onClose={() => setShowCalendarModal(false)}
+            />
+          </div>
+        </>
       )}
 
     </div>
