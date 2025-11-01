@@ -86,11 +86,21 @@ export async function listInboxes() {
   // Get first page of inboxes
   const response: any = await agentmail.inboxes.list();
   
-  // AgentMail API returns { data: [...] } structure
-  return response.data || response.inboxes || [];
+  // AgentMail API returns { count: X, inboxes: [...] }
+  return response?.inboxes || [];
 }
 
 export async function findInboxByEmail(email: string) {
   const inboxes = await listInboxes();
-  return inboxes.find((inbox: any) => inbox.email === email);
+  
+  // AgentMail inboxes have inboxId field that contains the email address
+  const found = inboxes.find((inbox: any) => inbox.inboxId === email);
+  
+  if (found) {
+    console.log("Found existing inbox:", email);
+  } else {
+    console.log("Inbox not found:", email);
+  }
+  
+  return found;
 }

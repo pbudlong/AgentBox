@@ -78,10 +78,10 @@ Respond as a buyer evaluating this product. Ask a qualifying question about pric
           const existingInbox = await findInboxByEmail("seller-demo@agentmail.to");
           if (existingInbox) {
             demoInboxes.seller = {
-              inbox_id: (existingInbox as any).inbox_id,
-              email: (existingInbox as any).email,
+              inbox_id: (existingInbox as any).inboxId, // inboxId contains the email
+              email: (existingInbox as any).inboxId,
             };
-            console.log("Found existing seller inbox:", demoInboxes.seller.email, "ID:", demoInboxes.seller.inbox_id);
+            console.log("Reusing seller inbox:", demoInboxes.seller.email);
           } else {
             throw new Error("Seller inbox exists but could not be found");
           }
@@ -105,10 +105,10 @@ Respond as a buyer evaluating this product. Ask a qualifying question about pric
           const existingInbox = await findInboxByEmail("buyer-demo@agentmail.to");
           if (existingInbox) {
             demoInboxes.buyer = {
-              inbox_id: (existingInbox as any).inbox_id,
-              email: (existingInbox as any).email,
+              inbox_id: (existingInbox as any).inboxId, // inboxId contains the email
+              email: (existingInbox as any).inboxId,
             };
-            console.log("Found existing buyer inbox:", demoInboxes.buyer.email, "ID:", demoInboxes.buyer.inbox_id);
+            console.log("Reusing buyer inbox:", demoInboxes.buyer.email);
           } else {
             throw new Error("Buyer inbox exists but could not be found");
           }
