@@ -5,9 +5,12 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useEffect } from "react";
 import Cover from "@/pages/Cover";
-import ProblemSolution from "@/pages/ProblemSolution";
-import Demo from "@/pages/Demo";
+import Problem from "@/pages/Problem";
+import BuyerJourney from "@/pages/BuyerJourney";
+import SellerJourney from "@/pages/SellerJourney";
+import ScriptedDemo from "@/pages/ScriptedDemo";
 import Profiles from "@/pages/Profiles";
+import LiveDemo from "@/pages/LiveDemo";
 import TechStackPage from "@/pages/TechStackPage";
 import NotFound from "@/pages/not-found";
 
@@ -15,9 +18,12 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Cover} />
-      <Route path="/problem" component={ProblemSolution} />
-      <Route path="/demo" component={Demo} />
+      <Route path="/problem" component={Problem} />
+      <Route path="/buyer" component={BuyerJourney} />
+      <Route path="/seller" component={SellerJourney} />
+      <Route path="/demo" component={ScriptedDemo} />
       <Route path="/profiles" component={Profiles} />
+      <Route path="/live" component={LiveDemo} />
       <Route path="/tech" component={TechStackPage} />
       <Route component={NotFound} />
     </Switch>

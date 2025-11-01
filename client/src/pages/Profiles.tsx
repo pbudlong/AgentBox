@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Building2, MapPin, DollarSign, Clock, Zap, Users, Code } from "lucide-react";
 import ProgressIndicator from "@/components/ProgressIndicator";
+import FitScoreIndicator from "@/components/FitScoreIndicator";
 
 interface DataField {
   field: string;
@@ -109,23 +110,40 @@ export default function Profiles() {
         />
       </div>
 
-      {/* Fit scoring explanation */}
-      <div className="bg-card border-t border-border px-8 py-6">
+      {/* Fit Score Section */}
+      <div className="bg-background border-t border-border px-8 py-8">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between gap-8">
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold mb-2 text-foreground">8-Signal Fit Score</h3>
-              <p className="text-sm text-muted-foreground">
-                Agents compute a weighted score across: Industry Match • Size Match • Geo Match • Need Intent • Timing • Budget • Authority • Stack Compatibility
-              </p>
+            <div className="flex-1 max-w-md">
+              <FitScoreIndicator
+                score={85}
+                signals={[
+                  { name: 'Industry Match', matched: true, value: 'B2B SaaS' },
+                  { name: 'Company Size', matched: true, value: '50-200' },
+                  { name: 'Geographic Match', matched: true, value: 'North America' },
+                  { name: 'Budget Range', matched: true, value: '$25K' },
+                  { name: 'Timing', matched: true, value: 'Q1 2025' },
+                  { name: 'Tech Stack', matched: true, value: 'Salesforce' },
+                  { name: 'Need Intent', matched: true },
+                  { name: 'Authority', matched: true, value: 'VP Sales' },
+                ]}
+                threshold={70}
+              />
             </div>
-            <Button 
-              onClick={() => navigate("/tech")}
-              size="lg"
-              data-testid="button-next-tech"
-            >
-              See Tech Stack <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
+            <div className="flex-1">
+              <h3 className="text-2xl font-semibold mb-3 text-foreground">8-Signal Fit Scoring</h3>
+              <p className="text-base text-muted-foreground mb-6">
+                Agents compute a weighted score across all signals. When the score exceeds the threshold, meeting times are proposed automatically.
+              </p>
+              <Button 
+                onClick={() => navigate("/live")}
+                size="lg"
+                className="hover-elevate active-elevate-2"
+                data-testid="button-next-live"
+              >
+                Watch Live Demo <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
       </div>

@@ -3,10 +3,13 @@ import { CheckCircle2, Circle } from "lucide-react";
 
 const steps = [
   { id: 1, name: "Cover", path: "/" },
-  { id: 2, name: "Use Case", path: "/problem" },
-  { id: 3, name: "Demo", path: "/demo" },
-  { id: 4, name: "Profiles", path: "/profiles" },
-  { id: 5, name: "Tech", path: "/tech" },
+  { id: 2, name: "Problem", path: "/problem" },
+  { id: 3, name: "Buyer", path: "/buyer" },
+  { id: 4, name: "Seller", path: "/seller" },
+  { id: 5, name: "Demo", path: "/demo" },
+  { id: 6, name: "Profiles", path: "/profiles" },
+  { id: 7, name: "Live", path: "/live" },
+  { id: 8, name: "Tech", path: "/tech" },
 ];
 
 export default function ProgressIndicator() {
