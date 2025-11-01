@@ -110,9 +110,9 @@ export default function LiveDemo() {
         { agent: 'buyer', message: 'Created fresh AgentMail inbox', status: 'success', timestamp: new Date() },
         { agent: 'seller', message: 'Generated outreach email via OpenAI', status: 'success', timestamp: new Date() },
         { agent: 'seller', message: 'Sent email to buyer', status: 'success', timestamp: new Date() },
-        { agent: 'buyer', message: 'Buyer agent received email (immediate response)', status: 'success', timestamp: new Date() },
+        { agent: 'buyer', message: 'Buyer agent received email (immediate mode)', status: 'success', timestamp: new Date() },
         { agent: 'buyer', message: 'Generated response via OpenAI', status: 'success', timestamp: new Date() },
-        { agent: 'buyer', message: 'Sent reply email', status: 'success', timestamp: new Date() },
+        { agent: 'buyer', message: 'Sent reply email (NOT via webhook)', status: 'error', timestamp: new Date() },
       ]);
       
       return { ...data, sessionStart };
@@ -325,20 +325,57 @@ export default function LiveDemo() {
                 {webhookEvents.length > 0 && (
                   <div className="mt-3 pt-3 border-t border-border">
                     <p className="text-xs font-semibold text-muted-foreground mb-2">Webhook Events:</p>
-                    <div className="space-y-1">
+                    <div className="space-y-2">
                       {webhookEvents.filter((e: any) => e.from?.includes('buyer') || e.to?.includes('seller')).map((event: any, idx: number) => (
                         <div 
                           key={idx} 
-                          className={`text-xs px-2 py-1 rounded ${
-                            event.status === 'success' ? 'bg-green-500/20 text-green-400' : 
+                          className={`text-xs rounded overflow-hidden ${
+                            event.status?.includes('success') ? 'bg-green-500/10 border border-green-500/30' : 
+                            event.status?.includes('error') ? 'bg-red-500/10 border border-red-500/30' : 
+                            event.status?.includes('ignored') ? 'bg-gray-500/10 border border-gray-500/30' :
+                            'bg-blue-500/10 border border-blue-500/30'
+                          }`}
+                        >
+                          <div className={`px-2 py-1 font-semibold ${
+                            event.status?.includes('success') ? 'bg-green-500/20 text-green-400' : 
                             event.status?.includes('error') ? 'bg-red-500/20 text-red-400' : 
                             event.status?.includes('ignored') ? 'bg-gray-500/20 text-gray-400' :
                             'bg-blue-500/20 text-blue-400'
-                          }`}
-                        >
-                          {event.status === 'success' && '✓ '}
-                          {event.status?.includes('error') && '✗ '}
-                          Webhook: {event.status}
+                          }`}>
+                            {event.status?.includes('success') && '✓ '}
+                            {event.status?.includes('error') && '✗ '}
+                            Webhook {event.status}
+                          </div>
+                          <div className="px-2 py-2 font-mono text-[10px] space-y-1">
+                            <div className="text-muted-foreground">
+                              <span className="opacity-60">Event ID:</span> {event.event_id?.substring(0, 20)}...
+                            </div>
+                            <div className="text-muted-foreground">
+                              <span className="opacity-60">From:</span> {event.from}
+                            </div>
+                            <div className="text-muted-foreground">
+                              <span className="opacity-60">To:</span> {event.to}
+                            </div>
+                            <details className="mt-1">
+                              <summary className="cursor-pointer text-primary hover:underline">
+                                View Full Payload & Response
+                              </summary>
+                              <div className="mt-2 p-2 bg-background/50 rounded border border-border max-h-40 overflow-auto">
+                                <div className="mb-2">
+                                  <div className="font-semibold text-primary mb-1">Request Payload:</div>
+                                  <pre className="whitespace-pre-wrap break-all">
+                                    {JSON.stringify(event.payload, null, 2)}
+                                  </pre>
+                                </div>
+                                <div>
+                                  <div className="font-semibold text-primary mb-1">Response:</div>
+                                  <pre className="whitespace-pre-wrap break-all">
+                                    {JSON.stringify(event.response, null, 2)}
+                                  </pre>
+                                </div>
+                              </div>
+                            </details>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -404,20 +441,57 @@ export default function LiveDemo() {
                 {webhookEvents.length > 0 && (
                   <div className="mt-3 pt-3 border-t border-border">
                     <p className="text-xs font-semibold text-muted-foreground mb-2">Webhook Events:</p>
-                    <div className="space-y-1">
+                    <div className="space-y-2">
                       {webhookEvents.filter((e: any) => e.from?.includes('seller') || e.to?.includes('buyer')).map((event: any, idx: number) => (
                         <div 
                           key={idx} 
-                          className={`text-xs px-2 py-1 rounded ${
-                            event.status === 'success' ? 'bg-green-500/20 text-green-400' : 
+                          className={`text-xs rounded overflow-hidden ${
+                            event.status?.includes('success') ? 'bg-green-500/10 border border-green-500/30' : 
+                            event.status?.includes('error') ? 'bg-red-500/10 border border-red-500/30' : 
+                            event.status?.includes('ignored') ? 'bg-gray-500/10 border border-gray-500/30' :
+                            'bg-blue-500/10 border border-blue-500/30'
+                          }`}
+                        >
+                          <div className={`px-2 py-1 font-semibold ${
+                            event.status?.includes('success') ? 'bg-green-500/20 text-green-400' : 
                             event.status?.includes('error') ? 'bg-red-500/20 text-red-400' : 
                             event.status?.includes('ignored') ? 'bg-gray-500/20 text-gray-400' :
                             'bg-blue-500/20 text-blue-400'
-                          }`}
-                        >
-                          {event.status === 'success' && '✓ '}
-                          {event.status?.includes('error') && '✗ '}
-                          Webhook: {event.status}
+                          }`}>
+                            {event.status?.includes('success') && '✓ '}
+                            {event.status?.includes('error') && '✗ '}
+                            Webhook {event.status}
+                          </div>
+                          <div className="px-2 py-2 font-mono text-[10px] space-y-1">
+                            <div className="text-muted-foreground">
+                              <span className="opacity-60">Event ID:</span> {event.event_id?.substring(0, 20)}...
+                            </div>
+                            <div className="text-muted-foreground">
+                              <span className="opacity-60">From:</span> {event.from}
+                            </div>
+                            <div className="text-muted-foreground">
+                              <span className="opacity-60">To:</span> {event.to}
+                            </div>
+                            <details className="mt-1">
+                              <summary className="cursor-pointer text-primary hover:underline">
+                                View Full Payload & Response
+                              </summary>
+                              <div className="mt-2 p-2 bg-background/50 rounded border border-border max-h-40 overflow-auto">
+                                <div className="mb-2">
+                                  <div className="font-semibold text-primary mb-1">Request Payload:</div>
+                                  <pre className="whitespace-pre-wrap break-all">
+                                    {JSON.stringify(event.payload, null, 2)}
+                                  </pre>
+                                </div>
+                                <div>
+                                  <div className="font-semibold text-primary mb-1">Response:</div>
+                                  <pre className="whitespace-pre-wrap break-all">
+                                    {JSON.stringify(event.response, null, 2)}
+                                  </pre>
+                                </div>
+                              </div>
+                            </details>
+                          </div>
                         </div>
                       ))}
                     </div>

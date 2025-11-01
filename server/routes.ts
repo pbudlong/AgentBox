@@ -11,7 +11,16 @@ let demoInboxes: {
 } = {};
 
 // Track webhook events for debugging
-let webhookEvents: Array<{ timestamp: Date; from: string; to: string; subject: string; status: string }> = [];
+let webhookEvents: Array<{ 
+  timestamp: Date; 
+  from: string; 
+  to: string; 
+  subject: string; 
+  status: string;
+  event_id: string;
+  payload: any;
+  response: any;
+}> = [];
 
 // Track processed event IDs to prevent duplicates
 const processedEventIds = new Set<string>();
@@ -67,7 +76,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           from: inboundEmail.from || 'unknown',
           to: Array.isArray(inboundEmail.to) ? inboundEmail.to.join(', ') : (inboundEmail.to || 'unknown'),
           subject: inboundEmail.subject || 'No subject',
-          status: isBuyerEmail ? 'processing' : 'ignored (seller inbox)'
+          status: isBuyerEmail ? 'processing' : 'ignored (seller inbox)',
+          event_id: event.event_id || 'unknown',
+          payload: event,
+          response: { success: true }
         });
         
         console.log("🔍 Recipient check:", {
@@ -101,7 +113,7 @@ Respond as a buyer evaluating this product. Ask a qualifying question about pric
           });
 
           // Update webhook event status
-          webhookEvents[webhookEvents.length - 1].status = 'success';
+          webhookEvents[webhookEvents.length - 1].status = 'success (generated reply)';
           console.log("✅ Buyer response sent successfully via webhook");
         } else {
           console.log("📬 Email received by seller inbox - no auto-response needed");
@@ -112,7 +124,10 @@ Respond as a buyer evaluating this product. Ask a qualifying question about pric
           from: 'unknown',
           to: 'unknown',
           subject: 'Unknown event',
-          status: 'error (unhandled event type)'
+          status: 'error (unhandled event type)',
+          event_id: event.event_id || 'unknown',
+          payload: event,
+          response: { success: true }
         });
         console.log("⚠️ Webhook event type not handled. event_type:", event.event_type, "type:", event.type);
       }
