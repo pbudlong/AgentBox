@@ -13,27 +13,42 @@ let demoInboxes: {
 export async function registerRoutes(app: Express): Promise<Server> {
   // AgentMail webhook endpoint for inbound emails
   app.post("/webhooks/agentmail", async (req, res) => {
+    const timestamp = new Date().toISOString();
+    console.log(`\n${"=".repeat(80)}`);
+    console.log(`🔔 WEBHOOK RECEIVED at ${timestamp}`);
+    console.log(`${"=".repeat(80)}`);
+    
     try {
       const event = req.body;
       
-      console.log("🔔 Webhook received:", {
-        type: event.type,
+      console.log("📦 Full webhook payload:", JSON.stringify(event, null, 2));
+      console.log("📋 Event type:", event.type);
+      console.log("📧 Event data:", {
         from: event.data?.from,
         to: event.data?.to,
         subject: event.data?.subject,
+        inbox_id: event.data?.inbox_id,
+        message_id: event.data?.message_id,
       });
 
       // Quick response to webhook (must respond immediately)
       res.status(200).json({ success: true });
+      console.log("✅ Webhook acknowledged (200 OK sent)");
 
       // Process email asynchronously
       if (event.type === "message_received" && event.data) {
         const inboundEmail = event.data;
         const isBuyerEmail = inboundEmail.to?.includes?.("buyer-demo") || inboundEmail.to?.some?.((addr: string) => addr.includes("buyer-demo"));
         
+        console.log("🔍 Recipient check:", {
+          to: inboundEmail.to,
+          isBuyerEmail,
+          buyerInboxExists: !!demoInboxes.buyer,
+        });
+        
         // Only auto-respond if buyer receives an email
         if (isBuyerEmail && demoInboxes.buyer) {
-          console.log("📧 Buyer received email, generating response...");
+          console.log("📧 Buyer inbox received email - generating response...");
           
           const emailBody = inboundEmail.text || inboundEmail.html || "";
           const prompt = `You received a sales outreach email:
@@ -43,22 +58,30 @@ Body: ${emailBody}
 
 Respond as a buyer evaluating this product. Ask a qualifying question about pricing, features, or implementation. Keep it under 80 words.`;
 
+          console.log("🤖 Calling buyer agent...");
           const response = await buyerAgent.generate(prompt);
+          console.log("💬 Buyer response generated:", response.text.substring(0, 100) + "...");
           
           // Send reply
+          console.log("📮 Sending buyer reply...");
           await replyToEmail({
             inbox_id: inboundEmail.inbox_id,
             message_id: inboundEmail.message_id,
             text: response.text,
           });
 
-          console.log("✅ Buyer response sent successfully");
+          console.log("✅ Buyer response sent successfully via webhook");
         } else {
-          console.log("📬 Email received by seller, no auto-response needed");
+          console.log("📬 Email received by seller inbox - no auto-response needed");
         }
+      } else {
+        console.log("⚠️ Webhook event type not handled:", event.type);
       }
+      console.log(`${"=".repeat(80)}\n`);
     } catch (error) {
       console.error("❌ Error processing webhook:", error);
+      console.error("Stack trace:", (error as Error).stack);
+      console.log(`${"=".repeat(80)}\n`);
     }
   });
 
@@ -123,52 +146,107 @@ Respond as a buyer evaluating this product. Ask a qualifying question about pric
 
       console.log("Inboxes ready:", demoInboxes);
 
+      console.log("\n" + "=".repeat(80));
+      console.log("🌐 WEBHOOK REGISTRATION PHASE");
+      console.log("=".repeat(80));
+      
       // Register webhooks for both inboxes
       // In development: use REPLIT_DEV_DOMAIN
       // In production: use REPLIT_DOMAINS (comma-separated list)
+      console.log("🔍 Checking environment variables:");
+      console.log("  - REPLIT_DEV_DOMAIN:", process.env.REPLIT_DEV_DOMAIN || "(not set)");
+      console.log("  - REPLIT_DOMAINS:", process.env.REPLIT_DOMAINS || "(not set)");
+      console.log("  - NODE_ENV:", process.env.NODE_ENV);
+      
       let replitDomain = process.env.REPLIT_DEV_DOMAIN;
       if (!replitDomain && process.env.REPLIT_DOMAINS) {
         // Production: extract first domain from comma-separated list
         replitDomain = process.env.REPLIT_DOMAINS.split(',')[0];
+        console.log("📍 Using production domain:", replitDomain);
+      } else if (replitDomain) {
+        console.log("📍 Using development domain:", replitDomain);
       }
 
       if (replitDomain) {
         const webhookUrl = `https://${replitDomain}/webhooks/agentmail`;
-        console.log(`🔗 Registering webhooks at: ${webhookUrl}`);
+        console.log(`🔗 Attempting webhook registration at: ${webhookUrl}`);
+        console.log(`📬 Seller inbox ID: ${demoInboxes.seller.inbox_id}`);
+        console.log(`📬 Buyer inbox ID: ${demoInboxes.buyer.inbox_id}`);
         
         try {
-          await Promise.all([
+          console.log("⏳ Calling AgentMail webhook API...");
+          const results = await Promise.all([
             registerWebhook(demoInboxes.seller.inbox_id, webhookUrl),
             registerWebhook(demoInboxes.buyer.inbox_id, webhookUrl),
           ]);
-          console.log("✅ Webhooks registered for both inboxes");
+          console.log("✅ Webhook registration successful!");
+          console.log("📋 Registration results:", JSON.stringify(results, null, 2));
         } catch (webhookError) {
-          console.error("⚠️ Webhook registration failed (demo will continue without webhooks):", webhookError);
+          console.error("❌ Webhook registration FAILED:");
+          console.error("   Error:", webhookError);
+          console.error("   Stack:", (webhookError as Error).stack);
+          console.error("⚠️  Demo will continue without webhooks - using immediate response fallback");
         }
       } else {
-        console.warn("⚠️ No Replit domain found - webhooks not registered");
+        console.error("❌ No Replit domain found in environment!");
+        console.error("   Cannot register webhooks - using immediate response fallback");
       }
+      console.log("=".repeat(80) + "\n");
 
+      console.log("\n" + "=".repeat(80));
+      console.log("📧 EMAIL CONVERSATION PHASE");
+      console.log("=".repeat(80));
+      
       // Generate seller's first email using agent
+      console.log("🤖 Generating seller's outreach email...");
       const sellerMessage = await sellerAgent.generate(
         "Write a brief sales outreach email to a potential B2B SaaS buyer. Introduce a product that helps with sales qualification. Keep it under 100 words and professional."
       );
+      console.log("✅ Seller message generated:", sellerMessage.text.substring(0, 100) + "...");
 
       // Send first email from seller to buyer
-      await sendEmail({
+      console.log("📮 Sending seller email to buyer...");
+      const sellerEmailResult = await sendEmail({
         inbox_id: demoInboxes.seller.inbox_id,
         to: demoInboxes.buyer.email,
         subject: "Streamline Your Sales Qualification Process",
         text: sellerMessage.text,
       });
+      console.log("✅ Seller email sent successfully");
+      console.log("📋 Email result:", JSON.stringify(sellerEmailResult, null, 2));
 
-      console.log("Initial email sent from seller to buyer");
+      // IMMEDIATE BUYER RESPONSE (Hybrid Approach - Guarantees Demo Works)
+      // This ensures the demo always shows a conversation, even if webhooks fail
+      console.log("\n🔄 IMMEDIATE BUYER RESPONSE (Fallback Strategy)");
+      console.log("🤖 Generating buyer's response...");
+      
+      const buyerResponsePrompt = `You received a sales outreach email:
+From: ${demoInboxes.seller.email}
+Subject: Streamline Your Sales Qualification Process
+Body: ${sellerMessage.text}
+
+Respond as a buyer evaluating this product. Ask a qualifying question about pricing, features, or implementation. Keep it under 80 words.`;
+
+      const buyerResponse = await buyerAgent.generate(buyerResponsePrompt);
+      console.log("✅ Buyer response generated:", buyerResponse.text.substring(0, 100) + "...");
+
+      // Send buyer's reply
+      console.log("📮 Sending buyer response...");
+      const buyerEmailResult = await sendEmail({
+        inbox_id: demoInboxes.buyer.inbox_id,
+        to: demoInboxes.seller.email,
+        subject: "Re: Streamline Your Sales Qualification Process",
+        text: buyerResponse.text,
+      });
+      console.log("✅ Buyer response sent successfully (immediate mode)");
+      console.log("📋 Buyer email result:", JSON.stringify(buyerEmailResult, null, 2));
+      console.log("=".repeat(80) + "\n");
 
       res.json({
         success: true,
         seller: demoInboxes.seller.email,
         buyer: demoInboxes.buyer.email,
-        message: "Demo initialized successfully",
+        message: "Demo initialized successfully with immediate buyer response",
       });
     } catch (error) {
       console.error("Error initializing demo:", error);
