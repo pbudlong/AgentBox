@@ -187,58 +187,56 @@ export default function TechStack() {
             </h3>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Scripted: Sponsors */}
-            <Card className="p-6">
-              <h4 className="font-semibold text-lg mb-4 flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-primary" />
-                Sponsors
-              </h4>
-              <div className="space-y-4">
-                {scriptedSponsorTech.map((tech, index) => (
-                  <div key={index} className="border-l-2 border-primary/30 pl-4">
-                    <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <h5 className="font-semibold" data-testid={`text-scripted-sponsor-${index}`}>
+          {/* Scripted: Sponsors */}
+          <Card className="p-6 mb-6">
+            <h4 className="font-semibold text-lg mb-4 flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" />
+              Sponsors
+            </h4>
+            <div className="space-y-4">
+              {scriptedSponsorTech.map((tech, index) => (
+                <div key={index} className="border-l-2 border-primary/30 pl-4">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <h5 className="font-semibold" data-testid={`text-scripted-sponsor-${index}`}>
+                      {tech.name}
+                    </h5>
+                    <Badge variant="default" className="text-xs">
+                      {tech.status}
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-primary/80 mb-1">{tech.role}</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {tech.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          {/* Scripted: Other Tech */}
+          <Card className="p-6">
+            <h4 className="font-semibold text-lg mb-4">Other Technologies</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {scriptedOtherTech.map((tech, index) => (
+                <div key={index} className="flex items-start gap-3">
+                  <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="font-semibold" data-testid={`text-scripted-other-${index}`}>
                         {tech.name}
-                      </h5>
+                      </p>
                       <Badge variant="default" className="text-xs">
                         {tech.status}
                       </Badge>
                     </div>
-                    <p className="text-sm text-primary/80 mb-1">{tech.role}</p>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
+                    <p className="text-sm text-muted-foreground">
                       {tech.description}
                     </p>
                   </div>
-                ))}
-              </div>
-            </Card>
-
-            {/* Scripted: Other Tech */}
-            <Card className="p-6">
-              <h4 className="font-semibold text-lg mb-4">Other Technologies</h4>
-              <div className="space-y-3">
-                {scriptedOtherTech.map((tech, index) => (
-                  <div key={index} className="flex items-start gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <p className="font-semibold" data-testid={`text-scripted-other-${index}`}>
-                          {tech.name}
-                        </p>
-                        <Badge variant="default" className="text-xs">
-                          {tech.status}
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        {tech.description}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          </div>
+                </div>
+              ))}
+            </div>
+          </Card>
         </div>
 
         {/* Section 2: Live Demo */}
@@ -252,61 +250,59 @@ export default function TechStack() {
             </h3>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Live: Sponsors */}
-            <Card className="p-6">
-              <h4 className="font-semibold text-lg mb-4 flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-primary" />
-                Sponsors
-              </h4>
-              <div className="space-y-4">
-                {liveSponsorTech.map((tech, index) => (
-                  <div key={index} className="border-l-2 border-primary/30 pl-4">
-                    <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <h5 className="font-semibold" data-testid={`text-live-sponsor-${index}`}>
+          {/* Live: Sponsors */}
+          <Card className="p-6 mb-6">
+            <h4 className="font-semibold text-lg mb-4 flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" />
+              Sponsors
+            </h4>
+            <div className="space-y-4">
+              {liveSponsorTech.map((tech, index) => (
+                <div key={index} className="border-l-2 border-primary/30 pl-4">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <h5 className="font-semibold" data-testid={`text-live-sponsor-${index}`}>
+                      {tech.name}
+                    </h5>
+                    <Badge 
+                      variant={tech.status === "active" ? "default" : "secondary"}
+                      className="text-xs"
+                    >
+                      {tech.status}
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-primary/80 mb-1">{tech.role}</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {tech.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          {/* Live: Other Tech */}
+          <Card className="p-6">
+            <h4 className="font-semibold text-lg mb-4">Other Technologies</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {liveOtherTech.map((tech, index) => (
+                <div key={index} className="flex items-start gap-3">
+                  <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="font-semibold" data-testid={`text-live-other-${index}`}>
                         {tech.name}
-                      </h5>
-                      <Badge 
-                        variant={tech.status === "active" ? "default" : "secondary"}
-                        className="text-xs"
-                      >
+                      </p>
+                      <Badge variant="default" className="text-xs">
                         {tech.status}
                       </Badge>
                     </div>
-                    <p className="text-sm text-primary/80 mb-1">{tech.role}</p>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
+                    <p className="text-sm text-muted-foreground">
                       {tech.description}
                     </p>
                   </div>
-                ))}
-              </div>
-            </Card>
-
-            {/* Live: Other Tech */}
-            <Card className="p-6">
-              <h4 className="font-semibold text-lg mb-4">Other Technologies</h4>
-              <div className="space-y-3">
-                {liveOtherTech.map((tech, index) => (
-                  <div key={index} className="flex items-start gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <p className="font-semibold" data-testid={`text-live-other-${index}`}>
-                          {tech.name}
-                        </p>
-                        <Badge variant="default" className="text-xs">
-                          {tech.status}
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        {tech.description}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          </div>
+                </div>
+              ))}
+            </div>
+          </Card>
         </div>
 
         {/* Section 3: To Make Fully Functional */}
