@@ -127,27 +127,33 @@ const liveSponsorTech = [
   },
 ];
 
+// Sponsor technologies for color-coding
+const sponsorTech = [
+  "AgentMail", "Replit", "LiveKit", "Browser-Use", "Hyperspell", 
+  "OpenAI", "Mastra", "Composio", "Moss", "Perplexity", "Convex"
+];
+
 // To Make Fully Functional
 const techAlreadyInPlace = [
   {
     name: "Database-Backed Sessions",
     description: "Demo sessions persisted across deployments",
-    tech: ["PostgreSQL", "Drizzle"],
+    tech: ["PostgreSQL", "Drizzle", "Replit"],
   },
   {
     name: "Webhook Infrastructure",
     description: "Real-time email webhooks with duplicate detection and status tracking",
-    tech: ["AgentMail"],
+    tech: ["AgentMail", "Replit"],
   },
   {
     name: "AI Agent Framework",
     description: "GPT-4 powered buyer and seller agents with tool integration",
-    tech: ["Mastra", "OpenAI"],
+    tech: ["Mastra", "OpenAI", "Perplexity"],
   },
   {
     name: "Exchange Counter",
     description: "Infinite loop prevention limiting conversations to 5 emails",
-    tech: ["PostgreSQL"],
+    tech: ["PostgreSQL", "Replit"],
   },
   {
     name: "Real-time Updates",
@@ -352,11 +358,18 @@ export default function TechStack() {
                           {feature.description}
                         </p>
                         <div className="flex flex-wrap gap-1">
-                          {feature.tech.map((techName, techIndex) => (
-                            <Badge key={techIndex} variant="secondary" className="text-xs">
-                              {techName}
-                            </Badge>
-                          ))}
+                          {feature.tech.map((techName, techIndex) => {
+                            const isSponsor = sponsorTech.includes(techName);
+                            return (
+                              <Badge 
+                                key={techIndex} 
+                                variant="secondary" 
+                                className={`text-xs ${isSponsor ? 'bg-purple-500/20 text-purple-300 border-purple-500/30' : ''}`}
+                              >
+                                {techName}
+                              </Badge>
+                            );
+                          })}
                         </div>
                       </div>
                     </div>
@@ -383,11 +396,18 @@ export default function TechStack() {
                           {feature.description}
                         </p>
                         <div className="flex flex-wrap gap-1">
-                          {feature.tech.map((techName, techIndex) => (
-                            <Badge key={techIndex} variant="outline" className="text-xs">
-                              {techName}
-                            </Badge>
-                          ))}
+                          {feature.tech.map((techName, techIndex) => {
+                            const isSponsor = sponsorTech.includes(techName);
+                            return (
+                              <Badge 
+                                key={techIndex} 
+                                variant="outline" 
+                                className={`text-xs ${isSponsor ? 'bg-orange-500/20 text-orange-300 border-orange-500/30' : ''}`}
+                              >
+                                {techName}
+                              </Badge>
+                            );
+                          })}
                         </div>
                       </div>
                     </div>
