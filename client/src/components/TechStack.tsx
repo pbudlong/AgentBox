@@ -220,25 +220,55 @@ export default function TechStack() {
           </div>
 
           <Card className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {standardTech.map((tech, index) => (
-                <div key={index} className="flex items-start gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <p className="font-semibold" data-testid={`text-standard-tech-${index}`}>
-                        {tech.name}
+            {/* Both demos tech in 2-column grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              {standardTech
+                .filter(tech => !tech.description.includes("Live Demo only"))
+                .map((tech, index) => (
+                  <div key={index} className="flex items-start gap-3">
+                    <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="font-semibold" data-testid={`text-standard-tech-${index}`}>
+                          {tech.name}
+                        </p>
+                        <Badge variant="default" className="text-xs">
+                          {tech.status}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        {tech.description}
                       </p>
-                      <Badge variant="default" className="text-xs">
-                        {tech.status}
-                      </Badge>
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      {tech.description}
-                    </p>
                   </div>
-                </div>
-              ))}
+                ))}
+            </div>
+
+            {/* Live Demo only tech stacked vertically */}
+            <div className="border-t pt-6">
+              <p className="text-sm font-medium text-muted-foreground mb-4">Live Demo only:</p>
+              <div className="space-y-3">
+                {standardTech
+                  .filter(tech => tech.description.includes("Live Demo only"))
+                  .map((tech, index) => (
+                    <div key={index} className="flex items-start gap-3">
+                      <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="font-semibold" data-testid={`text-standard-tech-live-${index}`}>
+                            {tech.name}
+                          </p>
+                          <Badge variant="default" className="text-xs">
+                            {tech.status}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {tech.description}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+              </div>
             </div>
           </Card>
         </div>
