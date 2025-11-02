@@ -55,66 +55,6 @@ const scriptedSponsorTech = [
     status: "active",
     description: "Hosting the static demo experience with instant deployments",
   },
-  {
-    name: "AgentMail",
-    role: "Email Infrastructure",
-    status: "not-used",
-    description: "Not used in scripted demo (static conversation only)",
-  },
-  {
-    name: "LiveKit",
-    role: "Real-time Communication",
-    status: "not-used",
-    description: "Not used in scripted demo",
-  },
-  {
-    name: "Browser-Use",
-    role: "Browser Automation",
-    status: "not-used",
-    description: "Not used in scripted demo",
-  },
-  {
-    name: "Hyperspell",
-    role: "Spell Check",
-    status: "not-used",
-    description: "Not used in scripted demo",
-  },
-  {
-    name: "OpenAI",
-    role: "AI Models",
-    status: "not-used",
-    description: "Not used in scripted demo (no AI agents)",
-  },
-  {
-    name: "Anthropic",
-    role: "AI Models",
-    status: "not-used",
-    description: "Not used in scripted demo",
-  },
-  {
-    name: "Composio",
-    role: "Tool Integration",
-    status: "not-used",
-    description: "Not used in scripted demo",
-  },
-  {
-    name: "Moss",
-    role: "Infrastructure",
-    status: "not-used",
-    description: "Not used in scripted demo",
-  },
-  {
-    name: "Perplexity",
-    role: "Research API",
-    status: "not-used",
-    description: "Not used in scripted demo",
-  },
-  {
-    name: "Convex",
-    role: "Real-time Database",
-    status: "not-used",
-    description: "Not used in scripted demo",
-  },
 ];
 
 // Sponsor Tech - Live Demo
@@ -168,10 +108,10 @@ const liveSponsorTech = [
     description: "Not used in live demo",
   },
   {
-    name: "Anthropic",
-    role: "AI Models",
-    status: "not-used",
-    description: "Not used in live demo (using OpenAI instead)",
+    name: "Mastra",
+    role: "AI Agent Framework",
+    status: "active",
+    description: "Framework for building AI agents with tool integration (wraps OpenAI for buyer and seller agents)",
   },
   {
     name: "Composio",
@@ -305,44 +245,22 @@ export default function TechStack() {
           <Card className="p-6 mb-6">
             <h4 className="font-semibold text-lg mb-4">Scripted Demo (/demo)</h4>
             <div className="space-y-4">
-              {/* Active sponsors first */}
-              {scriptedSponsorTech
-                .filter(tech => tech.status === "active")
-                .map((tech, index) => (
-                  <div key={index} className="border-l-2 border-primary/30 pl-4">
-                    <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <h5 className="font-semibold" data-testid={`text-scripted-sponsor-${index}`}>
-                        {tech.name}
-                      </h5>
-                      <Badge variant="default" className="text-xs">
-                        {tech.status}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-primary/80 mb-1">{tech.role}</p>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      {tech.description}
-                    </p>
+              {scriptedSponsorTech.map((tech, index) => (
+                <div key={index} className="border-l-2 border-primary/30 pl-4">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <h5 className="font-semibold" data-testid={`text-scripted-sponsor-${index}`}>
+                      {tech.name}
+                    </h5>
+                    <Badge variant="default" className="text-xs">
+                      {tech.status}
+                    </Badge>
                   </div>
-                ))}
-              {/* Not-used sponsors */}
-              {scriptedSponsorTech
-                .filter(tech => tech.status === "not-used")
-                .map((tech, index) => (
-                  <div key={index} className="border-l-2 border-muted/50 pl-4">
-                    <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <h5 className="font-semibold text-muted-foreground" data-testid={`text-scripted-sponsor-inactive-${index}`}>
-                        {tech.name}
-                      </h5>
-                      <Badge variant="secondary" className="text-xs">
-                        {tech.status}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground/80 mb-1">{tech.role}</p>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      {tech.description}
-                    </p>
-                  </div>
-                ))}
+                  <p className="text-sm text-primary/80 mb-1">{tech.role}</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {tech.description}
+                  </p>
+                </div>
+              ))}
             </div>
           </Card>
 
