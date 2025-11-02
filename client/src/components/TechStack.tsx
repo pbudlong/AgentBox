@@ -80,8 +80,8 @@ const liveSponsorTech = [
   {
     name: "Perplexity",
     role: "Research & Context",
-    status: "not-used",
-    description: "Enriches agent knowledge with real-time company research and market context for better qualification (available but not used in current demo).",
+    status: "active",
+    description: "Integrated as agent tool for real-time company research and market context enrichment (available to agents but not triggered in current 5-email demo).",
   },
   {
     name: "Convex",
@@ -131,54 +131,66 @@ const liveSponsorTech = [
 const techAlreadyInPlace = [
   {
     name: "Database-Backed Sessions",
-    description: "Demo sessions persisted across deployments with PostgreSQL",
+    description: "Demo sessions persisted across deployments",
+    tech: ["PostgreSQL", "Drizzle"],
   },
   {
     name: "Webhook Infrastructure",
-    description: "AgentMail webhooks with duplicate detection and status tracking",
+    description: "Real-time email webhooks with duplicate detection and status tracking",
+    tech: ["AgentMail"],
   },
   {
     name: "AI Agent Framework",
-    description: "GPT-4 powered buyer and seller agents with Mastra",
+    description: "GPT-4 powered buyer and seller agents with tool integration",
+    tech: ["Mastra", "OpenAI"],
   },
   {
     name: "Exchange Counter",
     description: "Infinite loop prevention limiting conversations to 5 emails",
+    tech: ["PostgreSQL"],
   },
   {
     name: "Real-time Updates",
     description: "Polling-based message and webhook status updates",
+    tech: ["TanStack Query"],
   },
 ];
 
 const techToBeImplemented = [
   {
     name: "User Inbox Creation",
-    description: "Build UI for users to claim their own @agentbox.ai email addresses via AgentMail API",
+    description: "Build UI for users to claim their own @agentbox.ai email addresses",
+    tech: ["AgentMail API", "React"],
   },
   {
     name: "Profile Management",
-    description: "Create forms for buyers/sellers to configure qualification preferences (industry, company size, budget, timing, tech stack)",
+    description: "Create forms for buyers/sellers to configure qualification preferences",
+    tech: ["React", "Zod"],
   },
   {
     name: "Fit Score Calculation",
-    description: "Implement multi-signal evaluation algorithm with weighted scoring and decision thresholds",
+    description: "Implement multi-signal evaluation algorithm with weighted scoring",
+    tech: ["Mastra Tools"],
   },
   {
     name: "Calendar File Generation",
     description: "Generate .ics files and Google Calendar event links from meeting proposals",
+    tech: ["Node.js"],
   },
   {
-    name: "Perplexity Integration",
-    description: "Use Perplexity API for real-time company research to enrich agent context",
+    name: "Active Perplexity Usage",
+    description: "Trigger Perplexity research tool in agent workflows for company enrichment",
+    tech: ["Perplexity", "Mastra"],
   },
   {
     name: "Convex Real-time Sync",
-    description: "Replace polling with WebSocket-based real-time updates using Convex",
+    description: "Replace polling with WebSocket-based real-time updates",
+    tech: ["Convex"],
   },
   {
     name: "Production Scaling",
     description: "Multi-user support, custom domain verification, and performance optimization",
+    tech: ["Replit", "Neon"],
   },
 ];
 
@@ -326,19 +338,26 @@ export default function TechStack() {
               {/* Tech Already in Place */}
               <div>
                 <h4 className="font-semibold text-lg mb-4 text-primary">
-                  Tech Already in Place
+                  Features and Tech Already in Place
                 </h4>
                 <div className="space-y-3">
-                  {techAlreadyInPlace.map((tech, index) => (
+                  {techAlreadyInPlace.map((feature, index) => (
                     <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-card/50 border border-card-border">
                       <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                      <div>
+                      <div className="flex-1">
                         <p className="font-semibold mb-1" data-testid={`text-in-place-${index}`}>
-                          {tech.name}
+                          {feature.name}
                         </p>
-                        <p className="text-sm text-muted-foreground leading-relaxed">
-                          {tech.description}
+                        <p className="text-sm text-muted-foreground leading-relaxed mb-2">
+                          {feature.description}
                         </p>
+                        <div className="flex flex-wrap gap-1">
+                          {feature.tech.map((techName, techIndex) => (
+                            <Badge key={techIndex} variant="secondary" className="text-xs">
+                              {techName}
+                            </Badge>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -348,21 +367,28 @@ export default function TechStack() {
               {/* Tech to be Implemented */}
               <div>
                 <h4 className="font-semibold text-lg mb-4 text-gradient-to">
-                  Tech to be Implemented
+                  Features and Tech to be Implemented
                 </h4>
                 <div className="space-y-3">
-                  {techToBeImplemented.map((tech, index) => (
+                  {techToBeImplemented.map((feature, index) => (
                     <div key={index} className="flex items-start gap-3 p-3 rounded-lg hover-elevate bg-card/50 border border-card-border">
                       <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
                         <span className="text-xs font-bold text-primary">{index + 1}</span>
                       </div>
-                      <div>
+                      <div className="flex-1">
                         <p className="font-semibold mb-1" data-testid={`text-to-implement-${index}`}>
-                          {tech.name}
+                          {feature.name}
                         </p>
-                        <p className="text-sm text-muted-foreground leading-relaxed">
-                          {tech.description}
+                        <p className="text-sm text-muted-foreground leading-relaxed mb-2">
+                          {feature.description}
                         </p>
+                        <div className="flex flex-wrap gap-1">
+                          {feature.tech.map((techName, techIndex) => (
+                            <Badge key={techIndex} variant="outline" className="text-xs">
+                              {techName}
+                            </Badge>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   ))}
