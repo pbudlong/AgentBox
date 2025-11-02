@@ -146,46 +146,45 @@ export default function LiveDemo() {
       const webhooks = (webhooksData as any).webhooks;
       setWebhookEvents(webhooks);
       
-      // Filter out webhooks we've already processed (across multiple polls)
-      const newWebhooks = webhooks.filter((w: any) => !processedWebhookIds.has(w.event_id));
-      
-      if (newWebhooks.length === 0) {
-        return; // No new webhooks to process
-      }
-      
-      // Mark these webhooks as processed
-      setProcessedWebhookIds(prev => {
-        const updated = new Set(prev);
-        newWebhooks.forEach((w: any) => updated.add(w.event_id));
-        return updated;
-      });
-      
-      // Add NEW webhooks to debug logs (append to end, sorted by timestamp)
+      // Process webhooks: add new ones OR update existing ones if status changed
       setDebugLogs(prevLogs => {
-        const logsToAdd = newWebhooks
-          .filter((w: any) => 
-            // Only add webhooks that actually processed something (not "ignored" status)
-            !w.status?.includes('ignored')
-          )
-          .map((webhook: any) => ({
-            agent: webhook.to?.includes('buyer') ? 'buyer' : 'seller' as 'buyer' | 'seller',
-            message: `Webhook ${webhook.status}`, // Use actual status from backend
-            status: webhook.status?.includes('success') ? 'success' : webhook.status?.includes('processing') ? 'pending' : 'error' as 'success' | 'error' | 'pending',
-            timestamp: new Date(webhook.timestamp),
-            isWebhook: true,
-            webhookData: webhook,
-          }));
+        const logsWithoutPlaceholder = prevLogs.filter((log: any) => !log.isWebhookPlaceholder);
         
-        // Remove "Waiting for webhook..." placeholder if webhooks arrived
-        const withoutPlaceholder = prevLogs.filter((log: any) => !log.isWebhookPlaceholder);
+        webhooks
+          .filter((w: any) => !w.status?.includes('ignored'))
+          .forEach((webhook: any) => {
+            const existingLogIndex = logsWithoutPlaceholder.findIndex(
+              (log: any) => log.isWebhook && log.webhookData?.event_id === webhook.event_id
+            );
+            
+            const newWebhookLog = {
+              agent: webhook.to?.includes('buyer') ? 'buyer' : 'seller' as 'buyer' | 'seller',
+              message: `Webhook ${webhook.status}`,
+              status: webhook.status?.includes('success') ? 'success' : webhook.status?.includes('processing') ? 'pending' : 'error' as 'success' | 'error' | 'pending',
+              timestamp: new Date(webhook.timestamp),
+              isWebhook: true,
+              webhookData: webhook,
+            };
+            
+            if (existingLogIndex >= 0) {
+              // Update existing webhook if status changed
+              const existingLog = logsWithoutPlaceholder[existingLogIndex] as any;
+              if (existingLog.webhookData?.status !== webhook.status) {
+                logsWithoutPlaceholder[existingLogIndex] = newWebhookLog;
+              }
+            } else {
+              // Add new webhook
+              logsWithoutPlaceholder.push(newWebhookLog);
+            }
+          });
         
-        // Append new webhooks and sort all logs by timestamp
-        return [...withoutPlaceholder, ...logsToAdd].sort((a, b) => 
+        // Sort by timestamp
+        return logsWithoutPlaceholder.sort((a, b) => 
           a.timestamp.getTime() - b.timestamp.getTime()
         );
       });
     }
-  }, [webhooksData, processedWebhookIds]);
+  }, [webhooksData]);
 
   // Update messages from real API data
   useEffect(() => {
@@ -409,7 +408,7 @@ export default function LiveDemo() {
                 <div 
                   key={msg.id} 
                   className="flex justify-end mb-4"
-                  style={{ marginTop: idx * 80 }}
+                  style={{ marginTop: idx * 40 }}
                 >
                   <Card 
                     className="p-4 border-primary/20 bg-card max-w-[85%]" 
@@ -514,7 +513,7 @@ export default function LiveDemo() {
                 <div 
                   key={msg.id} 
                   className="flex justify-start mb-4"
-                  style={{ marginTop: 80 + (idx * 80) }}
+                  style={{ marginTop: 120 + (idx * 40) }}
                 >
                   <Card 
                     className="p-4 border-gradient-via/20 bg-card max-w-[85%]" 
