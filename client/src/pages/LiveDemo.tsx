@@ -169,9 +169,7 @@ export default function LiveDemo() {
           )
           .map((webhook: any) => ({
             agent: webhook.to?.includes('buyer') ? 'buyer' : 'seller' as 'buyer' | 'seller',
-            message: webhook.status?.includes('processing') 
-              ? 'Webhook processing (buyer received)' 
-              : 'Webhook received (seller inbox)',
+            message: 'Webhook received',
             status: webhook.status?.includes('success') || webhook.status?.includes('processing') ? 'pending' : 'error' as 'success' | 'error' | 'pending',
             timestamp: new Date(webhook.timestamp),
             isWebhook: true,
@@ -408,19 +406,25 @@ export default function LiveDemo() {
             
             <div className="flex-1 overflow-auto p-6 space-y-4">
               {sellerMessages.map((msg, idx) => (
-                <Card key={msg.id} className="p-4 border-primary/20 bg-card" data-testid={`message-seller-${idx}`}>
-                  <div className="space-y-2">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs text-muted-foreground">To: {msg.to}</p>
-                        <p className="font-semibold text-foreground mt-1">{msg.subject}</p>
+                <div key={msg.id} className="flex justify-end">
+                  <Card 
+                    className="p-4 border-primary/20 bg-card max-w-[85%]" 
+                    data-testid={`message-seller-${idx}`}
+                    style={{ marginTop: idx * 40 }}
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-muted-foreground">To: {msg.to}</p>
+                          <p className="font-semibold text-foreground mt-1">{msg.subject}</p>
+                        </div>
                       </div>
+                      <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
+                        {msg.body}
+                      </p>
                     </div>
-                    <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
-                      {msg.body}
-                    </p>
-                  </div>
-                </Card>
+                  </Card>
+                </div>
               ))}
             </div>
           </div>
@@ -504,19 +508,25 @@ export default function LiveDemo() {
             
             <div className="flex-1 overflow-auto p-6 space-y-4">
               {buyerMessages.map((msg, idx) => (
-                <Card key={msg.id} className="p-4 border-gradient-via/20 bg-card" data-testid={`message-buyer-${idx}`}>
-                  <div className="space-y-2">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs text-muted-foreground">To: {msg.to}</p>
-                        <p className="font-semibold text-foreground mt-1">{msg.subject}</p>
+                <div key={msg.id} className="flex justify-start">
+                  <Card 
+                    className="p-4 border-gradient-via/20 bg-card max-w-[85%]" 
+                    data-testid={`message-buyer-${idx}`}
+                    style={{ marginTop: idx * 40 }}
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-muted-foreground">To: {msg.to}</p>
+                          <p className="font-semibold text-foreground mt-1">{msg.subject}</p>
+                        </div>
                       </div>
+                      <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
+                        {msg.body}
+                      </p>
                     </div>
-                    <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
-                      {msg.body}
-                    </p>
-                  </div>
-                </Card>
+                  </Card>
+                </div>
               ))}
             </div>
           </div>
