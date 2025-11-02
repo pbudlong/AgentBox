@@ -160,40 +160,31 @@ export default function LiveDemo() {
         return updated;
       });
       
-      // Merge NEW webhooks inline with execution flow
+      // Add NEW webhooks to debug logs (append to end, sorted by timestamp)
       setDebugLogs(prevLogs => {
-        const newLogs = [...prevLogs];
-        
-        newWebhooks.forEach((webhook: any) => {
-          const webhookLog: any = {
-            agent: webhook.to?.includes('buyer') ? 'buyer' : 'seller',
-            message: 'Webhook received',
-            status: webhook.status?.includes('success') ? 'success' : webhook.status?.includes('error') ? 'error' : 'pending',
+        const logsToAdd = newWebhooks
+          .filter((w: any) => 
+            // Only add webhooks that actually processed something (not "ignored" status)
+            !w.status?.includes('ignored')
+          )
+          .map((webhook: any) => ({
+            agent: webhook.to?.includes('buyer') ? 'buyer' : 'seller' as 'buyer' | 'seller',
+            message: webhook.status?.includes('processing') 
+              ? 'Webhook processing (buyer received)' 
+              : 'Webhook received (seller inbox)',
+            status: webhook.status?.includes('success') || webhook.status?.includes('processing') ? 'pending' : 'error' as 'success' | 'error' | 'pending',
             timestamp: new Date(webhook.timestamp),
             isWebhook: true,
             webhookData: webhook,
-          };
-          
-          // Insert webhook at correct chronological position
-          if (webhookLog.agent === 'buyer') {
-            // Buyer webhook goes after "Sent email to buyer" (seller step 4)
-            const insertIndex = newLogs.findIndex((log: any) => log.message === 'Sent email to buyer') + 1;
-            newLogs.splice(insertIndex, 0, webhookLog);
-            
-            // Add buyer's response steps after webhook if successful
-            if (webhook.status?.includes('success')) {
-              newLogs.splice(insertIndex + 1, 0, 
-                { agent: 'buyer', message: 'Generated response via OpenAI', status: 'success', timestamp: new Date(webhook.timestamp) } as any,
-                { agent: 'buyer', message: 'Sent reply email via webhook', status: 'success', timestamp: new Date(webhook.timestamp) } as any
-              );
-            }
-          } else if (webhookLog.agent === 'seller') {
-            // Seller webhook goes at the end (after buyer sends reply)
-            newLogs.push(webhookLog);
-          }
-        });
+          }));
         
-        return newLogs;
+        // Remove "Waiting for webhook..." placeholder if webhooks arrived
+        const withoutPlaceholder = prevLogs.filter((log: any) => !log.isWebhookPlaceholder);
+        
+        // Append new webhooks and sort all logs by timestamp
+        return [...withoutPlaceholder, ...logsToAdd].sort((a, b) => 
+          a.timestamp.getTime() - b.timestamp.getTime()
+        );
       });
     }
   }, [webhooksData, processedWebhookIds]);
