@@ -72,6 +72,12 @@ const liveSponsorTech = [
     description: "Full-stack hosting with integrated database, webhooks, and seamless deployment for rapid prototyping.",
   },
   {
+    name: "Mastra",
+    role: "AI Agent Framework",
+    status: "active",
+    description: "Framework for building AI agents with tool integration (wraps OpenAI for buyer and seller agents)",
+  },
+  {
     name: "OpenAI",
     role: "Agent Intelligence",
     status: "active",
@@ -108,12 +114,6 @@ const liveSponsorTech = [
     description: "Not used in live demo",
   },
   {
-    name: "Mastra",
-    role: "AI Agent Framework",
-    status: "active",
-    description: "Framework for building AI agents with tool integration (wraps OpenAI for buyer and seller agents)",
-  },
-  {
     name: "Composio",
     role: "Tool Integration",
     status: "not-used",
@@ -136,11 +136,6 @@ const sponsorTech = [
 // To Make Fully Functional
 const techAlreadyInPlace = [
   {
-    name: "Database-Backed Sessions",
-    description: "Demo sessions persisted across deployments",
-    tech: ["PostgreSQL", "Drizzle", "Replit"],
-  },
-  {
     name: "Webhook Infrastructure",
     description: "Real-time email webhooks with duplicate detection and status tracking",
     tech: ["AgentMail", "Replit"],
@@ -151,9 +146,9 @@ const techAlreadyInPlace = [
     tech: ["Mastra", "OpenAI", "Perplexity"],
   },
   {
-    name: "Exchange Counter",
-    description: "Infinite loop prevention limiting conversations to 5 emails",
-    tech: ["PostgreSQL", "Replit"],
+    name: "Database-Backed Sessions",
+    description: "Demo sessions persisted across deployments",
+    tech: ["PostgreSQL", "Drizzle", "Replit"],
   },
   {
     name: "Real-time Updates",
@@ -164,28 +159,18 @@ const techAlreadyInPlace = [
 
 const techToBeImplemented = [
   {
-    name: "User Inbox Creation",
+    name: "AgentMail Inbox Creation",
     description: "Build UI for users to claim their own @agentbox.ai email addresses",
-    tech: ["AgentMail API", "React"],
+    tech: ["AgentMail", "React"],
   },
   {
-    name: "Profile Management",
-    description: "Create forms for buyers/sellers to configure qualification preferences",
-    tech: ["React", "Zod"],
-  },
-  {
-    name: "Fit Score Calculation",
+    name: "Mastra Fit Scoring",
     description: "Implement multi-signal evaluation algorithm with weighted scoring",
-    tech: ["Mastra Tools"],
+    tech: ["Mastra", "OpenAI"],
   },
   {
-    name: "Calendar File Generation",
-    description: "Generate .ics files and Google Calendar event links from meeting proposals",
-    tech: ["Node.js"],
-  },
-  {
-    name: "Active Perplexity Usage",
-    description: "Trigger Perplexity research tool in agent workflows for company enrichment",
+    name: "Perplexity Active Usage",
+    description: "Trigger company research tool in agent workflows for enrichment",
     tech: ["Perplexity", "Mastra"],
   },
   {
@@ -194,9 +179,19 @@ const techToBeImplemented = [
     tech: ["Convex"],
   },
   {
-    name: "Production Scaling",
-    description: "Multi-user support, custom domain verification, and performance optimization",
-    tech: ["Replit", "Neon"],
+    name: "Replit Production Scaling",
+    description: "Multi-user support, custom domain verification, and optimization",
+    tech: ["Replit"],
+  },
+  {
+    name: "Profile Management",
+    description: "Create forms for buyers/sellers to configure qualification preferences",
+    tech: ["React", "Zod"],
+  },
+  {
+    name: "Calendar File Generation",
+    description: "Generate .ics files and Google Calendar event links from meeting proposals",
+    tech: ["Node.js"],
   },
 ];
 
