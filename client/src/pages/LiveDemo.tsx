@@ -83,6 +83,7 @@ export default function LiveDemo() {
   const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
   const [debugLogs, setDebugLogs] = useState<{ agent: 'seller' | 'buyer', message: string, status: 'success' | 'error' | 'pending', timestamp: Date }[]>([]);
   const [webhookEvents, setWebhookEvents] = useState<any[]>([]);
+  const [processedWebhookIds, setProcessedWebhookIds] = useState<Set<string>>(new Set());
   const [, navigate] = useLocation();
 
   // Initialize demo mutation
@@ -145,23 +146,25 @@ export default function LiveDemo() {
       const webhooks = (webhooksData as any).webhooks;
       setWebhookEvents(webhooks);
       
-      // Merge webhooks inline with execution flow
+      // Filter out webhooks we've already processed (across multiple polls)
+      const newWebhooks = webhooks.filter((w: any) => !processedWebhookIds.has(w.event_id));
+      
+      if (newWebhooks.length === 0) {
+        return; // No new webhooks to process
+      }
+      
+      // Mark these webhooks as processed
+      setProcessedWebhookIds(prev => {
+        const updated = new Set(prev);
+        newWebhooks.forEach((w: any) => updated.add(w.event_id));
+        return updated;
+      });
+      
+      // Merge NEW webhooks inline with execution flow
       setDebugLogs(prevLogs => {
-        // Remove existing webhook entries and placeholder
-        const baseLogs = prevLogs.filter((log: any) => !log.isWebhook && !log.isWebhookPlaceholder);
+        const newLogs = [...prevLogs];
         
-        // Add webhook events chronologically
-        const newLogs = [...baseLogs];
-        
-        // Deduplicate webhooks by event_id (AgentMail sends duplicates)
-        const uniqueWebhooks = webhooks.reduce((acc: any[], webhook: any) => {
-          if (!acc.find(w => w.event_id === webhook.event_id)) {
-            acc.push(webhook);
-          }
-          return acc;
-        }, []);
-        
-        uniqueWebhooks.forEach((webhook: any) => {
+        newWebhooks.forEach((webhook: any) => {
           const webhookLog: any = {
             agent: webhook.to?.includes('buyer') ? 'buyer' : 'seller',
             message: 'Webhook received',
@@ -193,7 +196,7 @@ export default function LiveDemo() {
         return newLogs;
       });
     }
-  }, [webhooksData]);
+  }, [webhooksData, processedWebhookIds]);
 
   // Update messages from real API data
   useEffect(() => {
@@ -268,6 +271,7 @@ export default function LiveDemo() {
     setSessionStartTime(null);
     setDebugLogs([]);
     setWebhookEvents([]);
+    setProcessedWebhookIds(new Set());
     console.log("🔄 Demo reset");
   };
 
