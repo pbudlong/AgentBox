@@ -153,7 +153,15 @@ export default function LiveDemo() {
         // Add webhook events chronologically
         const newLogs = [...baseLogs];
         
-        webhooks.forEach((webhook: any) => {
+        // Deduplicate webhooks by event_id (AgentMail sends duplicates)
+        const uniqueWebhooks = webhooks.reduce((acc: any[], webhook: any) => {
+          if (!acc.find(w => w.event_id === webhook.event_id)) {
+            acc.push(webhook);
+          }
+          return acc;
+        }, []);
+        
+        uniqueWebhooks.forEach((webhook: any) => {
           const webhookLog: any = {
             agent: webhook.to?.includes('buyer') ? 'buyer' : 'seller',
             message: 'Webhook received',
