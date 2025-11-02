@@ -174,6 +174,11 @@ const techToBeImplemented = [
     tech: ["Perplexity", "Mastra"],
   },
   {
+    name: "Composio Calendar Integration",
+    description: "Generate .ics files and Google Calendar event links from meeting proposals",
+    tech: ["Composio"],
+  },
+  {
     name: "Convex Real-time Sync",
     description: "Replace polling with WebSocket-based real-time updates",
     tech: ["Convex"],
@@ -187,11 +192,6 @@ const techToBeImplemented = [
     name: "Profile Management",
     description: "Create forms for buyers/sellers to configure qualification preferences",
     tech: ["React", "Zod"],
-  },
-  {
-    name: "Calendar File Generation",
-    description: "Generate .ics files and Google Calendar event links from meeting proposals",
-    tech: ["Node.js"],
   },
 ];
 
