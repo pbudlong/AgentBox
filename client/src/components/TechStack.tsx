@@ -1,112 +1,155 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, Code2, Sparkles, Wrench } from "lucide-react";
-import { SiReplit, SiOpenai } from "react-icons/si";
+import { CheckCircle2, Sparkles, Wrench, Play, Zap } from "lucide-react";
+import { SiReplit } from "react-icons/si";
 
-const sponsors = [
+// Scripted Demo Tech
+const scriptedSponsorTech = [
+  {
+    name: "Replit",
+    role: "Hosting Platform",
+    status: "active",
+    description: "Hosting the static demo experience",
+  },
+];
+
+const scriptedOtherTech = [
+  {
+    name: "React + TypeScript",
+    status: "active",
+    description: "Frontend framework with full type safety",
+  },
+  {
+    name: "Tailwind CSS + shadcn/ui",
+    status: "active",
+    description: "Professional UI components with dark mode",
+  },
+  {
+    name: "Wouter",
+    status: "active",
+    description: "Lightweight client-side routing",
+  },
+];
+
+// Live Demo Tech
+const liveSponsorTech = [
   {
     name: "AgentMail",
     role: "Core Email Infrastructure",
+    status: "active",
     description: "Provides @agentmail.to email addresses, webhook delivery, and real-time email routing for agent conversations.",
-    status: "integrated",
-    liveDemo: true,
   },
   {
     name: "Neon / PostgreSQL",
     role: "Production Database",
+    status: "active",
     description: "Persists demo sessions, inbox IDs, and exchange counters to survive deployments and enable webhook state recovery.",
-    status: "integrated",
-    liveDemo: true,
   },
   {
     name: "Mastra / OpenAI",
     role: "Agent Intelligence",
+    status: "active",
     description: "Powers buyer and seller AI agents with GPT-4 for natural language generation and intelligent email responses.",
-    status: "integrated",
-    liveDemo: true,
   },
   {
     name: "Perplexity",
     role: "Research & Context",
+    status: "not-used",
     description: "Enriches agent knowledge with real-time company research and market context for better qualification (available but not used in current demo).",
-    status: "available",
-    liveDemo: false,
   },
   {
     name: "Replit",
     role: "Hosting & Deployment",
+    status: "active",
     description: "Full-stack hosting with integrated database, webhooks, and seamless deployment for rapid prototyping.",
-    status: "integrated",
-    liveDemo: true,
   },
 ];
 
-const implemented = [
+const liveOtherTech = [
   {
     name: "React + TypeScript",
+    status: "active",
     description: "Frontend framework with full type safety",
-    demo: "both",
   },
   {
     name: "Tailwind CSS + shadcn/ui",
+    status: "active",
     description: "Professional UI components with dark mode",
-    demo: "both",
   },
   {
-    name: "Express + PostgreSQL",
-    description: "Backend API with Neon database persistence",
-    demo: "live",
+    name: "Express.js",
+    status: "active",
+    description: "Backend API server with webhook handling",
+  },
+  {
+    name: "Drizzle ORM",
+    status: "active",
+    description: "Type-safe database operations and schema management",
+  },
+  {
+    name: "TanStack Query",
+    status: "active",
+    description: "Efficient data fetching and caching with real-time polling",
   },
   {
     name: "AgentMail Webhooks",
-    description: "Real-time email webhook delivery with timestamp filtering",
-    demo: "live",
+    status: "active",
+    description: "Real-time email webhook delivery with duplicate detection",
   },
-  {
-    name: "Mastra AI Agent Framework",
-    description: "GPT-4 powered buyer and seller agents",
-    demo: "live",
-  },
+];
+
+// To Make Fully Functional
+const techAlreadyInPlace = [
   {
     name: "Database-Backed Sessions",
-    description: "Demo sessions persisted across deployments",
-    demo: "live",
+    description: "Demo sessions persisted across deployments with PostgreSQL",
+  },
+  {
+    name: "Webhook Infrastructure",
+    description: "AgentMail webhooks with duplicate detection and status tracking",
+  },
+  {
+    name: "AI Agent Framework",
+    description: "GPT-4 powered buyer and seller agents with Mastra",
+  },
+  {
+    name: "Exchange Counter",
+    description: "Infinite loop prevention limiting conversations to 5 emails",
+  },
+  {
+    name: "Real-time Updates",
+    description: "Polling-based message and webhook status updates",
   },
 ];
 
-const demoFeatures = [
+const techToBeImplemented = [
   {
-    feature: "Scripted Demo",
-    description: "Pre-written conversation showing qualification flow",
-    items: ["Static message history", "Fit score calculation demo", "Meeting scheduling UI"],
+    name: "User Inbox Creation",
+    description: "Build UI for users to claim their own @agentbox.ai email addresses via AgentMail API",
   },
   {
-    feature: "Live Demo",
-    description: "Real AI agents communicating via actual emails",
-    items: ["AgentMail webhook delivery", "GPT-4 agent responses", "Database-persisted sessions", "Infinite loop prevention"],
-  },
-];
-
-const remaining = [
-  {
-    task: "Convex Real-time Sync",
-    description: "Run npx convex dev locally to enable live thread updates and persistent storage",
+    name: "Profile Management",
+    description: "Create forms for buyers/sellers to configure qualification preferences (industry, company size, budget, timing, tech stack)",
   },
   {
-    task: "AgentMail Inbox Creation",
-    description: "Build UI for users to claim their @agentbox.ai email addresses",
+    name: "Fit Score Calculation",
+    description: "Implement multi-signal evaluation algorithm with weighted scoring and decision thresholds",
   },
   {
-    task: "Profile Management",
-    description: "Create forms for buyers/sellers to configure qualification preferences",
-  },
-  {
-    task: "Calendar File Generation",
+    name: "Calendar File Generation",
     description: "Generate .ics files and Google Calendar event links from meeting proposals",
   },
   {
-    task: "Production Deployment",
-    description: "Configure webhooks, domain verification, and scale testing",
+    name: "Perplexity Integration",
+    description: "Use Perplexity API for real-time company research to enrich agent context",
+  },
+  {
+    name: "Convex Real-time Sync",
+    description: "Replace polling with WebSocket-based real-time updates using Convex",
+  },
+  {
+    name: "Production Scaling",
+    description: "Multi-user support, custom domain verification, and performance optimization",
   },
 ];
 
@@ -123,144 +166,196 @@ export default function TechStack() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-          {/* Sponsors - What Powers This */}
-          <Card className="p-8">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <Sparkles className="h-6 w-6 text-primary" />
-              </div>
-              <h3 className="text-2xl font-semibold" data-testid="text-sponsors-heading">
-                Sponsor Technologies
-              </h3>
+        {/* Section 1: Scripted Demo */}
+        <div className="mb-12">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2 rounded-lg bg-gradient-to-br from-gradient-from to-gradient-via/50">
+              <Play className="h-6 w-6 text-white" />
             </div>
-            <div className="space-y-6">
-              {sponsors.map((sponsor, index) => (
-                <div key={index} className="border-l-2 border-primary/30 pl-4">
-                  <div className="flex items-center gap-2 mb-2 flex-wrap">
-                    <h4 className="font-semibold text-lg" data-testid={`text-sponsor-name-${index}`}>
-                      {sponsor.name}
-                    </h4>
-                    <Badge 
-                      variant={sponsor.status === "integrated" ? "default" : "secondary"}
-                      className="text-xs"
-                    >
-                      {sponsor.status}
-                    </Badge>
-                    {sponsor.liveDemo && (
-                      <Badge variant="outline" className="text-xs border-primary/50">
-                        Live Demo
-                      </Badge>
-                    )}
-                  </div>
-                  <p className="text-sm text-primary/80 mb-2">{sponsor.role}</p>
-                  <p className="text-sm text-muted-foreground leading-relaxed" data-testid={`text-sponsor-desc-${index}`}>
-                    {sponsor.description}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </Card>
+            <h3 className="text-2xl font-semibold" data-testid="text-scripted-demo-heading">
+              Scripted Demo (/demo)
+            </h3>
+          </div>
 
-          {/* Implemented Tech */}
-          <Card className="p-8">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 rounded-lg bg-gradient-to-br from-gradient-from to-gradient-via/50">
-                <Code2 className="h-6 w-6 text-white" />
-              </div>
-              <h3 className="text-2xl font-semibold" data-testid="text-implemented-heading">
-                Implemented
-              </h3>
-            </div>
-            <div className="space-y-4">
-              {implemented.map((tech, index) => (
-                <div key={index} className="flex items-start gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <p className="font-semibold" data-testid={`text-implemented-name-${index}`}>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Scripted: Sponsors */}
+            <Card className="p-6">
+              <h4 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-primary" />
+                Sponsors
+              </h4>
+              <div className="space-y-4">
+                {scriptedSponsorTech.map((tech, index) => (
+                  <div key={index} className="border-l-2 border-primary/30 pl-4">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <h5 className="font-semibold" data-testid={`text-scripted-sponsor-${index}`}>
                         {tech.name}
-                      </p>
-                      {tech.demo === "live" && (
-                        <Badge variant="default" className="text-xs">Live Demo</Badge>
-                      )}
-                      {tech.demo === "both" && (
-                        <Badge variant="secondary" className="text-xs">Both</Badge>
-                      )}
+                      </h5>
+                      <Badge variant="default" className="text-xs">
+                        {tech.status}
+                      </Badge>
                     </div>
-                    <p className="text-sm text-muted-foreground" data-testid={`text-implemented-desc-${index}`}>
+                    <p className="text-sm text-primary/80 mb-1">{tech.role}</p>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
                       {tech.description}
                     </p>
                   </div>
-                </div>
-              ))}
-            </div>
-          </Card>
+                ))}
+              </div>
+            </Card>
+
+            {/* Scripted: Other Tech */}
+            <Card className="p-6">
+              <h4 className="font-semibold text-lg mb-4">Other Technologies</h4>
+              <div className="space-y-3">
+                {scriptedOtherTech.map((tech, index) => (
+                  <div key={index} className="flex items-start gap-3">
+                    <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="font-semibold" data-testid={`text-scripted-other-${index}`}>
+                          {tech.name}
+                        </p>
+                        <Badge variant="default" className="text-xs">
+                          {tech.status}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        {tech.description}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </div>
         </div>
 
-        {/* Demo Comparison */}
-        <Card className="p-8 mb-8 bg-gradient-to-br from-gradient-to/5 to-transparent border-gradient-to/30">
+        {/* Section 2: Live Demo */}
+        <div className="mb-12">
           <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 rounded-lg bg-gradient-to/10">
-              <Sparkles className="h-6 w-6 text-gradient-to" />
+            <div className="p-2 rounded-lg bg-primary/10">
+              <Zap className="h-6 w-6 text-primary" />
             </div>
-            <h3 className="text-2xl font-semibold" data-testid="text-demo-comparison-heading">
-              Demo Comparison
+            <h3 className="text-2xl font-semibold" data-testid="text-live-demo-heading">
+              Live Demo (/live)
             </h3>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {demoFeatures.map((demo, index) => (
-              <div key={index} className="p-6 rounded-lg bg-background/50 border border-card-border">
-                <div className="flex items-center gap-2 mb-3">
-                  <h4 className="font-semibold text-lg" data-testid={`text-demo-feature-${index}`}>
-                    {demo.feature}
-                  </h4>
-                  <Badge variant={index === 1 ? "default" : "secondary"} className="text-xs">
-                    {index === 1 ? "Production Ready" : "Static"}
-                  </Badge>
-                </div>
-                <p className="text-sm text-muted-foreground mb-4">
-                  {demo.description}
-                </p>
-                <ul className="space-y-2">
-                  {demo.items.map((item, itemIndex) => (
-                    <li key={itemIndex} className="flex items-start gap-2 text-sm">
-                      <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-        </Card>
 
-        {/* Remaining Work */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Live: Sponsors */}
+            <Card className="p-6">
+              <h4 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-primary" />
+                Sponsors
+              </h4>
+              <div className="space-y-4">
+                {liveSponsorTech.map((tech, index) => (
+                  <div key={index} className="border-l-2 border-primary/30 pl-4">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <h5 className="font-semibold" data-testid={`text-live-sponsor-${index}`}>
+                        {tech.name}
+                      </h5>
+                      <Badge 
+                        variant={tech.status === "active" ? "default" : "secondary"}
+                        className="text-xs"
+                      >
+                        {tech.status}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-primary/80 mb-1">{tech.role}</p>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      {tech.description}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </Card>
+
+            {/* Live: Other Tech */}
+            <Card className="p-6">
+              <h4 className="font-semibold text-lg mb-4">Other Technologies</h4>
+              <div className="space-y-3">
+                {liveOtherTech.map((tech, index) => (
+                  <div key={index} className="flex items-start gap-3">
+                    <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="font-semibold" data-testid={`text-live-other-${index}`}>
+                          {tech.name}
+                        </p>
+                        <Badge variant="default" className="text-xs">
+                          {tech.status}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        {tech.description}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </div>
+        </div>
+
+        {/* Section 3: To Make Fully Functional */}
         <Card className="p-8 border-primary/20">
           <div className="flex items-center gap-3 mb-6">
             <div className="p-2 rounded-lg bg-primary/10">
               <Wrench className="h-6 w-6 text-primary" />
             </div>
-            <h3 className="text-2xl font-semibold" data-testid="text-remaining-heading">
-              To Make It Fully Functional
+            <h3 className="text-2xl font-semibold" data-testid="text-fully-functional-heading">
+              To Make Fully Functional
             </h3>
           </div>
-          <div className="space-y-4">
-            {remaining.map((task, index) => (
-              <div key={index} className="flex items-start gap-4 p-4 rounded-lg hover-elevate bg-card/50 border border-card-border">
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                  <span className="text-sm font-bold text-primary">{index + 1}</span>
-                </div>
-                <div>
-                  <h4 className="font-semibold mb-1" data-testid={`text-remaining-task-${index}`}>
-                    {task.task}
-                  </h4>
-                  <p className="text-sm text-muted-foreground leading-relaxed" data-testid={`text-remaining-desc-${index}`}>
-                    {task.description}
-                  </p>
-                </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Tech Already in Place */}
+            <div>
+              <h4 className="font-semibold text-lg mb-4 text-primary">
+                Tech Already in Place
+              </h4>
+              <div className="space-y-3">
+                {techAlreadyInPlace.map((tech, index) => (
+                  <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-card/50 border border-card-border">
+                    <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-semibold mb-1" data-testid={`text-in-place-${index}`}>
+                        {tech.name}
+                      </p>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        {tech.description}
+                      </p>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
+
+            {/* Tech to be Implemented */}
+            <div>
+              <h4 className="font-semibold text-lg mb-4 text-gradient-to">
+                Tech to be Implemented
+              </h4>
+              <div className="space-y-3">
+                {techToBeImplemented.map((tech, index) => (
+                  <div key={index} className="flex items-start gap-3 p-3 rounded-lg hover-elevate bg-card/50 border border-card-border">
+                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
+                      <span className="text-xs font-bold text-primary">{index + 1}</span>
+                    </div>
+                    <div>
+                      <p className="font-semibold mb-1" data-testid={`text-to-implement-${index}`}>
+                        {tech.name}
+                      </p>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        {tech.description}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </Card>
 
