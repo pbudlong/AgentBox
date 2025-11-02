@@ -22,6 +22,16 @@ let webhookEvents: Array<{
 // Track processed event IDs to prevent duplicates
 const processedEventIds = new Set<string>();
 
+// In-memory demo session storage (production-ready for hackathon demo)
+let currentDemoSession: {
+  sellerInboxId: string;
+  sellerEmail: string;
+  buyerInboxId: string;
+  buyerEmail: string;
+  exchangeCount: number;
+  createdAt: Date;
+} | null = null;
+
 // Helper function to extract only the new message content (strip quoted history)
 function extractNewContent(emailBody: string): string {
   // Split by common reply markers
@@ -93,11 +103,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (event.event_type === "message.received" && event.message) {
         const inboundEmail = event.message;
         
-        // Load demo session from database
-        const session = await storage.getDemoSessionByInboxId(inboundEmail.inbox_id);
+        // Load demo session from in-memory storage
+        const session = currentDemoSession;
         
         if (!session) {
-          console.log("⚠️ No demo session found for inbox:", inboundEmail.inbox_id);
+          console.log("⚠️ No demo session found in memory");
           webhookEvents.push({
             timestamp: new Date(),
             from: inboundEmail.from || 'unknown',
@@ -113,7 +123,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Check if message is older than session (AgentMail replays historical messages)
         const messageTimestamp = new Date(inboundEmail.created_at || inboundEmail.timestamp);
-        const sessionTimestamp = new Date(session.createdAt);
+        const sessionTimestamp = session.createdAt;
         
         if (messageTimestamp < sessionTimestamp) {
           console.log("⏮️ Ignoring old message from before session creation:", {
@@ -197,9 +207,9 @@ Respond as a buyer evaluating this product. Ask a qualifying question about pric
             text: response.text,
           });
 
-          // Increment exchange count in database
-          await storage.incrementExchangeCount(session.id);
-          console.log(`📊 Exchange count: ${session.exchangeCount + 1}/${MAX_EXCHANGES}`);
+          // Increment exchange count in memory
+          session.exchangeCount++;
+          console.log(`📊 Exchange count: ${session.exchangeCount}/${MAX_EXCHANGES}`);
 
           // Update webhook event status
           webhookEvents[webhookEvents.length - 1].status = 'success (buyer replied)';
@@ -239,9 +249,9 @@ Respond as a helpful sales person. Answer their questions professionally and try
             text: response.text,
           });
 
-          // Increment exchange count in database
-          await storage.incrementExchangeCount(session.id);
-          console.log(`📊 Exchange count: ${session.exchangeCount + 1}/${MAX_EXCHANGES}`);
+          // Increment exchange count in memory
+          session.exchangeCount++;
+          console.log(`📊 Exchange count: ${session.exchangeCount}/${MAX_EXCHANGES}`);
 
           // Update webhook event status
           webhookEvents[webhookEvents.length - 1].status = 'success (seller replied)';
@@ -302,16 +312,17 @@ Respond as a helpful sales person. Answer their questions professionally and try
       const buyerEmail = (buyerInbox as any).inboxId;    // inboxId IS the email address
       console.log("Created new buyer inbox:", buyerEmail);
 
-      // Save session to database
-      console.log("💾 Saving demo session to database...");
-      const session = await storage.createDemoSession({
+      // Save session to in-memory storage
+      console.log("💾 Saving demo session to memory...");
+      currentDemoSession = {
         sellerInboxId,
         sellerEmail,
         buyerInboxId,
         buyerEmail,
         exchangeCount: 0,
-      });
-      console.log("✅ Demo session created in database:", session.id);
+        createdAt: new Date(),
+      };
+      console.log("✅ Demo session created in memory");
 
       console.log("Inboxes ready:", { seller: sellerEmail, buyer: buyerEmail });
 
@@ -401,8 +412,8 @@ Respond as a helpful sales person. Answer their questions professionally and try
   // Fetch demo messages
   app.get("/api/demo/messages", async (req, res) => {
     try {
-      // Load latest session from database
-      const session = await storage.getLatestDemoSession();
+      // Load session from in-memory storage
+      const session = currentDemoSession;
       
       if (!session) {
         return res.json({ messages: [], initialized: false });
