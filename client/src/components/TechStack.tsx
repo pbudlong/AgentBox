@@ -9,7 +9,7 @@ const scriptedSponsorTech = [
     name: "Replit",
     role: "Hosting Platform",
     status: "active",
-    description: "Hosting the static demo experience",
+    description: "Hosting the static demo experience with instant deployments",
   },
 ];
 
@@ -17,17 +17,27 @@ const scriptedOtherTech = [
   {
     name: "React + TypeScript",
     status: "active",
-    description: "Frontend framework with full type safety",
+    description: "Frontend framework with full type safety for UI components",
   },
   {
     name: "Tailwind CSS + shadcn/ui",
     status: "active",
-    description: "Professional UI components with dark mode",
+    description: "Professional UI component library with dark mode and gradient system",
   },
   {
     name: "Wouter",
     status: "active",
-    description: "Lightweight client-side routing",
+    description: "Lightweight client-side routing for multi-page navigation",
+  },
+  {
+    name: "Vite",
+    status: "active",
+    description: "Fast build tool and development server",
+  },
+  {
+    name: "Lucide React",
+    status: "active",
+    description: "Icon system for UI elements and visual indicators",
   },
 ];
 
