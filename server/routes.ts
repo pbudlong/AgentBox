@@ -90,10 +90,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (event.event_id && processedEventIds.has(event.event_id)) {
         console.log("⚠️ Duplicate webhook event detected, skipping:", event.event_id);
         console.log(`${"=".repeat(80)}\n`);
+        // Don't add duplicate events to webhookEvents array
         return;
       }
       
-      // Mark event as processed
+      // Mark event as processed (prevents duplicates from being added to webhookEvents)
       if (event.event_id) {
         processedEventIds.add(event.event_id);
       }
