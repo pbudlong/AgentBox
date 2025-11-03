@@ -266,12 +266,12 @@ export default function TechStack() {
           </div>
 
           <Card className="p-3">
-            <div className="grid grid-cols-1 md:grid-rows-6 md:grid-flow-col gap-2">
+            <div className="grid grid-cols-1 md:grid-rows-6 md:grid-flow-col gap-x-4 gap-y-2">
               {allSponsorTech.map((tech, index) => (
                 <div key={index} className="flex items-start gap-2">
                   <CheckCircle2 
                     className={`h-4 w-4 flex-shrink-0 mt-0.5 ${
-                      tech.status === "not-used" ? "text-primary" : "text-purple-300"
+                      tech.status === "not-used" ? "text-foreground" : "text-purple-300"
                     }`} 
                   />
                   <div className="flex-1">
@@ -324,7 +324,7 @@ export default function TechStack() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* Tech Already in Place */}
               <div>
-                <h4 className="font-semibold text-sm mb-2 text-primary">
+                <h4 className="font-semibold text-sm mb-2 text-foreground">
                   Features and Tech Already in Place
                 </h4>
                 <div className="space-y-1.5">
