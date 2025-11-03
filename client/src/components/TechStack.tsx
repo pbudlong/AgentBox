@@ -266,9 +266,14 @@ export default function TechStack() {
           </div>
 
           <Card className="p-3">
-            <div className="grid grid-cols-1 md:grid-rows-6 md:grid-flow-col gap-x-4 gap-y-2">
+            {/* DEBUG: Grid container with red border */}
+            <div className="grid grid-cols-1 md:grid-rows-6 md:grid-flow-col gap-x-4 gap-y-2 border-4 border-red-500">
               {allSponsorTech.map((tech, index) => (
-                <div key={index} className="flex items-start gap-2">
+                <div key={index} className="flex items-start gap-2 border-2 border-blue-500 bg-blue-500/5 relative">
+                  {/* DEBUG: Item index number */}
+                  <span className="absolute -top-2 -left-2 bg-yellow-400 text-black text-xs px-1 rounded font-bold z-10">
+                    {index}
+                  </span>
                   <CheckCircle2 
                     className={`h-4 w-4 flex-shrink-0 mt-0.5 ${
                       tech.status === "not-used" ? "text-foreground" : "text-purple-300"
