@@ -19,8 +19,9 @@ let webhookEvents: Array<{
   response: any;
 }> = [];
 
-// Track processed event IDs to prevent duplicates
-const processedEventIds = new Set<string>();
+// Track processed webhooks using composite key (event_id + message_id) to prevent duplicates
+// AgentMail may reuse event_ids, so we need both to uniquely identify a message
+const processedWebhooks = new Set<string>();
 
 // In-memory demo session storage (production-ready for hackathon demo)
 let currentDemoSession: {
@@ -86,17 +87,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(200).json({ success: true });
       console.log("✅ Webhook acknowledged (200 OK sent)");
 
-      // Check for duplicate events (in-memory only for now - dev focused)
-      if (event.event_id && processedEventIds.has(event.event_id)) {
-        console.log("⚠️ Duplicate webhook event detected, skipping:", event.event_id);
-        console.log(`${"=".repeat(80)}\n`);
-        // Don't add duplicate events to webhookEvents array
-        return;
-      }
+      // Create composite key for duplicate detection (event_id + message_id)
+      // This prevents false duplicates when AgentMail reuses event_ids for different messages
+      const eventId = event.event_id || '';
+      const messageId = event.message?.message_id || '';
       
-      // Mark event as processed (prevents duplicates from being added to webhookEvents)
-      if (event.event_id) {
-        processedEventIds.add(event.event_id);
+      // Edge case: If both identifiers are missing, skip deduplication
+      // (otherwise all webhooks without IDs would share the "::" key)
+      if (!eventId && !messageId) {
+        console.log("⚠️ WARNING: Webhook has no event_id or message_id - skipping deduplication");
+        console.log("   This webhook will be processed without duplicate checking");
+      } else {
+        const compositeKey = `${eventId}::${messageId}`;
+        
+        console.log("🔑 Composite key:", compositeKey);
+        console.log("📊 Total processed webhooks:", processedWebhooks.size);
+        
+        if (processedWebhooks.has(compositeKey)) {
+          console.log("⚠️ DUPLICATE DETECTED - Already processed this exact webhook");
+          console.log("   Event ID:", eventId);
+          console.log("   Message ID:", messageId);
+          console.log("   Composite Key:", compositeKey);
+          console.log(`${"=".repeat(80)}\n`);
+          // Don't add duplicate events to webhookEvents array
+          return;
+        }
+        
+        // Mark webhook as processed using composite key
+        processedWebhooks.add(compositeKey);
+        console.log("✅ Marked webhook as processed (composite key added to Set)");
       }
 
       // Process email asynchronously
@@ -351,10 +370,10 @@ Under 30 words.`;
       console.log("█".repeat(100));
       console.log("█".repeat(100) + "\n");
       
-      // Clear previous webhook events and processed IDs
+      // Clear previous webhook events and processed webhooks (composite keys)
       webhookEvents = [];
-      processedEventIds.clear();
-      console.log("🔄 Reset webhook tracking");
+      processedWebhooks.clear();
+      console.log("🔄 Reset webhook tracking (cleared composite key Set)");
 
       // Create FRESH inboxes with timestamp to avoid old messages
       const sellerInboxName = `seller-${timestamp}`;
