@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import ProgressIndicator from "@/components/ProgressIndicator";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Mail, Sparkles, Loader2, Building2, MapPin, DollarSign, Clock, Zap, Users, Code, Copy, Check } from "lucide-react";
+import { ArrowRight, Mail, Sparkles, Loader2, Building2, MapPin, DollarSign, Clock, Zap, Users, Code } from "lucide-react";
 import { useLocation } from "wouter";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -84,18 +84,7 @@ export default function LiveDemo() {
   const [debugLogs, setDebugLogs] = useState<{ agent: 'seller' | 'buyer', message: string, status: 'success' | 'error' | 'pending', timestamp: Date }[]>([]);
   const [webhookEvents, setWebhookEvents] = useState<any[]>([]);
   const [processedWebhookIds, setProcessedWebhookIds] = useState<Set<string>>(new Set());
-  const [failedSessionId, setFailedSessionId] = useState<string | null>(null);
-  const [sessionIdCopied, setSessionIdCopied] = useState(false);
   const [, navigate] = useLocation();
-
-  // Copy session ID to clipboard
-  const copySessionId = async () => {
-    if (failedSessionId) {
-      await navigator.clipboard.writeText(failedSessionId);
-      setSessionIdCopied(true);
-      setTimeout(() => setSessionIdCopied(false), 2000);
-    }
-  };
 
   // Initialize demo mutation
   const initMutation = useMutation({
@@ -113,9 +102,6 @@ export default function LiveDemo() {
         const errorMessage = errorData.details || errorData.error || "Failed to initialize demo";
         const sessionId = errorData.sessionId || "unknown";
         
-        // Save session ID for display in error banner
-        setFailedSessionId(sessionId);
-        
         setDebugLogs([
           { agent: 'seller', message: `Demo initialization failed: ${errorMessage}`, status: 'error', timestamp: new Date() },
           { agent: 'seller', message: `Session ID: ${sessionId}`, status: 'error', timestamp: new Date() },
@@ -125,13 +111,35 @@ export default function LiveDemo() {
       const data = await response.json();
       
       // Set initial debug logs (webhooks will be added dynamically)
-      setDebugLogs([
+      const logs: any[] = [
         { agent: 'seller', message: 'Created fresh AgentMail inbox', status: 'success', timestamp: new Date() },
         { agent: 'buyer', message: 'Created fresh AgentMail inbox', status: 'success', timestamp: new Date() },
+      ];
+      
+      // Add webhook status logs
+      if (data.webhooksRegistered) {
+        logs.push(
+          { agent: 'seller', message: 'Registered webhook with AgentMail', status: 'success', timestamp: new Date() },
+          { agent: 'buyer', message: 'Registered webhook with AgentMail', status: 'success', timestamp: new Date() }
+        );
+      } else {
+        logs.push(
+          { agent: 'seller', message: `⚠️ Webhook registration failed: ${data.webhookError}`, status: 'error', timestamp: new Date() },
+          { agent: 'buyer', message: `⚠️ Webhook registration failed: ${data.webhookError}`, status: 'error', timestamp: new Date() }
+        );
+      }
+      
+      logs.push(
         { agent: 'seller', message: 'Generated outreach email via OpenAI', status: 'success', timestamp: new Date() },
-        { agent: 'seller', message: 'Sent email to buyer', status: 'success', timestamp: new Date() },
-        { agent: 'buyer', message: 'Waiting for webhook...', status: 'pending', timestamp: new Date(), isWebhookPlaceholder: true } as any,
-      ]);
+        { agent: 'seller', message: 'Sent email to buyer', status: 'success', timestamp: new Date() }
+      );
+      
+      // Only add webhook placeholder if webhooks were registered successfully
+      if (data.webhooksRegistered) {
+        logs.push({ agent: 'buyer', message: 'Waiting for webhook...', status: 'pending', timestamp: new Date(), isWebhookPlaceholder: true } as any);
+      }
+      
+      setDebugLogs(logs);
       
       return { ...data, sessionStart };
     },
@@ -140,7 +148,6 @@ export default function LiveDemo() {
       setSellerEmail(data.seller);
       setBuyerEmail(data.buyer);
       setIsInitialized(true);
-      setFailedSessionId(null); // Clear any previous failed session ID
       console.log("✅ Demo session started, filtering messages after:", data.sessionStart.toISOString());
       queryClient.invalidateQueries({ queryKey: ["/api/demo/messages"] });
     },

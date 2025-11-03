@@ -405,7 +405,7 @@ Respond as a helpful sales person. Answer their questions professionally and try
       } catch (webhookErr: any) {
         const webhookDuration = Date.now() - webhookStart;
         console.warn(`⚠️  Webhook registration failed after ${webhookDuration}ms:`, webhookErr.message);
-        console.warn("⚠️  Demo will continue with immediate buyer response (no webhook fallback)");
+        console.warn("⚠️  Demo will continue but webhooks will not work");
         webhookError = webhookErr.message || "Webhook registration failed";
       }
       console.log("=".repeat(80) + "\n");
@@ -458,7 +458,11 @@ Respond as a helpful sales person. Answer their questions professionally and try
         sessionId,
         seller: sellerEmail,
         buyer: buyerEmail,
-        message: "Demo initialized - webhooks will handle buyer response",
+        webhooksRegistered: webhooksSuccessful,
+        webhookError: webhookError,
+        message: webhooksSuccessful 
+          ? "Demo initialized - webhooks will handle buyer response"
+          : "Demo initialized - webhook registration failed, agents may not respond automatically",
       });
     } catch (error) {
       console.error("\n" + "❌".repeat(40));
