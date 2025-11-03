@@ -189,12 +189,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const newContent = extractNewContent(emailBody);
           console.log("📝 Extracted new content:", newContent.substring(0, 100) + "...");
           
-          const prompt = `You are an AI buying agent for Sarah Chen, VP of Sales at TechCorp (200 employees, FinTech, San Francisco). Based on your AgentBox profile, you're evaluating sales qualification solutions with $25K budget and Q1 2025 timeline.
+          // Determine conversation stage based on exchange count
+          const isFirstResponse = session.exchangeCount === 0;
+          const isSecondResponse = session.exchangeCount === 2;
+          
+          let prompt = '';
+          if (isFirstResponse) {
+            // First buyer response: Ask qualifying questions NOT in profile
+            prompt = `You are an AI buying agent for Sarah Chen, VP of Sales at TechCorp. Your AgentBox profile shows: 200 employees, FinTech, SF, $25K budget, Q1 2025 timeline, uses Salesforce.
 
-Received from seller:
+Seller's outreach:
 ${newContent}
 
-Generate a terse, data-driven reply asking ONE specific qualifying question (pricing structure, CRM integrations, implementation timeline, or feature comparison). Under 50 words. No pleasantries or "thank you" phrases. Professional but direct.`;
+This looks like a good profile match. Ask ONE specific qualifying question about something NOT in your profile (pricing tiers, implementation time, security/compliance, or technical requirements). Under 40 words. Direct and professional.`;
+          } else if (isSecondResponse) {
+            // Second buyer response: Accept meeting and pick time
+            prompt = `You are an AI buying agent for Sarah Chen at TechCorp. The seller answered your questions satisfactorily.
+
+Seller's response:
+${newContent}
+
+Accept the meeting offer and select ONE specific time from their suggestions (or propose Tuesday 2PM PT if they didn't give options). Under 35 words. Direct: "Accepted. [Time] works. Confirm?"`;
+          } else {
+            // Fallback for additional exchanges
+            prompt = `You are an AI buying agent. 
+
+Seller said:
+${newContent}
+
+Acknowledge briefly. Under 25 words.`;
+          }
 
           console.log("🤖 Calling buyer agent...");
           const response = await buyerAgent.generate(prompt);
@@ -231,12 +255,41 @@ Generate a terse, data-driven reply asking ONE specific qualifying question (pri
           const newContent = extractNewContent(emailBody);
           console.log("📝 Extracted new content:", newContent.substring(0, 100) + "...");
           
-          const prompt = `You are an AI sales agent for Mike Rodriguez at AgentBox. Based on your AgentBox profile, you target B2B SaaS companies (50-500 employees) with $10K-$50K ARR deals and integrate with Salesforce/HubSpot.
+          // Determine conversation stage based on exchange count
+          const isFirstResponse = session.exchangeCount === 1;
+          const isSecondResponse = session.exchangeCount === 3;
+          const isFinalResponse = session.exchangeCount === 5;
+          
+          let prompt = '';
+          if (isFirstResponse) {
+            // First seller response: Answer questions and suggest meeting
+            prompt = `You are an AI sales agent for Mike Rodriguez at AgentBox. Profile: B2B SaaS (50-500 employees), $10K-$50K ARR, integrates Salesforce/HubSpot.
 
 Buyer's question:
 ${newContent}
 
-Generate a terse, data-driven response. Answer their specific question directly referencing how your product/pricing aligns with their profile data. Under 60 words. No fluff. If appropriate, suggest meeting times. Professional but concise.`;
+Answer their question directly with specific data. Then suggest 2-3 meeting time options (day + time). Under 50 words. Direct and professional.`;
+          } else if (isSecondResponse) {
+            // Second seller response: Acknowledge meeting acceptance
+            prompt = `You are an AI sales agent.
+
+Buyer accepted meeting:
+${newContent}
+
+Confirm the meeting time they selected and state "Calendar invite sent." Under 20 words. Direct.`;
+          } else if (isFinalResponse) {
+            // Final confirmation
+            prompt = `Buyer said:
+${newContent}
+
+Brief final acknowledgment. Under 15 words.`;
+          } else {
+            // Fallback
+            prompt = `Respond briefly to:
+${newContent}
+
+Under 30 words.`;
+          }
 
           console.log("🤖 Calling seller agent...");
           const response = await sellerAgent.generate(prompt);
