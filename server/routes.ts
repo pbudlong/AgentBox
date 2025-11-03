@@ -5,7 +5,7 @@ import { buyerAgent, sellerAgent } from "./mastra/index";
 import { replyToEmail, type InboundEmail, createInbox, sendEmail, listMessages, getMessage, findInboxByEmail } from "./agentmail";
 
 // MAX_EXCHANGES constant for preventing infinite loops
-const MAX_EXCHANGES = 6; // Seller → buyer (1) → seller (2) → buyer (3) → seller (4) → buyer (5) → seller (6) → STOP
+const MAX_EXCHANGES = 5; // Seller → buyer (1) → seller (2) → buyer (3) → seller (4) → buyer (5) → STOP
 
 // Track webhook events for debugging
 let webhookEvents: Array<{ 

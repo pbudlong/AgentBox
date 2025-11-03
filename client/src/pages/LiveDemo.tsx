@@ -399,7 +399,7 @@ export default function LiveDemo() {
             )}
             
             <div className="flex-1 overflow-auto p-6">
-              {sellerMessages.slice(0, -1).map((msg, idx) => (
+              {sellerMessages.map((msg, idx) => (
                 <div 
                   key={msg.id} 
                   className="flex justify-end mb-8"
