@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useLayoutEffect } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import ProgressIndicator from "@/components/ProgressIndicator";
@@ -86,11 +86,6 @@ export default function LiveDemo() {
   const [webhookEvents, setWebhookEvents] = useState<any[]>([]);
   const [processedWebhookIds, setProcessedWebhookIds] = useState<Set<string>>(new Set());
   const [, navigate] = useLocation();
-  
-  // Refs for dynamic positioning
-  const sellerMessageRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const buyerContainerRef = useRef<HTMLDivElement | null>(null);
-  const [buyerPositions, setBuyerPositions] = useState<number[]>([]);
 
   // Initialize demo mutation
   const initMutation = useMutation({
@@ -261,63 +256,6 @@ export default function LiveDemo() {
   const buyerMessages = liveMessages.filter(m => 
     m.from && (m.from.includes('buyer-demo@agentmail.to') || m.from.includes(buyerEmail))
   );
-  
-  // Dynamically calculate buyer message positions based on seller message DOM positions
-  useLayoutEffect(() => {
-    if (sellerMessages.length === 0 || buyerMessages.length === 0) return;
-    
-    const calculatePositions = () => {
-      const marginTops: number[] = [];
-      let previousBuyerBottom = 0; // Track where the previous buyer message ended
-      
-      buyerMessages.forEach((buyerMsg, buyerIdx) => {
-        // Find the corresponding seller message that came before this buyer message
-        const buyerTimelineIdx = liveMessages.findIndex(m => m.id === buyerMsg.id);
-        
-        // Find which seller message this buyer is responding to
-        let sellerIndexBeforeBuyer = -1;
-        for (let i = buyerTimelineIdx - 1; i >= 0; i--) {
-          if (liveMessages[i].from?.includes('seller') || liveMessages[i].from?.includes(sellerEmail)) {
-            sellerIndexBeforeBuyer = sellerMessages.findIndex(sm => sm.id === liveMessages[i].id);
-            break;
-          }
-        }
-        
-        if (sellerIndexBeforeBuyer >= 0 && sellerMessageRefs.current[sellerIndexBeforeBuyer]) {
-          const sellerElement = sellerMessageRefs.current[sellerIndexBeforeBuyer];
-          
-          if (sellerElement) {
-            try {
-              const sellerRect = sellerElement.getBoundingClientRect();
-              const sellerHeight = sellerRect.height;
-              
-              // Calculate where this seller is in the flow: (index * (height + margin))
-              // Approximate seller message height + margin (will be measured dynamically)
-              const sellerTop = sellerIndexBeforeBuyer * 176; // Approximate: each seller ~160px + 16px margin
-              const targetPosition = sellerTop + sellerHeight + 50; // 50px below seller's bottom
-              
-              // Calculate margin-top relative to previous buyer's position
-              const marginTop = targetPosition - previousBuyerBottom;
-              marginTops[buyerIdx] = Math.max(marginTop, buyerIdx === 0 ? 0 : 16); // At least 16px margin
-              
-              // Update previous buyer bottom (approximate)
-              previousBuyerBottom = targetPosition + 150; // Approximate buyer height
-            } catch (e) {
-              marginTops[buyerIdx] = 50;
-            }
-          } else {
-            marginTops[buyerIdx] = 50;
-          }
-        } else {
-          marginTops[buyerIdx] = 50;
-        }
-      });
-      
-      setBuyerPositions(marginTops);
-    };
-    
-    requestAnimationFrame(calculatePositions);
-  }, [sellerMessages, buyerMessages, liveMessages, sellerEmail]);
 
   const resetDemo = () => {
     setLiveMessages([]);
@@ -454,7 +392,6 @@ export default function LiveDemo() {
               {sellerMessages.map((msg, idx) => (
                 <div 
                   key={msg.id} 
-                  ref={(el) => { sellerMessageRefs.current[idx] = el; }}
                   className="flex justify-end mb-4"
                 >
                   <Card 
@@ -526,7 +463,7 @@ export default function LiveDemo() {
                                   {JSON.stringify(log.webhookData.payload, null, 2)}
                                 </pre>
                               ),
-                              duration: 10000,
+                              duration: Infinity,
                             })}
                             className="ml-1 underline text-[10px] hover:opacity-80"
                           >
@@ -540,23 +477,16 @@ export default function LiveDemo() {
               </div>
             )}
             
-            <div className="flex-1 overflow-auto p-6" ref={buyerContainerRef}>
-              {buyerMessages.map((msg, idx) => {
-                // Use the dynamically calculated margin-top for EACH message
-                const marginTop = buyerPositions[idx] || 0;
-                
-                return (
-                  <div 
-                    key={msg.id} 
-                    className="flex justify-start mb-4"
-                    style={{ 
-                      marginTop: `${marginTop}px`
-                    }}
+            <div className="flex-1 overflow-auto p-6" style={{ paddingTop: '100px' }}>
+              {buyerMessages.map((msg, idx) => (
+                <div 
+                  key={msg.id} 
+                  className="flex justify-start mb-4"
+                >
+                  <Card 
+                    className="p-4 border-gradient-via/20 bg-card max-w-[85%]" 
+                    data-testid={`message-buyer-${idx}`}
                   >
-                    <Card 
-                      className="p-4 border-gradient-via/20 bg-card max-w-[85%]" 
-                      data-testid={`message-buyer-${idx}`}
-                    >
                     <div className="space-y-2">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
@@ -570,8 +500,7 @@ export default function LiveDemo() {
                     </div>
                   </Card>
                 </div>
-                );
-              })}
+              ))}
             </div>
           </div>
         </div>
