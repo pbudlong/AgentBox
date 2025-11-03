@@ -205,7 +205,7 @@ export default function ScriptedDemo() {
     if (typingProgress < fullText.length) {
       const timeout = setTimeout(() => {
         setTypingProgress((prev: number) => prev + 1);
-      }, 20); // 20ms per character for typewriter effect (33% slower)
+      }, 10); // 10ms per character for typewriter effect (50% faster)
 
       return () => clearTimeout(timeout);
     } else {

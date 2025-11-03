@@ -355,7 +355,7 @@ export default function LiveDemo() {
             {/* Debug panel - show ALL logs chronologically */}
             {debugLogs.length > 0 && (
               <div className="px-6 py-3 bg-card border-b border-border">
-                <p className="text-xs font-semibold text-muted-foreground mb-2">Execution Flow:</p>
+                <p className="text-xs font-semibold text-muted-foreground mb-2">Agentmail Execution Flow:</p>
                 <div className="space-y-1">
                   {debugLogs.map((log: any, idx) => (
                     <div key={idx} className={log.agent !== 'seller' ? 'opacity-50' : ''}>
@@ -440,7 +440,7 @@ export default function LiveDemo() {
             {/* Debug panel - show ALL logs chronologically */}
             {debugLogs.length > 0 && (
               <div className="px-6 py-3 bg-card border-b border-border">
-                <p className="text-xs font-semibold text-muted-foreground mb-2">Execution Flow:</p>
+                <p className="text-xs font-semibold text-muted-foreground mb-2">Agentmail Execution Flow:</p>
                 <div className="space-y-1">
                   {debugLogs.map((log: any, idx) => (
                     <div key={idx} className={log.agent !== 'buyer' ? 'opacity-50' : ''}>
