@@ -89,42 +89,42 @@ const allSponsorTech = [
     role: "Real-time Database",
     demos: [],
     status: "not-used",
-    description: "WebSocket-based real-time updates (not currently used)",
+    description: "WebSocket-based real-time updates",
   },
   {
     name: "LiveKit",
     role: "Real-time Communication",
     demos: [],
     status: "not-used",
-    description: "Not used in demo",
+    description: "WebRTC infrastructure for video, audio, and screen sharing",
   },
   {
     name: "Browser-Use",
     role: "Browser Automation",
     demos: [],
     status: "not-used",
-    description: "Not used in demo",
+    description: "AI-powered browser automation for complex web interactions",
   },
   {
     name: "Hyperspell",
     role: "Spell Check",
     demos: [],
     status: "not-used",
-    description: "Not used in demo",
+    description: "AI-enhanced spell checking and grammar correction",
   },
   {
     name: "Composio",
     role: "Tool Integration",
     demos: [],
     status: "not-used",
-    description: "Not used in demo",
+    description: "Integration platform for connecting AI agents to external tools",
   },
   {
     name: "Moss",
     role: "Infrastructure",
     demos: [],
     status: "not-used",
-    description: "Not used in demo",
+    description: "Developer infrastructure and tooling platform",
   },
 ];
 
@@ -221,35 +221,70 @@ export default function TechStack() {
           </div>
 
           <Card className="p-3">
-            <div className="grid grid-cols-1 md:grid-rows-4 md:grid-flow-col gap-2">
-              {standardTech.map((tech, index) => (
-                <div key={index} className="flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-foreground flex-shrink-0 mt-0.5" />
-                  <div className="flex-1">
-                    <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
-                      <p className="font-semibold text-sm" data-testid={`text-standard-tech-${index}`}>
-                        {tech.name}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2">
+              {/* Left Column: First 4 items */}
+              <div className="space-y-2">
+                {standardTech.slice(0, 4).map((tech, index) => (
+                  <div key={index} className="flex items-start gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-foreground flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
+                        <p className="font-semibold text-sm" data-testid={`text-standard-tech-${index}`}>
+                          {tech.name}
+                        </p>
+                        {tech.demos.map((demo, demoIndex) => (
+                          <Badge 
+                            key={demoIndex} 
+                            variant="default" 
+                            className={`text-[10px] px-1.5 py-0 ${
+                              demo === "Scripted Demo" 
+                                ? "bg-orange-500/20 text-orange-300 border-orange-500/30" 
+                                : "bg-purple-500/20 text-purple-300 border-purple-500/30"
+                            }`}
+                          >
+                            {demo}
+                          </Badge>
+                        ))}
+                      </div>
+                      <p className="text-xs text-muted-foreground leading-snug">
+                        {tech.description}
                       </p>
-                      {tech.demos.map((demo, demoIndex) => (
-                        <Badge 
-                          key={demoIndex} 
-                          variant="default" 
-                          className={`text-[10px] px-1.5 py-0 ${
-                            demo === "Scripted Demo" 
-                              ? "bg-orange-500/20 text-orange-300 border-orange-500/30" 
-                              : "bg-purple-500/20 text-purple-300 border-purple-500/30"
-                          }`}
-                        >
-                          {demo}
-                        </Badge>
-                      ))}
                     </div>
-                    <p className="text-xs text-muted-foreground leading-snug">
-                      {tech.description}
-                    </p>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
+
+              {/* Right Column: Last 4 items */}
+              <div className="space-y-2">
+                {standardTech.slice(4).map((tech, index) => (
+                  <div key={index + 4} className="flex items-start gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-foreground flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
+                        <p className="font-semibold text-sm" data-testid={`text-standard-tech-${index + 4}`}>
+                          {tech.name}
+                        </p>
+                        {tech.demos.map((demo, demoIndex) => (
+                          <Badge 
+                            key={demoIndex} 
+                            variant="default" 
+                            className={`text-[10px] px-1.5 py-0 ${
+                              demo === "Scripted Demo" 
+                                ? "bg-orange-500/20 text-orange-300 border-orange-500/30" 
+                                : "bg-purple-500/20 text-purple-300 border-purple-500/30"
+                            }`}
+                          >
+                            {demo}
+                          </Badge>
+                        ))}
+                      </div>
+                      <p className="text-xs text-muted-foreground leading-snug">
+                        {tech.description}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </Card>
         </div>
