@@ -86,20 +86,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(200).json({ success: true });
       console.log("✅ Webhook acknowledged (200 OK sent)");
 
-      // Check for duplicate events using message_id (more reliable than event_id)
-      // AgentMail may send the same event_id multiple times, but message_id is unique per email
-      const messageId = event.message?.message_id;
-      if (messageId && processedEventIds.has(messageId)) {
-        console.log("⚠️ Duplicate message detected (already processed), skipping:", messageId);
+      // Check for duplicate events (in-memory only for now - dev focused)
+      if (event.event_id && processedEventIds.has(event.event_id)) {
+        console.log("⚠️ Duplicate webhook event detected, skipping:", event.event_id);
         console.log(`${"=".repeat(80)}\n`);
         // Don't add duplicate events to webhookEvents array
         return;
       }
       
-      // Mark message as processed (prevents duplicates)
-      if (messageId) {
-        processedEventIds.add(messageId);
-        console.log("📝 Marked message as processed:", messageId);
+      // Mark event as processed (prevents duplicates from being added to webhookEvents)
+      if (event.event_id) {
+        processedEventIds.add(event.event_id);
       }
 
       // Process email asynchronously
