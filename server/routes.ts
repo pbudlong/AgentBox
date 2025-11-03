@@ -189,12 +189,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const newContent = extractNewContent(emailBody);
           console.log("📝 Extracted new content:", newContent.substring(0, 100) + "...");
           
-          const prompt = `You received a sales outreach email:
-From: ${inboundEmail.from}
-Subject: ${inboundEmail.subject}
-Body: ${newContent}
+          const prompt = `You are an AI buying agent for Sarah Chen, VP of Sales at TechCorp (200 employees, FinTech, San Francisco). Based on your AgentBox profile, you're evaluating sales qualification solutions with $25K budget and Q1 2025 timeline.
 
-Respond as a buyer evaluating this product. Ask a qualifying question about pricing, features, or implementation. Keep it under 80 words.`;
+Received from seller:
+${newContent}
+
+Generate a terse, data-driven reply asking ONE specific qualifying question (pricing structure, CRM integrations, implementation timeline, or feature comparison). Under 50 words. No pleasantries or "thank you" phrases. Professional but direct.`;
 
           console.log("🤖 Calling buyer agent...");
           const response = await buyerAgent.generate(prompt);
@@ -231,12 +231,12 @@ Respond as a buyer evaluating this product. Ask a qualifying question about pric
           const newContent = extractNewContent(emailBody);
           console.log("📝 Extracted new content:", newContent.substring(0, 100) + "...");
           
-          const prompt = `You received a reply to your sales outreach:
-From: ${inboundEmail.from}
-Subject: ${inboundEmail.subject}
-Body: ${newContent}
+          const prompt = `You are an AI sales agent for Mike Rodriguez at AgentBox. Based on your AgentBox profile, you target B2B SaaS companies (50-500 employees) with $10K-$50K ARR deals and integrate with Salesforce/HubSpot.
 
-Respond as a helpful sales person. Answer their questions professionally and try to move toward scheduling a meeting. Keep it under 100 words.`;
+Buyer's question:
+${newContent}
+
+Generate a terse, data-driven response. Answer their specific question directly referencing how your product/pricing aligns with their profile data. Under 60 words. No fluff. If appropriate, suggest meeting times. Professional but concise.`;
 
           console.log("🤖 Calling seller agent...");
           const response = await sellerAgent.generate(prompt);
@@ -360,7 +360,9 @@ Respond as a helpful sales person. Answer their questions professionally and try
       console.log("🤖 Generating seller's outreach email using AI agent...");
       const agentStart = Date.now();
       const sellerMessage = await sellerAgent.generate(
-        "Write a brief sales outreach email to Sarah, a VP of Sales at TechCorp. Introduce AgentBox, a product that helps with sales qualification using AI agents. Keep it under 100 words and professional."
+        `You are an AI sales agent reaching out to Sarah Chen, VP of Sales at TechCorp (200 employees, FinTech, SF). Based on your AgentBox profile data, she's a strong fit: needs sales qualification solution, $25K budget, Q1 timeline, uses Salesforce.
+
+Write a terse, data-driven outreach email introducing AgentBox - AI-powered sales qualification platform. Reference how your solution aligns with her profile. Under 60 words. No fluff or pleasantries. Direct and professional.`
       );
       const agentDuration = Date.now() - agentStart;
       console.log(`✅ Seller message generated in ${agentDuration}ms`);

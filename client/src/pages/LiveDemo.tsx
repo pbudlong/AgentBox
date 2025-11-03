@@ -413,7 +413,6 @@ export default function LiveDemo() {
                 <div 
                   key={msg.id} 
                   className="flex justify-end mb-4"
-                  style={{ marginTop: idx * 40 }}
                 >
                   <Card 
                     className="p-4 border-primary/20 bg-card max-w-[85%]" 
@@ -518,7 +517,6 @@ export default function LiveDemo() {
                 <div 
                   key={msg.id} 
                   className="flex justify-start mb-4"
-                  style={{ marginTop: 120 + (idx * 40) }}
                 >
                   <Card 
                     className="p-4 border-gradient-via/20 bg-card max-w-[85%]" 
