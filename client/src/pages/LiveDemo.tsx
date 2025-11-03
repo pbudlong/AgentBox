@@ -8,6 +8,7 @@ import { useLocation } from "wouter";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import FitScoreIndicator from "@/components/FitScoreIndicator";
+import { toast } from "sonner";
 
 interface DataField {
   field: string;
@@ -511,21 +512,27 @@ export default function LiveDemo() {
                           {log.message}
                         </div>
                       ) : (
-                        <details className={`text-xs rounded ${
+                        <div className={`text-xs px-2 py-1 rounded ${
                           log.webhookData.status?.includes('success') ? 'bg-green-500/20 text-green-400' : 
                           log.webhookData.status?.includes('error') ? 'bg-red-500/20 text-red-400' : 
                           'bg-gray-500/20 text-gray-400'
                         }`}>
-                          <summary className="px-2 py-1 cursor-pointer hover:opacity-80 list-none">
-                            {log.agent === 'seller' && <span className="opacity-60">[Seller] </span>}
-                            🔔 Webhook {log.webhookData.status}
-                            <span className="ml-1 underline text-[10px]">View Details</span>
-                          </summary>
-                          <div className="px-2 pb-1 pt-1 text-[10px] opacity-80 space-y-0.5 border-t border-current/20">
-                            <div>From: {log.webhookData.from}</div>
-                            <div>To: {log.webhookData.to}</div>
-                          </div>
-                        </details>
+                          {log.agent === 'seller' && <span className="opacity-60">[Seller] </span>}
+                          🔔 Webhook {log.webhookData.status}
+                          <button
+                            onClick={() => toast.info('Webhook Payload', {
+                              description: (
+                                <pre className="text-xs whitespace-pre-wrap max-h-96 overflow-auto">
+                                  {JSON.stringify(log.webhookData.payload, null, 2)}
+                                </pre>
+                              ),
+                              duration: 10000,
+                            })}
+                            className="ml-1 underline text-[10px] hover:opacity-80"
+                          >
+                            View Details
+                          </button>
+                        </div>
                       )}
                     </div>
                   ))}
