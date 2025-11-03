@@ -8,7 +8,13 @@ import { useLocation } from "wouter";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import FitScoreIndicator from "@/components/FitScoreIndicator";
-import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface DataField {
   field: string;
@@ -86,6 +92,8 @@ export default function LiveDemo() {
   const [webhookEvents, setWebhookEvents] = useState<any[]>([]);
   const [processedWebhookIds, setProcessedWebhookIds] = useState<Set<string>>(new Set());
   const [, navigate] = useLocation();
+  const [webhookDialogOpen, setWebhookDialogOpen] = useState(false);
+  const [selectedWebhookPayload, setSelectedWebhookPayload] = useState<any>(null);
 
   // Initialize demo mutation
   const initMutation = useMutation({
@@ -366,21 +374,23 @@ export default function LiveDemo() {
                           {log.message}
                         </div>
                       ) : (
-                        <details className={`text-xs rounded ${
+                        <div className={`text-xs px-2 py-1 rounded ${
                           log.webhookData.status?.includes('success') ? 'bg-green-500/20 text-green-400' : 
                           log.webhookData.status?.includes('error') ? 'bg-red-500/20 text-red-400' : 
                           'bg-gray-500/20 text-gray-400'
                         }`}>
-                          <summary className="px-2 py-1 cursor-pointer hover:opacity-80 list-none">
-                            {log.agent === 'buyer' && <span className="opacity-60">[Buyer] </span>}
-                            🔔 Webhook {log.webhookData.status} 
-                            <span className="ml-1 underline text-[10px]">View Details</span>
-                          </summary>
-                          <div className="px-2 pb-1 pt-1 text-[10px] opacity-80 space-y-0.5 border-t border-current/20">
-                            <div>From: {log.webhookData.from}</div>
-                            <div>To: {log.webhookData.to}</div>
-                          </div>
-                        </details>
+                          {log.agent === 'buyer' && <span className="opacity-60">[Buyer] </span>}
+                          🔔 Webhook {log.webhookData.status}
+                          <button
+                            onClick={() => {
+                              setSelectedWebhookPayload(log.webhookData.payload);
+                              setWebhookDialogOpen(true);
+                            }}
+                            className="ml-1 underline text-[10px] hover:opacity-80"
+                          >
+                            View Details
+                          </button>
+                        </div>
                       )}
                     </div>
                   ))}
@@ -457,14 +467,10 @@ export default function LiveDemo() {
                           {log.agent === 'seller' && <span className="opacity-60">[Seller] </span>}
                           🔔 Webhook {log.webhookData.status}
                           <button
-                            onClick={() => toast.info('Webhook Payload', {
-                              description: (
-                                <pre className="text-xs whitespace-pre-wrap max-h-96 overflow-auto">
-                                  {JSON.stringify(log.webhookData.payload, null, 2)}
-                                </pre>
-                              ),
-                              duration: Infinity,
-                            })}
+                            onClick={() => {
+                              setSelectedWebhookPayload(log.webhookData.payload);
+                              setWebhookDialogOpen(true);
+                            }}
                             className="ml-1 underline text-[10px] hover:opacity-80"
                           >
                             View Details
@@ -477,11 +483,11 @@ export default function LiveDemo() {
               </div>
             )}
             
-            <div className="flex-1 overflow-auto p-6" style={{ paddingTop: '100px' }}>
+            <div className="flex-1 overflow-auto p-6" style={{ paddingTop: '150px' }}>
               {buyerMessages.map((msg, idx) => (
                 <div 
                   key={msg.id} 
-                  className="flex justify-start mb-4"
+                  className="flex justify-start mb-[150px]"
                 >
                   <Card 
                     className="p-4 border-gradient-via/20 bg-card max-w-[85%]" 
@@ -577,6 +583,21 @@ export default function LiveDemo() {
         </div>
         </div>
       )}
+
+      {/* Webhook Payload Dialog */}
+      <Dialog open={webhookDialogOpen} onOpenChange={setWebhookDialogOpen}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-auto">
+          <DialogHeader>
+            <DialogTitle>Webhook Payload</DialogTitle>
+            <DialogDescription>
+              Full JSON payload from the webhook event
+            </DialogDescription>
+          </DialogHeader>
+          <pre className="text-xs whitespace-pre-wrap bg-muted p-4 rounded-md overflow-auto">
+            {JSON.stringify(selectedWebhookPayload, null, 2)}
+          </pre>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
