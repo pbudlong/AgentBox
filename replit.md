@@ -172,6 +172,12 @@ Preferred communication style: Simple, everyday language.
 - Error handling for AlreadyExistsError gracefully falls back to listing/finding existing inboxes
 
 **Recent Fixes (Nov 1-3, 2025):**
+- ✅ **Fixed buyer message chronology alignment** (Nov 3, 2025):
+  - Buyer messages now positioned using chronological index from full `liveMessages` array
+  - Previously used filtered `buyerMessages` index, causing drift when seller messages appeared back-to-back
+  - Formula: `marginTop = timelineIndex × MESSAGE_HEIGHT + 50` where timelineIndex is position in full conversation
+  - Ensures buyer messages align 50px below their corresponding seller messages regardless of conversation flow
+  - Fallback to old calculation if message not found in timeline (safety check)
 - ✅ **Removed redundant webhook registration** (Nov 3, 2025):
   - Discovered AgentMail webhooks are configured at organization/pod level, not per-inbox
   - Removed per-demo webhook registration from `/api/demo/initialize`
