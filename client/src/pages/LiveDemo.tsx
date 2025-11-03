@@ -266,54 +266,55 @@ export default function LiveDemo() {
     if (sellerMessages.length === 0 || buyerMessages.length === 0) return;
     
     const calculatePositions = () => {
-      const positions: number[] = [];
+      const marginTops: number[] = [];
+      let previousBuyerBottom = 0; // Track where the previous buyer message ended
       
       buyerMessages.forEach((buyerMsg, buyerIdx) => {
         // Find the corresponding seller message that came before this buyer message
         const buyerTimelineIdx = liveMessages.findIndex(m => m.id === buyerMsg.id);
         
-        // Count seller messages before this buyer message
+        // Find which seller message this buyer is responding to
         let sellerIndexBeforeBuyer = -1;
         for (let i = buyerTimelineIdx - 1; i >= 0; i--) {
           if (liveMessages[i].from?.includes('seller') || liveMessages[i].from?.includes(sellerEmail)) {
-            // Find the index in sellerMessages array
             sellerIndexBeforeBuyer = sellerMessages.findIndex(sm => sm.id === liveMessages[i].id);
             break;
           }
         }
         
-        // If we found a seller message before this buyer message, position 50px below it
         if (sellerIndexBeforeBuyer >= 0 && sellerMessageRefs.current[sellerIndexBeforeBuyer]) {
           const sellerElement = sellerMessageRefs.current[sellerIndexBeforeBuyer];
-          const containerElement = buyerContainerRef.current;
           
-          if (sellerElement && containerElement) {
+          if (sellerElement) {
             try {
-              // Get positions relative to container
-              const containerRect = containerElement.getBoundingClientRect();
               const sellerRect = sellerElement.getBoundingClientRect();
+              const sellerHeight = sellerRect.height;
               
-              // Calculate position: seller's bottom position relative to container + 50px
-              const relativeTop = sellerRect.bottom - containerRect.top + 50;
-              positions[buyerIdx] = relativeTop > 0 ? relativeTop : 50;
+              // Calculate where this seller is in the flow: (index * (height + margin))
+              // Approximate seller message height + margin (will be measured dynamically)
+              const sellerTop = sellerIndexBeforeBuyer * 176; // Approximate: each seller ~160px + 16px margin
+              const targetPosition = sellerTop + sellerHeight + 50; // 50px below seller's bottom
+              
+              // Calculate margin-top relative to previous buyer's position
+              const marginTop = targetPosition - previousBuyerBottom;
+              marginTops[buyerIdx] = Math.max(marginTop, buyerIdx === 0 ? 0 : 16); // At least 16px margin
+              
+              // Update previous buyer bottom (approximate)
+              previousBuyerBottom = targetPosition + 150; // Approximate buyer height
             } catch (e) {
-              // Fallback on error
-              positions[buyerIdx] = buyerIdx * 200 + 50;
+              marginTops[buyerIdx] = 50;
             }
           } else {
-            // Fallback if elements not ready
-            positions[buyerIdx] = buyerIdx * 200 + 50;
+            marginTops[buyerIdx] = 50;
           }
         } else {
-          // Fallback: position at top if no seller message found
-          positions[buyerIdx] = buyerIdx * 200 + 50;
+          marginTops[buyerIdx] = 50;
         }
       });
       
-      setBuyerPositions(positions);
+      setBuyerPositions(marginTops);
     };
     
-    // Use requestAnimationFrame to ensure DOM is ready
     requestAnimationFrame(calculatePositions);
   }, [sellerMessages, buyerMessages, liveMessages, sellerEmail]);
 
@@ -534,7 +535,7 @@ export default function LiveDemo() {
             
             <div className="flex-1 overflow-auto p-6" ref={buyerContainerRef}>
               {buyerMessages.map((msg, idx) => {
-                // Use the dynamically calculated position from state
+                // Use the dynamically calculated margin-top for EACH message
                 const marginTop = buyerPositions[idx] || 0;
                 
                 return (
@@ -542,7 +543,7 @@ export default function LiveDemo() {
                     key={msg.id} 
                     className="flex justify-start mb-4"
                     style={{ 
-                      marginTop: idx === 0 ? `${marginTop}px` : undefined
+                      marginTop: `${marginTop}px`
                     }}
                   >
                     <Card 
