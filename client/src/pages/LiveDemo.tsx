@@ -513,17 +513,12 @@ export default function LiveDemo() {
             )}
             
             <div className="flex-1 overflow-auto p-6">
-              {buyerMessages.map((msg, idx) => {
-                const MESSAGE_HEIGHT = 176;
-                const timelineIndex = liveMessages.findIndex(m => m.id === msg.id);
-                const marginTop = timelineIndex >= 0 ? timelineIndex * MESSAGE_HEIGHT + 50 : idx * MESSAGE_HEIGHT + 50;
-                
-                return (
-                  <div 
-                    key={msg.id} 
-                    className="flex justify-start mb-4"
-                    style={{ marginTop: `${marginTop}px` }}
-                  >
+              {buyerMessages.map((msg, idx) => (
+                <div 
+                  key={msg.id} 
+                  className="flex justify-start mb-4"
+                  style={{ marginTop: `${idx * 176 + 50}px` }}
+                >
                     <Card 
                       className="p-4 border-gradient-via/20 bg-card max-w-[85%]" 
                       data-testid={`message-buyer-${idx}`}
@@ -541,8 +536,7 @@ export default function LiveDemo() {
                     </div>
                   </Card>
                 </div>
-                );
-              })}
+              ))}
             </div>
           </div>
         </div>
