@@ -370,11 +370,12 @@ export default function LiveDemo() {
                           log.webhookData.status?.includes('error') ? 'bg-red-500/20 text-red-400' : 
                           'bg-gray-500/20 text-gray-400'
                         }`}>
-                          <summary className="px-2 py-1 cursor-pointer">
+                          <summary className="px-2 py-1 cursor-pointer hover:opacity-80 list-none">
                             {log.agent === 'buyer' && <span className="opacity-60">[Buyer] </span>}
-                            🔔 Webhook {log.webhookData.status} <span className="opacity-60 text-[10px]">▸</span>
+                            🔔 Webhook {log.webhookData.status} 
+                            <span className="ml-1 underline text-[10px]">View Details</span>
                           </summary>
-                          <div className="px-2 pb-1 text-[10px] opacity-80 space-y-0.5">
+                          <div className="px-2 pb-1 pt-1 text-[10px] opacity-80 space-y-0.5 border-t border-current/20">
                             <div>From: {log.webhookData.from}</div>
                             <div>To: {log.webhookData.to}</div>
                           </div>
@@ -452,11 +453,12 @@ export default function LiveDemo() {
                           log.webhookData.status?.includes('error') ? 'bg-red-500/20 text-red-400' : 
                           'bg-gray-500/20 text-gray-400'
                         }`}>
-                          <summary className="px-2 py-1 cursor-pointer">
+                          <summary className="px-2 py-1 cursor-pointer hover:opacity-80 list-none">
                             {log.agent === 'seller' && <span className="opacity-60">[Seller] </span>}
-                            🔔 Webhook {log.webhookData.status} <span className="opacity-60 text-[10px]">▸</span>
+                            🔔 Webhook {log.webhookData.status}
+                            <span className="ml-1 underline text-[10px]">View Details</span>
                           </summary>
-                          <div className="px-2 pb-1 text-[10px] opacity-80 space-y-0.5">
+                          <div className="px-2 pb-1 pt-1 text-[10px] opacity-80 space-y-0.5 border-t border-current/20">
                             <div>From: {log.webhookData.from}</div>
                             <div>To: {log.webhookData.to}</div>
                           </div>
