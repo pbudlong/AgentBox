@@ -197,20 +197,20 @@ const techToBeImplemented = [
 
 export default function TechStack() {
   return (
-    <section className="py-12 px-8 bg-muted/30">
+    <section className="py-8 px-8 bg-muted/30">
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-8">
-          <h2 className="text-2xl md:text-3xl font-semibold mb-2" data-testid="text-tech-stack-heading">
+        <div className="text-center mb-6">
+          <h2 className="text-2xl md:text-3xl font-semibold mb-1" data-testid="text-tech-stack-heading">
             Tech Stack
           </h2>
-          <p className="text-muted-foreground text-base">
+          <p className="text-muted-foreground text-sm">
             Built for AgentMail's HackHalloween @YC
           </p>
         </div>
 
         {/* Section 1: Standard Tech */}
-        <div className="mb-8">
-          <div className="flex items-center gap-2 mb-4">
+        <div className="mb-6">
+          <div className="flex items-center gap-2 mb-3">
             <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
               <span className="text-lg font-bold text-primary">1</span>
             </div>
@@ -219,8 +219,8 @@ export default function TechStack() {
             </h3>
           </div>
 
-          <Card className="p-4">
-            <div className="grid grid-cols-1 md:grid-rows-4 md:grid-flow-col gap-3">
+          <Card className="p-3">
+            <div className="grid grid-cols-1 md:grid-rows-4 md:grid-flow-col gap-2">
               {standardTech.map((tech, index) => (
                 <div key={index} className="flex items-start gap-2">
                   <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
@@ -244,8 +244,8 @@ export default function TechStack() {
         </div>
 
         {/* Section 2: Sponsor Tech */}
-        <div className="mb-8">
-          <div className="flex items-center gap-2 mb-4">
+        <div className="mb-6">
+          <div className="flex items-center gap-2 mb-3">
             <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
               <span className="text-lg font-bold text-primary">2</span>
             </div>
@@ -254,78 +254,80 @@ export default function TechStack() {
             </h3>
           </div>
 
-          {/* Scripted Demo Sponsors */}
-          <Card className="p-4 mb-4">
-            <h4 className="font-semibold text-base mb-3">Scripted Demo (/demo)</h4>
-            <div className="space-y-3">
-              {scriptedSponsorTech.map((tech, index) => (
-                <div key={index} className="border-l-2 border-primary/30 pl-3">
-                  <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                    <h5 className="font-semibold text-sm" data-testid={`text-scripted-sponsor-${index}`}>
-                      {tech.name}
-                    </h5>
-                    <Badge variant="default" className="text-[10px] px-1.5 py-0">
-                      {tech.status}
-                    </Badge>
-                  </div>
-                  <p className="text-xs text-primary/80 mb-0.5">{tech.role}</p>
-                  <p className="text-xs text-muted-foreground leading-snug">
-                    {tech.description}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </Card>
-
-          {/* Live Demo Sponsors */}
           <Card className="p-4">
-            <h4 className="font-semibold text-base mb-3">Live Demo (/live)</h4>
-            <div className="space-y-3">
-              {/* Active sponsors first */}
-              {liveSponsorTech
-                .filter(tech => tech.status === "active")
-                .map((tech, index) => (
-                  <div key={index} className="border-l-2 border-primary/30 pl-3">
-                    <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                      <h5 className="font-semibold text-sm" data-testid={`text-live-sponsor-${index}`}>
+            {/* Scripted Demo Sponsors */}
+            <div className="mb-4">
+              <h4 className="font-semibold text-sm mb-2">Scripted Demo (/demo)</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                {scriptedSponsorTech.map((tech, index) => (
+                  <div key={index} className="border-l-2 border-primary/30 pl-2">
+                    <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
+                      <h5 className="font-semibold text-xs" data-testid={`text-scripted-sponsor-${index}`}>
                         {tech.name}
                       </h5>
-                      <Badge variant="default" className="text-[10px] px-1.5 py-0">
+                      <Badge variant="default" className="text-[9px] px-1 py-0">
                         {tech.status}
                       </Badge>
                     </div>
-                    <p className="text-xs text-primary/80 mb-0.5">{tech.role}</p>
-                    <p className="text-xs text-muted-foreground leading-snug">
+                    <p className="text-[10px] text-primary/80 mb-0.5">{tech.role}</p>
+                    <p className="text-[10px] text-muted-foreground leading-tight">
                       {tech.description}
                     </p>
                   </div>
                 ))}
-              {/* Not-used sponsors */}
-              {liveSponsorTech
-                .filter(tech => tech.status === "not-used")
-                .map((tech, index) => (
-                  <div key={index} className="border-l-2 border-muted/50 pl-3">
-                    <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                      <h5 className="font-semibold text-sm text-muted-foreground" data-testid={`text-live-sponsor-inactive-${index}`}>
-                        {tech.name}
-                      </h5>
-                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                        {tech.status}
-                      </Badge>
+              </div>
+            </div>
+
+            {/* Live Demo Sponsors */}
+            <div>
+              <h4 className="font-semibold text-sm mb-2">Live Demo (/live)</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                {/* Active sponsors first */}
+                {liveSponsorTech
+                  .filter(tech => tech.status === "active")
+                  .map((tech, index) => (
+                    <div key={index} className="border-l-2 border-primary/30 pl-2">
+                      <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
+                        <h5 className="font-semibold text-xs" data-testid={`text-live-sponsor-${index}`}>
+                          {tech.name}
+                        </h5>
+                        <Badge variant="default" className="text-[9px] px-1 py-0">
+                          {tech.status}
+                        </Badge>
+                      </div>
+                      <p className="text-[10px] text-primary/80 mb-0.5">{tech.role}</p>
+                      <p className="text-[10px] text-muted-foreground leading-tight">
+                        {tech.description}
+                      </p>
                     </div>
-                    <p className="text-xs text-muted-foreground/80 mb-0.5">{tech.role}</p>
-                    <p className="text-xs text-muted-foreground leading-snug">
-                      {tech.description}
-                    </p>
-                  </div>
-                ))}
+                  ))}
+                {/* Not-used sponsors */}
+                {liveSponsorTech
+                  .filter(tech => tech.status === "not-used")
+                  .map((tech, index) => (
+                    <div key={index} className="border-l-2 border-muted/50 pl-2">
+                      <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
+                        <h5 className="font-semibold text-xs text-muted-foreground" data-testid={`text-live-sponsor-inactive-${index}`}>
+                          {tech.name}
+                        </h5>
+                        <Badge variant="secondary" className="text-[9px] px-1 py-0">
+                          {tech.status}
+                        </Badge>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground/80 mb-0.5">{tech.role}</p>
+                      <p className="text-[10px] text-muted-foreground leading-tight">
+                        {tech.description}
+                      </p>
+                    </div>
+                  ))}
+              </div>
             </div>
           </Card>
         </div>
 
         {/* Section 3: To Make Fully Functional */}
-        <div className="mb-8">
-          <div className="flex items-center gap-2 mb-4">
+        <div className="mb-6">
+          <div className="flex items-center gap-2 mb-3">
             <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
               <span className="text-lg font-bold text-primary">3</span>
             </div>
@@ -334,32 +336,32 @@ export default function TechStack() {
             </h3>
           </div>
 
-          <Card className="p-4 border-primary/20">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card className="p-3 border-primary/20">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* Tech Already in Place */}
               <div>
-                <h4 className="font-semibold text-base mb-3 text-primary">
+                <h4 className="font-semibold text-sm mb-2 text-primary">
                   Features and Tech Already in Place
                 </h4>
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   {techAlreadyInPlace.map((feature, index) => (
-                    <div key={index} className="flex items-start gap-2 p-2 rounded-lg bg-card/50 border border-card-border">
-                      <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                    <div key={index} className="flex items-start gap-1.5 p-1.5 rounded-lg bg-card/50 border border-card-border">
+                      <CheckCircle2 className="h-3 w-3 text-primary flex-shrink-0 mt-0.5" />
                       <div className="flex-1">
-                        <p className="font-semibold text-sm mb-0.5" data-testid={`text-in-place-${index}`}>
+                        <p className="font-semibold text-xs mb-0" data-testid={`text-in-place-${index}`}>
                           {feature.name}
                         </p>
-                        <p className="text-xs text-muted-foreground leading-snug mb-1.5">
+                        <p className="text-[10px] text-muted-foreground leading-tight mb-1">
                           {feature.description}
                         </p>
-                        <div className="flex flex-wrap gap-1">
+                        <div className="flex flex-wrap gap-0.5">
                           {feature.tech.map((techName, techIndex) => {
                             const isSponsor = sponsorTech.includes(techName);
                             return (
                               <Badge 
                                 key={techIndex} 
                                 variant="secondary" 
-                                className={`text-[10px] px-1.5 py-0 ${isSponsor ? 'bg-purple-500/20 text-purple-300 border-purple-500/30' : ''}`}
+                                className={`text-[9px] px-1 py-0 ${isSponsor ? 'bg-purple-500/20 text-purple-300 border-purple-500/30' : ''}`}
                               >
                                 {techName}
                               </Badge>
@@ -374,30 +376,30 @@ export default function TechStack() {
 
               {/* Tech to be Implemented */}
               <div>
-                <h4 className="font-semibold text-base mb-3 text-gradient-to">
+                <h4 className="font-semibold text-sm mb-2 text-gradient-to">
                   Features and Tech to be Implemented
                 </h4>
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   {techToBeImplemented.map((feature, index) => (
-                    <div key={index} className="flex items-start gap-2 p-2 rounded-lg hover-elevate bg-card/50 border border-card-border">
-                      <div className="flex-shrink-0 w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center">
-                        <span className="text-[10px] font-bold text-primary">{index + 1}</span>
+                    <div key={index} className="flex items-start gap-1.5 p-1.5 rounded-lg hover-elevate bg-card/50 border border-card-border">
+                      <div className="flex-shrink-0 w-4 h-4 rounded-full bg-primary/10 flex items-center justify-center">
+                        <span className="text-[9px] font-bold text-primary">{index + 1}</span>
                       </div>
                       <div className="flex-1">
-                        <p className="font-semibold text-sm mb-0.5" data-testid={`text-to-implement-${index}`}>
+                        <p className="font-semibold text-xs mb-0" data-testid={`text-to-implement-${index}`}>
                           {feature.name}
                         </p>
-                        <p className="text-xs text-muted-foreground leading-snug mb-1.5">
+                        <p className="text-[10px] text-muted-foreground leading-tight mb-1">
                           {feature.description}
                         </p>
-                        <div className="flex flex-wrap gap-1">
+                        <div className="flex flex-wrap gap-0.5">
                           {feature.tech.map((techName, techIndex) => {
                             const isSponsor = sponsorTech.includes(techName);
                             return (
                               <Badge 
                                 key={techIndex} 
                                 variant="outline" 
-                                className={`text-[10px] px-1.5 py-0 ${isSponsor ? 'bg-orange-500/20 text-orange-300 border-orange-500/30' : ''}`}
+                                className={`text-[9px] px-1 py-0 ${isSponsor ? 'bg-orange-500/20 text-orange-300 border-orange-500/30' : ''}`}
                               >
                                 {techName}
                               </Badge>
@@ -414,11 +416,11 @@ export default function TechStack() {
         </div>
 
         {/* Powered by footer */}
-        <div className="mt-8 text-center">
-          <div className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-card border border-card-border">
-            <span className="text-xs text-muted-foreground">Deployed on</span>
-            <SiReplit className="h-4 w-4 text-primary" />
-            <span className="font-semibold text-sm">Replit</span>
+        <div className="mt-6 text-center">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-card border border-card-border">
+            <span className="text-[10px] text-muted-foreground">Deployed on</span>
+            <SiReplit className="h-3 w-3 text-primary" />
+            <span className="font-semibold text-xs">Replit</span>
           </div>
         </div>
       </div>
