@@ -266,10 +266,14 @@ export default function TechStack() {
           </div>
 
           <Card className="p-3">
-            <div className="grid grid-cols-1 md:grid-rows-6 md:grid-flow-col gap-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2">
               {allSponsorTech.map((tech, index) => (
                 <div key={index} className="flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                  <CheckCircle2 
+                    className={`h-4 w-4 flex-shrink-0 mt-0.5 ${
+                      tech.demos.includes("Live Demo") ? "text-purple-400" : "text-primary"
+                    }`} 
+                  />
                   <div className="flex-1">
                     <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
                       <p className="font-semibold text-sm" data-testid={`text-sponsor-${index}`}>
@@ -357,9 +361,7 @@ export default function TechStack() {
               {/* Tech to be Implemented */}
               <div>
                 <h4 className="font-semibold text-sm mb-2">
-                  Standard and <Badge variant="default" className="bg-green-500/20 text-green-300 border-green-500/30 text-xs px-2 py-0.5 mx-1">
-                    Sponsor Tech
-                  </Badge> to Implement
+                  Features and Tech to Implement
                 </h4>
                 <div className="space-y-1.5">
                   {techToBeImplemented.map((feature, index) => (
@@ -379,7 +381,7 @@ export default function TechStack() {
                               <Badge 
                                 key={techIndex} 
                                 variant="outline" 
-                                className={`text-[9px] px-1 py-0 ${isSponsor ? 'bg-green-500/20 text-green-300 border-green-500/30' : ''}`}
+                                className={`text-[9px] px-1 py-0 ${isSponsor ? 'bg-purple-500/20 text-purple-300 border-purple-500/30' : ''}`}
                               >
                                 {techName}
                               </Badge>
