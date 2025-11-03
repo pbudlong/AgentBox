@@ -187,8 +187,9 @@ Preferred communication style: Simple, everyday language.
   - Created `server/db.ts` with Drizzle connection to Neon database
   - Storage interface methods: `createDemoSession()`, `getDemoSessionByInboxId()`, `getLatestDemoSession()`, `incrementExchangeCount()`
 - ✅ **Fixed infinite loop bug** (Nov 1, 2025):
-  - Added exchange counter to limit conversation to 4 exchanges maximum (5 total emails: seller → buyer → seller → buyer → seller → STOP)
-  - Both buyer and seller webhook handlers now check exchange count before responding
+  - Added exchange counter to limit conversation (updated Nov 3 to MAX_EXCHANGES=6 for 7 total emails)
+  - Current flow: seller → buyer (1) → seller (2) → buyer (3) → seller (4) → buyer (5) → seller (6) → STOP
+  - Both buyer and seller webhook handlers check exchange count before responding
   - Exchange counter resets when initializing new demo
   - Prevents agents from replying endlessly to each other
 - ✅ **Stripped email quote history** (Nov 1, 2025):
