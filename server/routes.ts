@@ -450,8 +450,21 @@ Respond as a helpful sales person. Answer their questions professionally and try
         message: "Demo initialized - webhooks will handle buyer response",
       });
     } catch (error) {
-      console.error("Error initializing demo:", error);
-      res.status(500).json({ error: "Failed to initialize demo" });
+      console.error("\n" + "❌".repeat(40));
+      console.error("❌ DEMO INITIALIZATION FAILED");
+      console.error("❌".repeat(40));
+      console.error("Session ID:", sessionId);
+      console.error("Error Type:", (error as any).constructor.name);
+      console.error("Error Message:", (error as Error).message);
+      console.error("Full Error:", error);
+      console.error("Stack Trace:", (error as Error).stack);
+      console.error("❌".repeat(40) + "\n");
+      
+      res.status(500).json({ 
+        error: "Failed to initialize demo",
+        details: (error as Error).message,
+        sessionId
+      });
     }
   });
 

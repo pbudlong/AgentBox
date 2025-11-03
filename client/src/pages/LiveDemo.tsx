@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import ProgressIndicator from "@/components/ProgressIndicator";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Mail, Sparkles, Loader2, Building2, MapPin, DollarSign, Clock, Zap, Users, Code } from "lucide-react";
+import { ArrowRight, Mail, Sparkles, Loader2, Building2, MapPin, DollarSign, Clock, Zap, Users, Code, Copy, Check } from "lucide-react";
 import { useLocation } from "wouter";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -84,7 +84,18 @@ export default function LiveDemo() {
   const [debugLogs, setDebugLogs] = useState<{ agent: 'seller' | 'buyer', message: string, status: 'success' | 'error' | 'pending', timestamp: Date }[]>([]);
   const [webhookEvents, setWebhookEvents] = useState<any[]>([]);
   const [processedWebhookIds, setProcessedWebhookIds] = useState<Set<string>>(new Set());
+  const [failedSessionId, setFailedSessionId] = useState<string | null>(null);
+  const [sessionIdCopied, setSessionIdCopied] = useState(false);
   const [, navigate] = useLocation();
+
+  // Copy session ID to clipboard
+  const copySessionId = async () => {
+    if (failedSessionId) {
+      await navigator.clipboard.writeText(failedSessionId);
+      setSessionIdCopied(true);
+      setTimeout(() => setSessionIdCopied(false), 2000);
+    }
+  };
 
   // Initialize demo mutation
   const initMutation = useMutation({
@@ -98,10 +109,18 @@ export default function LiveDemo() {
         method: "POST",
       });
       if (!response.ok) {
+        const errorData = await response.json();
+        const errorMessage = errorData.details || errorData.error || "Failed to initialize demo";
+        const sessionId = errorData.sessionId || "unknown";
+        
+        // Save session ID for display in error banner
+        setFailedSessionId(sessionId);
+        
         setDebugLogs([
-          { agent: 'seller', message: 'Demo initialization failed', status: 'error', timestamp: new Date() },
+          { agent: 'seller', message: `Demo initialization failed: ${errorMessage}`, status: 'error', timestamp: new Date() },
+          { agent: 'seller', message: `Session ID: ${sessionId}`, status: 'error', timestamp: new Date() },
         ]);
-        throw new Error("Failed to initialize demo");
+        throw new Error(errorMessage);
       }
       const data = await response.json();
       
@@ -121,6 +140,7 @@ export default function LiveDemo() {
       setSellerEmail(data.seller);
       setBuyerEmail(data.buyer);
       setIsInitialized(true);
+      setFailedSessionId(null); // Clear any previous failed session ID
       console.log("✅ Demo session started, filtering messages after:", data.sessionStart.toISOString());
       queryClient.invalidateQueries({ queryKey: ["/api/demo/messages"] });
     },
@@ -305,8 +325,80 @@ export default function LiveDemo() {
         )}
       </div>
 
+      {/* Error banner */}
+      {initMutation.isError && !isInitialized && (
+        <div className="mx-8 mt-8 p-6 bg-red-500/10 border-2 border-red-500/50 rounded-lg">
+          <div className="flex items-start gap-3">
+            <div className="mt-0.5">
+              <div className="h-6 w-6 rounded-full bg-red-500 flex items-center justify-center">
+                <span className="text-white text-sm font-bold">✗</span>
+              </div>
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-red-400 mb-2">Demo Initialization Failed</h3>
+              <p className="text-red-300 mb-3">
+                {initMutation.error?.message || "Failed to initialize demo - webhook registration error"}
+              </p>
+              
+              {failedSessionId && (
+                <div className="mb-3 p-3 bg-red-500/5 border border-red-500/30 rounded">
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <p className="text-xs font-semibold text-red-400">Session ID for Debugging:</p>
+                    <Button
+                      onClick={copySessionId}
+                      size="sm"
+                      variant="ghost"
+                      className="h-6 px-2 text-xs hover:bg-red-500/10"
+                      data-testid="button-copy-session-id"
+                    >
+                      {sessionIdCopied ? (
+                        <>
+                          <Check className="h-3 w-3 mr-1" />
+                          Copied
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="h-3 w-3 mr-1" />
+                          Copy
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                  <code className="text-sm font-mono text-red-300 break-all select-all">
+                    {failedSessionId}
+                  </code>
+                </div>
+              )}
+              
+              <p className="text-sm text-red-400/70 mb-3">
+                The live demo requires webhooks to be successfully registered with AgentMail. 
+                This usually means the AgentMail API returned an error during webhook setup.
+              </p>
+              
+              <div className="text-xs text-red-400/60 mb-3">
+                Check the server logs for the session ID above to see detailed error information 
+                including the exact AgentMail API response.
+              </div>
+              
+              <Button 
+                onClick={() => {
+                  initMutation.reset();
+                  setDebugLogs([]);
+                  setFailedSessionId(null);
+                }}
+                variant="outline"
+                className="mt-2 border-red-500/50 text-red-400 hover:bg-red-500/10"
+                data-testid="button-dismiss-error"
+              >
+                Dismiss and Try Again
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Status message */}
-      {!isInitialized && (
+      {!isInitialized && !initMutation.isError && (
         <div className="p-8 text-center">
           <p className="text-foreground text-lg font-bold">
             Click "Start Live Demo" to watch real AI agents communicate via email
