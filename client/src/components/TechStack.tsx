@@ -224,7 +224,7 @@ export default function TechStack() {
             <div className="grid grid-cols-1 md:grid-rows-4 md:grid-flow-col gap-2">
               {standardTech.map((tech, index) => (
                 <div key={index} className="flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                  <CheckCircle2 className="h-4 w-4 text-foreground flex-shrink-0 mt-0.5" />
                   <div className="flex-1">
                     <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
                       <p className="font-semibold text-sm" data-testid={`text-standard-tech-${index}`}>
@@ -266,50 +266,90 @@ export default function TechStack() {
           </div>
 
           <Card className="p-3">
-            {/* DEBUG: Grid container with red border */}
-            <div className="grid grid-cols-1 md:grid-rows-6 md:grid-flow-col gap-x-4 gap-y-2 border-4 border-red-500">
-              {allSponsorTech.map((tech, index) => (
-                <div key={index} className="flex items-start gap-2 border-2 border-blue-500 bg-blue-500/5 relative">
-                  {/* DEBUG: Item index number */}
-                  <span className="absolute -top-2 -left-2 bg-yellow-400 text-black text-xs px-1 rounded font-bold z-10">
-                    {index}
-                  </span>
-                  <CheckCircle2 
-                    className={`h-4 w-4 flex-shrink-0 mt-0.5 ${
-                      tech.status === "not-used" ? "text-foreground" : "text-purple-300"
-                    }`} 
-                  />
-                  <div className="flex-1">
-                    <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
-                      <p className="font-semibold text-sm" data-testid={`text-sponsor-${index}`}>
-                        {tech.name}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2">
+              {/* Left Column: First 6 items */}
+              <div className="space-y-2">
+                {allSponsorTech.slice(0, 6).map((tech, index) => (
+                  <div key={index} className="flex items-start gap-2">
+                    <CheckCircle2 
+                      className={`h-4 w-4 flex-shrink-0 mt-0.5 ${
+                        tech.demos.includes("Live Demo") ? "text-purple-300" : "text-foreground"
+                      }`} 
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
+                        <p className="font-semibold text-sm" data-testid={`text-sponsor-${index}`}>
+                          {tech.name}
+                        </p>
+                        {tech.demos.map((demo, demoIndex) => (
+                          <Badge 
+                            key={demoIndex} 
+                            variant="default" 
+                            className={`text-[10px] px-1.5 py-0 ${
+                              demo === "Scripted Demo" 
+                                ? "bg-orange-500/20 text-orange-300 border-orange-500/30" 
+                                : "bg-purple-500/20 text-purple-300 border-purple-500/30"
+                            }`}
+                          >
+                            {demo}
+                          </Badge>
+                        ))}
+                        {tech.status === "not-used" && (
+                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                            not-used
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-xs text-primary/80 mb-0.5">{tech.role}</p>
+                      <p className="text-xs text-muted-foreground leading-snug">
+                        {tech.description}
                       </p>
-                      {tech.demos.map((demo, demoIndex) => (
-                        <Badge 
-                          key={demoIndex} 
-                          variant="default" 
-                          className={`text-[10px] px-1.5 py-0 ${
-                            demo === "Scripted Demo" 
-                              ? "bg-orange-500/20 text-orange-300 border-orange-500/30" 
-                              : "bg-purple-500/20 text-purple-300 border-purple-500/30"
-                          }`}
-                        >
-                          {demo}
-                        </Badge>
-                      ))}
-                      {tech.status === "not-used" && (
-                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                          not-used
-                        </Badge>
-                      )}
                     </div>
-                    <p className="text-xs text-primary/80 mb-0.5">{tech.role}</p>
-                    <p className="text-xs text-muted-foreground leading-snug">
-                      {tech.description}
-                    </p>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
+
+              {/* Right Column: Last 5 items */}
+              <div className="space-y-2">
+                {allSponsorTech.slice(6).map((tech, index) => (
+                  <div key={index + 6} className="flex items-start gap-2">
+                    <CheckCircle2 
+                      className={`h-4 w-4 flex-shrink-0 mt-0.5 ${
+                        tech.demos.includes("Live Demo") ? "text-purple-300" : "text-foreground"
+                      }`} 
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
+                        <p className="font-semibold text-sm" data-testid={`text-sponsor-${index + 6}`}>
+                          {tech.name}
+                        </p>
+                        {tech.demos.map((demo, demoIndex) => (
+                          <Badge 
+                            key={demoIndex} 
+                            variant="default" 
+                            className={`text-[10px] px-1.5 py-0 ${
+                              demo === "Scripted Demo" 
+                                ? "bg-orange-500/20 text-orange-300 border-orange-500/30" 
+                                : "bg-purple-500/20 text-purple-300 border-purple-500/30"
+                            }`}
+                          >
+                            {demo}
+                          </Badge>
+                        ))}
+                        {tech.status === "not-used" && (
+                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                            not-used
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-xs text-primary/80 mb-0.5">{tech.role}</p>
+                      <p className="text-xs text-muted-foreground leading-snug">
+                        {tech.description}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </Card>
         </div>
@@ -335,7 +375,7 @@ export default function TechStack() {
                 <div className="space-y-1.5">
                   {techAlreadyInPlace.map((feature, index) => (
                     <div key={index} className="flex items-start gap-1.5 p-1.5 rounded-lg bg-card/50 border border-card-border">
-                      <CheckCircle2 className="h-3 w-3 text-primary flex-shrink-0 mt-0.5" />
+                      <CheckCircle2 className="h-3 w-3 text-foreground flex-shrink-0 mt-0.5" />
                       <div className="flex-1">
                         <p className="font-semibold text-xs mb-0" data-testid={`text-in-place-${index}`}>
                           {feature.name}
@@ -373,7 +413,7 @@ export default function TechStack() {
                     const hasSponsorTech = feature.tech.some(techName => sponsorTech.includes(techName));
                     return (
                       <div key={index} className="flex items-start gap-1.5 p-1.5 rounded-lg bg-card/50 border border-card-border">
-                        <CheckCircle2 className={`h-3 w-3 flex-shrink-0 mt-0.5 ${hasSponsorTech ? 'text-purple-300' : 'text-muted-foreground'}`} />
+                        <CheckCircle2 className={`h-3 w-3 flex-shrink-0 mt-0.5 ${hasSponsorTech ? 'text-purple-300' : 'text-foreground'}`} />
                         <div className="flex-1">
                           <p className="font-semibold text-xs mb-0" data-testid={`text-to-implement-${index}`}>
                             {feature.name}
