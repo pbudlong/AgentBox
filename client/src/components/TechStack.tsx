@@ -47,47 +47,84 @@ const standardTech = [
   },
 ];
 
-// Sponsor Tech - Scripted Demo
-const scriptedSponsorTech = [
+// All Sponsor Tech (combined)
+const allSponsorTech = [
   {
     name: "Replit",
-    role: "Hosting Platform",
-    demos: ["Scripted Demo"],
-    description: "Hosting the static demo experience with instant deployments",
+    role: "Hosting & Deployment",
+    demos: ["Scripted Demo", "Live Demo"],
+    status: "active",
+    description: "Full-stack hosting with integrated database and instant deployments",
   },
-];
-
-// Sponsor Tech - Live Demo
-const liveSponsorTech = [
   {
     name: "AgentMail",
     role: "Core Email Infrastructure",
     demos: ["Live Demo"],
-    description: "Provides @agentmail.to email addresses, webhook delivery, and real-time email routing for agent conversations.",
-  },
-  {
-    name: "Replit",
-    role: "Hosting & Deployment",
-    demos: ["Live Demo"],
-    description: "Full-stack hosting with integrated database, webhooks, and seamless deployment for rapid prototyping.",
+    status: "active",
+    description: "Provides @agentmail.to addresses, webhooks, and email routing",
   },
   {
     name: "Mastra",
     role: "AI Agent Framework",
     demos: ["Live Demo"],
-    description: "Framework for building AI agents with tool integration (wraps OpenAI for buyer and seller agents)",
+    status: "active",
+    description: "Framework for building AI agents with tool integration",
   },
   {
     name: "OpenAI",
     role: "Agent Intelligence",
     demos: ["Live Demo"],
-    description: "Powers buyer and seller AI agents with GPT-4 for natural language generation and intelligent email responses (via Mastra framework).",
+    status: "active",
+    description: "Powers buyer and seller AI agents with GPT-4",
   },
   {
     name: "Perplexity",
     role: "Research & Context",
     demos: ["Live Demo"],
-    description: "Integrated as agent tool for real-time company research and market context enrichment (available to agents but not triggered in current 5-email demo).",
+    status: "active",
+    description: "Real-time company research and market context enrichment",
+  },
+  {
+    name: "Convex",
+    role: "Real-time Database",
+    demos: [],
+    status: "not-used",
+    description: "WebSocket-based real-time updates (not currently used)",
+  },
+  {
+    name: "LiveKit",
+    role: "Real-time Communication",
+    demos: [],
+    status: "not-used",
+    description: "Not used in demo",
+  },
+  {
+    name: "Browser-Use",
+    role: "Browser Automation",
+    demos: [],
+    status: "not-used",
+    description: "Not used in demo",
+  },
+  {
+    name: "Hyperspell",
+    role: "Spell Check",
+    demos: [],
+    status: "not-used",
+    description: "Not used in demo",
+  },
+  {
+    name: "Composio",
+    role: "Tool Integration",
+    demos: [],
+    status: "not-used",
+    description: "Not used in demo",
+  },
+  {
+    name: "Moss",
+    role: "Infrastructure",
+    demos: [],
+    status: "not-used",
+    description: "Not used in demo",
   },
 ];
 
@@ -229,9 +266,8 @@ export default function TechStack() {
           </div>
 
           <Card className="p-3">
-            <div className="space-y-2">
-              {/* All sponsors in single column */}
-              {[...scriptedSponsorTech, ...liveSponsorTech].map((tech, index) => (
+            <div className="grid grid-cols-1 md:grid-rows-6 md:grid-flow-col gap-2">
+              {allSponsorTech.map((tech, index) => (
                 <div key={index} className="flex items-start gap-2">
                   <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
                   <div className="flex-1">
@@ -252,6 +288,11 @@ export default function TechStack() {
                           {demo}
                         </Badge>
                       ))}
+                      {tech.status === "not-used" && (
+                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                          not-used
+                        </Badge>
+                      )}
                     </div>
                     <p className="text-xs text-primary/80 mb-0.5">{tech.role}</p>
                     <p className="text-xs text-muted-foreground leading-snug">
@@ -316,10 +357,9 @@ export default function TechStack() {
               {/* Tech to be Implemented */}
               <div>
                 <h4 className="font-semibold text-sm mb-2">
-                  <Badge variant="default" className="bg-green-500/20 text-green-300 border-green-500/30 text-xs px-2 py-0.5 mr-2">
-                    To Implement
-                  </Badge>
-                  Features and Tech
+                  Standard and <Badge variant="default" className="bg-green-500/20 text-green-300 border-green-500/30 text-xs px-2 py-0.5 mx-1">
+                    Sponsor Tech
+                  </Badge> to Implement
                 </h4>
                 <div className="space-y-1.5">
                   {techToBeImplemented.map((feature, index) => (
