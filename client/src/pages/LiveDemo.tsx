@@ -265,43 +265,56 @@ export default function LiveDemo() {
   useLayoutEffect(() => {
     if (sellerMessages.length === 0 || buyerMessages.length === 0) return;
     
-    const positions: number[] = [];
-    
-    buyerMessages.forEach((buyerMsg, buyerIdx) => {
-      // Find the corresponding seller message that came before this buyer message
-      const buyerTimelineIdx = liveMessages.findIndex(m => m.id === buyerMsg.id);
+    const calculatePositions = () => {
+      const positions: number[] = [];
       
-      // Count seller messages before this buyer message
-      let sellerIndexBeforeBuyer = -1;
-      for (let i = buyerTimelineIdx - 1; i >= 0; i--) {
-        if (liveMessages[i].from?.includes('seller') || liveMessages[i].from?.includes(sellerEmail)) {
-          // Find the index in sellerMessages array
-          sellerIndexBeforeBuyer = sellerMessages.findIndex(sm => sm.id === liveMessages[i].id);
-          break;
-        }
-      }
-      
-      // If we found a seller message before this buyer message, position 50px below it
-      if (sellerIndexBeforeBuyer >= 0 && sellerMessageRefs.current[sellerIndexBeforeBuyer]) {
-        const sellerElement = sellerMessageRefs.current[sellerIndexBeforeBuyer];
-        const containerElement = buyerContainerRef.current;
+      buyerMessages.forEach((buyerMsg, buyerIdx) => {
+        // Find the corresponding seller message that came before this buyer message
+        const buyerTimelineIdx = liveMessages.findIndex(m => m.id === buyerMsg.id);
         
-        if (sellerElement && containerElement) {
-          // Get positions relative to container
-          const containerRect = containerElement.getBoundingClientRect();
-          const sellerRect = sellerElement.getBoundingClientRect();
-          
-          // Calculate position: seller's bottom position relative to container + 50px
-          const relativeTop = sellerRect.bottom - containerRect.top + 50;
-          positions[buyerIdx] = relativeTop;
+        // Count seller messages before this buyer message
+        let sellerIndexBeforeBuyer = -1;
+        for (let i = buyerTimelineIdx - 1; i >= 0; i--) {
+          if (liveMessages[i].from?.includes('seller') || liveMessages[i].from?.includes(sellerEmail)) {
+            // Find the index in sellerMessages array
+            sellerIndexBeforeBuyer = sellerMessages.findIndex(sm => sm.id === liveMessages[i].id);
+            break;
+          }
         }
-      } else {
-        // Fallback: position at top if no seller message found
-        positions[buyerIdx] = 50;
-      }
-    });
+        
+        // If we found a seller message before this buyer message, position 50px below it
+        if (sellerIndexBeforeBuyer >= 0 && sellerMessageRefs.current[sellerIndexBeforeBuyer]) {
+          const sellerElement = sellerMessageRefs.current[sellerIndexBeforeBuyer];
+          const containerElement = buyerContainerRef.current;
+          
+          if (sellerElement && containerElement) {
+            try {
+              // Get positions relative to container
+              const containerRect = containerElement.getBoundingClientRect();
+              const sellerRect = sellerElement.getBoundingClientRect();
+              
+              // Calculate position: seller's bottom position relative to container + 50px
+              const relativeTop = sellerRect.bottom - containerRect.top + 50;
+              positions[buyerIdx] = relativeTop > 0 ? relativeTop : 50;
+            } catch (e) {
+              // Fallback on error
+              positions[buyerIdx] = buyerIdx * 200 + 50;
+            }
+          } else {
+            // Fallback if elements not ready
+            positions[buyerIdx] = buyerIdx * 200 + 50;
+          }
+        } else {
+          // Fallback: position at top if no seller message found
+          positions[buyerIdx] = buyerIdx * 200 + 50;
+        }
+      });
+      
+      setBuyerPositions(positions);
+    };
     
-    setBuyerPositions(positions);
+    // Use requestAnimationFrame to ensure DOM is ready
+    requestAnimationFrame(calculatePositions);
   }, [sellerMessages, buyerMessages, liveMessages, sellerEmail]);
 
   const resetDemo = () => {
