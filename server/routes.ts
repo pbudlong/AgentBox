@@ -284,8 +284,19 @@ Respond as a helpful sales person. Answer their questions professionally and try
 
   // Initialize demo inboxes and start conversation
   app.post("/api/demo/initialize", async (req, res) => {
+    // Generate unique session ID for detailed tracking
+    const timestamp = Date.now();
+    const sessionId = `session-${timestamp}-${Math.random().toString(36).substr(2, 9)}`;
+    const sessionStartTime = new Date().toISOString();
+    
     try {
-      console.log("Initializing demo inboxes...");
+      console.log("\n" + "█".repeat(100));
+      console.log("█".repeat(100));
+      console.log(`🆕 NEW DEMO SESSION STARTED`);
+      console.log(`📋 Session ID: ${sessionId}`);
+      console.log(`⏰ Timestamp: ${sessionStartTime}`);
+      console.log("█".repeat(100));
+      console.log("█".repeat(100) + "\n");
       
       // Clear previous webhook events and processed IDs
       webhookEvents = [];
@@ -293,25 +304,36 @@ Respond as a helpful sales person. Answer their questions professionally and try
       console.log("🔄 Reset webhook tracking");
 
       // Create FRESH inboxes with timestamp to avoid old messages
-      const timestamp = Date.now();
       const sellerInboxName = `seller-${timestamp}`;
       const buyerInboxName = `buyer-${timestamp}`;
       
+      console.log("\n" + "=".repeat(80));
+      console.log("📬 PHASE 1: INBOX CREATION");
+      console.log("=".repeat(80));
+      console.log(`Session ID: ${sessionId}`);
       console.log("Creating fresh inboxes:", sellerInboxName, buyerInboxName);
 
       // Create seller inbox
+      console.log(`⏳ Creating seller inbox: ${sellerInboxName}@agentmail.to`);
+      const sellerInboxStart = Date.now();
       const sellerInbox = await createInbox(sellerInboxName, "Mike (Seller)");
-      console.log("Created inbox result:", JSON.stringify(sellerInbox, null, 2));
+      const sellerInboxDuration = Date.now() - sellerInboxStart;
+      console.log(`✅ Seller inbox created in ${sellerInboxDuration}ms`);
+      console.log("📦 Full API response:", JSON.stringify(sellerInbox, null, 2));
       const sellerInboxId = (sellerInbox as any).inboxId; // AgentMail API uses camelCase
       const sellerEmail = (sellerInbox as any).inboxId;    // inboxId IS the email address
-      console.log("Created new seller inbox:", sellerEmail);
+      console.log(`📧 Seller email address: ${sellerEmail}`);
 
       // Create buyer inbox
+      console.log(`⏳ Creating buyer inbox: ${buyerInboxName}@agentmail.to`);
+      const buyerInboxStart = Date.now();
       const buyerInbox = await createInbox(buyerInboxName, "Sarah (Buyer)");
-      console.log("Created inbox result:", JSON.stringify(buyerInbox, null, 2));
+      const buyerInboxDuration = Date.now() - buyerInboxStart;
+      console.log(`✅ Buyer inbox created in ${buyerInboxDuration}ms`);
+      console.log("📦 Full API response:", JSON.stringify(buyerInbox, null, 2));
       const buyerInboxId = (buyerInbox as any).inboxId; // AgentMail API uses camelCase
       const buyerEmail = (buyerInbox as any).inboxId;    // inboxId IS the email address
-      console.log("Created new buyer inbox:", buyerEmail);
+      console.log(`📧 Buyer email address: ${buyerEmail}`);
 
       // Save session to in-memory storage
       console.log("💾 Saving demo session to memory...");
@@ -328,8 +350,9 @@ Respond as a helpful sales person. Answer their questions professionally and try
       console.log("Inboxes ready:", { seller: sellerEmail, buyer: buyerEmail });
 
       console.log("\n" + "=".repeat(80));
-      console.log("🌐 WEBHOOK REGISTRATION PHASE");
+      console.log("🌐 PHASE 2: WEBHOOK REGISTRATION");
       console.log("=".repeat(80));
+      console.log(`Session ID: ${sessionId}`);
       
       // Register webhooks for both inboxes
       // In development: use REPLIT_DEV_DOMAIN
@@ -348,58 +371,80 @@ Respond as a helpful sales person. Answer their questions professionally and try
         console.log("📍 Using development domain:", replitDomain);
       }
 
-      if (replitDomain) {
-        const webhookUrl = `https://${replitDomain}/webhooks/agentmail`;
-        console.log(`🔗 Attempting webhook registration at: ${webhookUrl}`);
-        console.log(`📬 Seller inbox ID: ${sellerInboxId}`);
-        console.log(`📬 Buyer inbox ID: ${buyerInboxId}`);
-        
-        try {
-          console.log("⏳ Calling AgentMail webhook API...");
-          const results = await Promise.all([
-            registerWebhook(sellerInboxId, webhookUrl),
-            registerWebhook(buyerInboxId, webhookUrl),
-          ]);
-          console.log("✅ Webhook registration successful!");
-          console.log("📋 Registration results:", JSON.stringify(results, null, 2));
-        } catch (webhookError) {
-          console.error("❌ Webhook registration FAILED:");
-          console.error("   Error:", webhookError);
-          console.error("   Stack:", (webhookError as Error).stack);
-          console.error("⚠️  Demo will continue without webhooks - using immediate response fallback");
-        }
-      } else {
-        console.error("❌ No Replit domain found in environment!");
-        console.error("   Cannot register webhooks - using immediate response fallback");
+      if (!replitDomain) {
+        console.error("\n" + "❌".repeat(40));
+        console.error("❌ NO REPLIT DOMAIN FOUND");
+        console.error("❌".repeat(40));
+        console.error("Session ID:", sessionId);
+        console.error("Cannot register webhooks - demo initialization failed");
+        console.error("❌".repeat(40) + "\n");
+        throw new Error("No Replit domain found - cannot register webhooks");
       }
+
+      const webhookUrl = `https://${replitDomain}/webhooks/agentmail`;
+      console.log(`🔗 Webhook URL: ${webhookUrl}`);
+      console.log(`📬 Seller inbox ID: ${sellerInboxId}`);
+      console.log(`📬 Buyer inbox ID: ${buyerInboxId}`);
+      
+      // Register webhooks - let errors propagate and fail the entire initialization
+      console.log("⏳ Registering webhooks with AgentMail API...");
+      const webhookStart = Date.now();
+      const results = await Promise.all([
+        registerWebhook(sellerInboxId, webhookUrl),
+        registerWebhook(buyerInboxId, webhookUrl),
+      ]);
+      const webhookDuration = Date.now() - webhookStart;
+      console.log(`✅ Webhook registration successful in ${webhookDuration}ms!`);
+      console.log("📋 Seller webhook result:", JSON.stringify(results[0], null, 2));
+      console.log("📋 Buyer webhook result:", JSON.stringify(results[1], null, 2));
       console.log("=".repeat(80) + "\n");
 
       console.log("\n" + "=".repeat(80));
-      console.log("📧 EMAIL CONVERSATION PHASE");
+      console.log("📧 PHASE 3: EMAIL SENDING");
       console.log("=".repeat(80));
+      console.log(`Session ID: ${sessionId}`);
       
       // Generate seller's first email using agent
-      console.log("🤖 Generating seller's outreach email...");
+      console.log("🤖 Generating seller's outreach email using AI agent...");
+      const agentStart = Date.now();
       const sellerMessage = await sellerAgent.generate(
         "Write a brief sales outreach email to Sarah, a VP of Sales at TechCorp. Introduce AgentBox, a product that helps with sales qualification using AI agents. Keep it under 100 words and professional."
       );
-      console.log("✅ Seller message generated:", sellerMessage.text.substring(0, 100) + "...");
+      const agentDuration = Date.now() - agentStart;
+      console.log(`✅ Seller message generated in ${agentDuration}ms`);
+      console.log("📝 Generated message preview:", sellerMessage.text.substring(0, 150) + "...");
+      console.log("📏 Message length:", sellerMessage.text.length, "characters");
 
       // Send first email from seller to buyer
-      console.log("📮 Sending seller email to buyer...");
+      console.log(`📮 Sending email from ${sellerEmail} to ${buyerEmail}...`);
+      const emailStart = Date.now();
       const sellerEmailResult = await sendEmail({
         inbox_id: sellerInboxId,
         to: buyerEmail,
         subject: "Streamline Your Sales Qualification Process",
         text: sellerMessage.text,
       });
-      console.log("✅ Seller email sent successfully");
-      console.log("📋 Email result:", JSON.stringify(sellerEmailResult, null, 2));
-      console.log("⏳ Waiting for buyer webhook to fire and generate response...");
+      const emailDuration = Date.now() - emailStart;
+      console.log(`✅ Email sent successfully in ${emailDuration}ms`);
+      console.log("📦 AgentMail send response:", JSON.stringify(sellerEmailResult, null, 2));
+      console.log("⏳ Waiting for buyer webhook to fire and auto-generate response...");
       console.log("=".repeat(80) + "\n");
+
+      const sessionEndTime = new Date().toISOString();
+      const totalDuration = Date.now() - timestamp;
+      console.log("\n" + "█".repeat(100));
+      console.log("✅ DEMO SESSION INITIALIZED SUCCESSFULLY");
+      console.log(`📋 Session ID: ${sessionId}`);
+      console.log(`⏱️  Total duration: ${totalDuration}ms`);
+      console.log(`⏰ Started: ${sessionStartTime}`);
+      console.log(`⏰ Ended: ${sessionEndTime}`);
+      console.log(`📧 Seller: ${sellerEmail}`);
+      console.log(`📧 Buyer: ${buyerEmail}`);
+      console.log("█".repeat(100) + "\n");
 
       res.json({
         success: true,
+        sessionId,
         seller: sellerEmail,
         buyer: buyerEmail,
         message: "Demo initialized - webhooks will handle buyer response",
