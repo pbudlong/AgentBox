@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { buyerAgent, sellerAgent } from "./mastra/index";
-import { replyToEmail, type InboundEmail, createInbox, sendEmail, listMessages, getMessage, findInboxByEmail, registerWebhook } from "./agentmail";
+import { replyToEmail, type InboundEmail, createInbox, sendEmail, listMessages, getMessage, findInboxByEmail } from "./agentmail";
 
 // MAX_EXCHANGES constant for preventing infinite loops
 const MAX_EXCHANGES = 5; // Seller → buyer (1) → seller (2) → buyer (3) → seller (4) → buyer (5) → STOP
@@ -401,32 +401,7 @@ Under 30 words.`;
       console.log("✅ Demo session created in memory");
 
       console.log("Inboxes ready:", { seller: sellerEmail, buyer: buyerEmail });
-      
-      // ONE-TIME PRODUCTION WEBHOOK REGISTRATION
-      // Set REGISTER_PRODUCTION_WEBHOOK=true in secrets to enable
-      // After successful registration, remove this flag to disable
-      if (process.env.REGISTER_PRODUCTION_WEBHOOK === 'true') {
-        console.log("\n" + "=".repeat(80));
-        console.log("🔔 REGISTERING PRODUCTION WEBHOOK (ONE-TIME SETUP)");
-        console.log("=".repeat(80));
-        const productionWebhookUrl = "https://agentboxyc.replit.app/webhooks/agentmail";
-        console.log(`📍 Webhook URL: ${productionWebhookUrl}`);
-        
-        try {
-          console.log(`⏳ Calling AgentMail API to register webhook...`);
-          const webhookResult = await registerWebhook(sellerInboxId, productionWebhookUrl);
-          console.log("✅ PRODUCTION WEBHOOK REGISTERED SUCCESSFULLY!");
-          console.log("📦 AgentMail webhook response:", JSON.stringify(webhookResult, null, 2));
-          console.log("⚠️  ACTION REQUIRED: Set REGISTER_PRODUCTION_WEBHOOK=false in secrets to disable auto-registration");
-          console.log("=".repeat(80) + "\n");
-        } catch (webhookError) {
-          console.error("❌ Production webhook registration failed:", webhookError);
-          console.error("This is expected if webhook is already registered");
-          console.log("=".repeat(80) + "\n");
-        }
-      } else {
-        console.log("ℹ️  Webhooks are configured at organization level - no per-inbox registration needed");
-      }
+      console.log("ℹ️  Webhooks are configured at organization level - no per-inbox registration needed");
       console.log("=".repeat(80) + "\n");
 
       console.log("\n" + "=".repeat(80));
