@@ -386,17 +386,28 @@ Respond as a helpful sales person. Answer their questions professionally and try
       console.log(`📬 Seller inbox ID: ${sellerInboxId}`);
       console.log(`📬 Buyer inbox ID: ${buyerInboxId}`);
       
-      // Register webhooks - let errors propagate and fail the entire initialization
+      // Register webhooks - continue even if registration fails
       console.log("⏳ Registering webhooks with AgentMail API...");
       const webhookStart = Date.now();
-      const results = await Promise.all([
-        registerWebhook(sellerInboxId, webhookUrl),
-        registerWebhook(buyerInboxId, webhookUrl),
-      ]);
-      const webhookDuration = Date.now() - webhookStart;
-      console.log(`✅ Webhook registration successful in ${webhookDuration}ms!`);
-      console.log("📋 Seller webhook result:", JSON.stringify(results[0], null, 2));
-      console.log("📋 Buyer webhook result:", JSON.stringify(results[1], null, 2));
+      let webhooksSuccessful = false;
+      let webhookError: string | null = null;
+      
+      try {
+        const results = await Promise.all([
+          registerWebhook(sellerInboxId, webhookUrl),
+          registerWebhook(buyerInboxId, webhookUrl),
+        ]);
+        const webhookDuration = Date.now() - webhookStart;
+        console.log(`✅ Webhook registration successful in ${webhookDuration}ms!`);
+        console.log("📋 Seller webhook result:", JSON.stringify(results[0], null, 2));
+        console.log("📋 Buyer webhook result:", JSON.stringify(results[1], null, 2));
+        webhooksSuccessful = true;
+      } catch (webhookErr: any) {
+        const webhookDuration = Date.now() - webhookStart;
+        console.warn(`⚠️  Webhook registration failed after ${webhookDuration}ms:`, webhookErr.message);
+        console.warn("⚠️  Demo will continue with immediate buyer response (no webhook fallback)");
+        webhookError = webhookErr.message || "Webhook registration failed";
+      }
       console.log("=".repeat(80) + "\n");
 
       console.log("\n" + "=".repeat(80));
