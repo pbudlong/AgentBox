@@ -532,17 +532,17 @@ export default function LiveDemo() {
               </div>
             )}
             
-            <div className="flex-1 overflow-auto p-6 relative" ref={buyerContainerRef}>
+            <div className="flex-1 overflow-auto p-6" ref={buyerContainerRef}>
               {buyerMessages.map((msg, idx) => {
                 // Use the dynamically calculated position from state
-                const topPosition = buyerPositions[idx] || 0;
+                const marginTop = buyerPositions[idx] || 0;
                 
                 return (
                   <div 
                     key={msg.id} 
-                    className="flex justify-start absolute left-0 right-0 px-6"
+                    className="flex justify-start mb-4"
                     style={{ 
-                      top: `${topPosition}px`
+                      marginTop: idx === 0 ? `${marginTop}px` : undefined
                     }}
                   >
                     <Card 
