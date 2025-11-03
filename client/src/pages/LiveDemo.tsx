@@ -399,10 +399,10 @@ export default function LiveDemo() {
             )}
             
             <div className="flex-1 overflow-auto p-6">
-              {sellerMessages.map((msg, idx) => (
+              {sellerMessages.slice(0, -1).map((msg, idx) => (
                 <div 
                   key={msg.id} 
-                  className="flex justify-end mb-4"
+                  className="flex justify-end mb-8"
                 >
                   <Card 
                     className="p-4 border-primary/20 bg-card max-w-[85%]" 
