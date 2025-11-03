@@ -172,6 +172,12 @@ Preferred communication style: Simple, everyday language.
 - Error handling for AlreadyExistsError gracefully falls back to listing/finding existing inboxes
 
 **Recent Fixes (Nov 1-3, 2025):**
+- ✅ **Synchronized chronological execution flow** (Nov 3, 2025):
+  - Both seller and buyer panes now show ALL execution logs in chronological order
+  - Seller pane highlights seller actions, dims buyer actions with [Buyer] prefix
+  - Buyer pane highlights buyer actions, dims seller actions with [Seller] prefix  
+  - Ensures conversation timeline is visible and aligned across both panes
+  - Example flow: "Created inbox" → "Generated email" → "Sent to buyer" → "[Buyer] Webhook received" → "[Buyer] Webhook replied"
 - ✅ **Buyer message positioning** (Nov 3, 2025):
   - Simple formula: each buyer message positioned at `idx × 176 + 50` (50px below corresponding seller message)
   - Messages must be properly sorted chronologically on backend to ensure correct pairing

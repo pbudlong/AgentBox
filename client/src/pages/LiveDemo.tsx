@@ -343,13 +343,13 @@ export default function LiveDemo() {
               </div>
             </div>
             
-            {/* Debug panel */}
-            {debugLogs.filter((log: any) => log.agent === 'seller').length > 0 && (
+            {/* Debug panel - show ALL logs chronologically */}
+            {debugLogs.length > 0 && (
               <div className="px-6 py-3 bg-card border-b border-border">
                 <p className="text-xs font-semibold text-muted-foreground mb-2">Execution Flow:</p>
                 <div className="space-y-1">
-                  {debugLogs.filter((log: any) => log.agent === 'seller').map((log: any, idx) => (
-                    <div key={idx}>
+                  {debugLogs.map((log: any, idx) => (
+                    <div key={idx} className={log.agent !== 'seller' ? 'opacity-50' : ''}>
                       {!log.isWebhook ? (
                         <div 
                           className={`text-xs px-2 py-1 rounded ${
@@ -361,6 +361,7 @@ export default function LiveDemo() {
                           {log.status === 'success' && '✓ '}
                           {log.status === 'error' && '✗ '}
                           {log.status === 'pending' && '⏳ '}
+                          {log.agent === 'buyer' && <span className="opacity-60">[Buyer] </span>}
                           {log.message}
                         </div>
                       ) : (
@@ -374,6 +375,7 @@ export default function LiveDemo() {
                             log.webhookData.status?.includes('error') ? 'bg-red-500/20 text-red-400' : 
                             'bg-gray-500/20 text-gray-400'
                           }`}>
+                            {log.agent === 'buyer' && <span className="opacity-60">[Buyer] </span>}
                             🔔 Webhook {log.webhookData.status}
                           </div>
                           <details className="px-2 py-2 font-mono text-[10px]">
@@ -447,13 +449,13 @@ export default function LiveDemo() {
               </div>
             </div>
             
-            {/* Debug panel */}
-            {debugLogs.filter((log: any) => log.agent === 'buyer').length > 0 && (
+            {/* Debug panel - show ALL logs chronologically */}
+            {debugLogs.length > 0 && (
               <div className="px-6 py-3 bg-card border-b border-border">
                 <p className="text-xs font-semibold text-muted-foreground mb-2">Execution Flow:</p>
                 <div className="space-y-1">
-                  {debugLogs.filter((log: any) => log.agent === 'buyer').map((log: any, idx) => (
-                    <div key={idx}>
+                  {debugLogs.map((log: any, idx) => (
+                    <div key={idx} className={log.agent !== 'buyer' ? 'opacity-50' : ''}>
                       {!log.isWebhook ? (
                         <div 
                           className={`text-xs px-2 py-1 rounded ${
@@ -465,6 +467,7 @@ export default function LiveDemo() {
                           {log.status === 'success' && '✓ '}
                           {log.status === 'error' && '✗ '}
                           {log.status === 'pending' && '⏳ '}
+                          {log.agent === 'seller' && <span className="opacity-60">[Seller] </span>}
                           {log.message}
                         </div>
                       ) : (
@@ -478,6 +481,7 @@ export default function LiveDemo() {
                             log.webhookData.status?.includes('error') ? 'bg-red-500/20 text-red-400' : 
                             'bg-gray-500/20 text-gray-400'
                           }`}>
+                            {log.agent === 'seller' && <span className="opacity-60">[Seller] </span>}
                             🔔 Webhook {log.webhookData.status}
                           </div>
                           <details className="px-2 py-2 font-mono text-[10px]">
