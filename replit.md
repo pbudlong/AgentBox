@@ -105,9 +105,12 @@ Preferred communication style: Simple, everyday language.
 
 **Active Third-Party Integrations:**
 - **AgentMail**: Core email infrastructure for @agentmail.to addresses (API key configured via AGENTMAIL_API_KEY secret)
-  - Live demo uses seller-demo@agentmail.to and buyer-demo@agentmail.to
+  - Live demo uses dynamically created inboxes (e.g., seller-1762148369969@agentmail.to)
   - API fields: `inboxId` (contains email address), `displayName`, `createdAt`, `updatedAt`
   - Inbox reuse logic handles AlreadyExistsError by calling listInboxes() and finding by inboxId
+  - **Webhooks are configured at organization/pod level** - no per-inbox registration needed
+  - Webhook URL: `https://{REPLIT_DOMAIN}/webhooks/agentmail` catches all messages for the pod
+  - Once webhooks are registered for an organization, ALL inboxes inherit the configuration automatically
 - **OpenAI / Mastra**: LLM-based agent intelligence (using AI_INTEGRATIONS_OPENAI_API_KEY from Replit integration)
   - Configured via createOpenAI({ apiKey }) at provider level
   - Powers buyer and seller agent responses with GPT-4
@@ -168,7 +171,13 @@ Preferred communication style: Simple, everyday language.
 - Mastra agents (buyerAgent, sellerAgent) use tools for fit scoring and company research
 - Error handling for AlreadyExistsError gracefully falls back to listing/finding existing inboxes
 
-**Recent Fixes (Nov 1, 2025):**
+**Recent Fixes (Nov 1-3, 2025):**
+- ✅ **Removed redundant webhook registration** (Nov 3, 2025):
+  - Discovered AgentMail webhooks are configured at organization/pod level, not per-inbox
+  - Removed per-demo webhook registration from `/api/demo/initialize`
+  - Webhooks persist automatically for all inboxes in the pod
+  - Simplified initialization flow and eliminated intermittent webhook registration failures
+  - Errors now displayed inline in execution status instead of separate error banner
 - ✅ **Implemented database persistence for production webhooks** (Nov 1, 2025):
   - Created `demo_sessions` table to persist inbox IDs and exchange count
   - Replaced in-memory storage with PostgreSQL database queries

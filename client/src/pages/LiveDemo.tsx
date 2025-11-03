@@ -111,35 +111,13 @@ export default function LiveDemo() {
       const data = await response.json();
       
       // Set initial debug logs (webhooks will be added dynamically)
-      const logs: any[] = [
+      setDebugLogs([
         { agent: 'seller', message: 'Created fresh AgentMail inbox', status: 'success', timestamp: new Date() },
         { agent: 'buyer', message: 'Created fresh AgentMail inbox', status: 'success', timestamp: new Date() },
-      ];
-      
-      // Add webhook status logs
-      if (data.webhooksRegistered) {
-        logs.push(
-          { agent: 'seller', message: 'Registered webhook with AgentMail', status: 'success', timestamp: new Date() },
-          { agent: 'buyer', message: 'Registered webhook with AgentMail', status: 'success', timestamp: new Date() }
-        );
-      } else {
-        logs.push(
-          { agent: 'seller', message: `⚠️ Webhook registration failed: ${data.webhookError}`, status: 'error', timestamp: new Date() },
-          { agent: 'buyer', message: `⚠️ Webhook registration failed: ${data.webhookError}`, status: 'error', timestamp: new Date() }
-        );
-      }
-      
-      logs.push(
         { agent: 'seller', message: 'Generated outreach email via OpenAI', status: 'success', timestamp: new Date() },
-        { agent: 'seller', message: 'Sent email to buyer', status: 'success', timestamp: new Date() }
-      );
-      
-      // Only add webhook placeholder if webhooks were registered successfully
-      if (data.webhooksRegistered) {
-        logs.push({ agent: 'buyer', message: 'Waiting for webhook...', status: 'pending', timestamp: new Date(), isWebhookPlaceholder: true } as any);
-      }
-      
-      setDebugLogs(logs);
+        { agent: 'seller', message: 'Sent email to buyer', status: 'success', timestamp: new Date() },
+        { agent: 'buyer', message: 'Waiting for webhook...', status: 'pending', timestamp: new Date(), isWebhookPlaceholder: true } as any,
+      ]);
       
       return { ...data, sessionStart };
     },

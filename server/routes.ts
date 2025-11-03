@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { buyerAgent, sellerAgent } from "./mastra/index";
-import { replyToEmail, type InboundEmail, createInbox, sendEmail, listMessages, getMessage, findInboxByEmail, registerWebhook } from "./agentmail";
+import { replyToEmail, type InboundEmail, createInbox, sendEmail, listMessages, getMessage, findInboxByEmail } from "./agentmail";
 
 // MAX_EXCHANGES constant for preventing infinite loops
 const MAX_EXCHANGES = 4; // Seller sends 1, buyer replies 1, seller replies 1, buyer replies 1, seller replies 1, stop
@@ -348,66 +348,7 @@ Respond as a helpful sales person. Answer their questions professionally and try
       console.log("✅ Demo session created in memory");
 
       console.log("Inboxes ready:", { seller: sellerEmail, buyer: buyerEmail });
-
-      console.log("\n" + "=".repeat(80));
-      console.log("🌐 PHASE 2: WEBHOOK REGISTRATION");
-      console.log("=".repeat(80));
-      console.log(`Session ID: ${sessionId}`);
-      
-      // Register webhooks for both inboxes
-      // In development: use REPLIT_DEV_DOMAIN
-      // In production: use REPLIT_DOMAINS (comma-separated list)
-      console.log("🔍 Checking environment variables:");
-      console.log("  - REPLIT_DEV_DOMAIN:", process.env.REPLIT_DEV_DOMAIN || "(not set)");
-      console.log("  - REPLIT_DOMAINS:", process.env.REPLIT_DOMAINS || "(not set)");
-      console.log("  - NODE_ENV:", process.env.NODE_ENV);
-      
-      let replitDomain = process.env.REPLIT_DEV_DOMAIN;
-      if (!replitDomain && process.env.REPLIT_DOMAINS) {
-        // Production: extract first domain from comma-separated list
-        replitDomain = process.env.REPLIT_DOMAINS.split(',')[0];
-        console.log("📍 Using production domain:", replitDomain);
-      } else if (replitDomain) {
-        console.log("📍 Using development domain:", replitDomain);
-      }
-
-      if (!replitDomain) {
-        console.error("\n" + "❌".repeat(40));
-        console.error("❌ NO REPLIT DOMAIN FOUND");
-        console.error("❌".repeat(40));
-        console.error("Session ID:", sessionId);
-        console.error("Cannot register webhooks - demo initialization failed");
-        console.error("❌".repeat(40) + "\n");
-        throw new Error("No Replit domain found - cannot register webhooks");
-      }
-
-      const webhookUrl = `https://${replitDomain}/webhooks/agentmail`;
-      console.log(`🔗 Webhook URL: ${webhookUrl}`);
-      console.log(`📬 Seller inbox ID: ${sellerInboxId}`);
-      console.log(`📬 Buyer inbox ID: ${buyerInboxId}`);
-      
-      // Register webhooks - continue even if registration fails
-      console.log("⏳ Registering webhooks with AgentMail API...");
-      const webhookStart = Date.now();
-      let webhooksSuccessful = false;
-      let webhookError: string | null = null;
-      
-      try {
-        const results = await Promise.all([
-          registerWebhook(sellerInboxId, webhookUrl),
-          registerWebhook(buyerInboxId, webhookUrl),
-        ]);
-        const webhookDuration = Date.now() - webhookStart;
-        console.log(`✅ Webhook registration successful in ${webhookDuration}ms!`);
-        console.log("📋 Seller webhook result:", JSON.stringify(results[0], null, 2));
-        console.log("📋 Buyer webhook result:", JSON.stringify(results[1], null, 2));
-        webhooksSuccessful = true;
-      } catch (webhookErr: any) {
-        const webhookDuration = Date.now() - webhookStart;
-        console.warn(`⚠️  Webhook registration failed after ${webhookDuration}ms:`, webhookErr.message);
-        console.warn("⚠️  Demo will continue but webhooks will not work");
-        webhookError = webhookErr.message || "Webhook registration failed";
-      }
+      console.log("ℹ️  Webhooks are configured at organization level - no per-inbox registration needed");
       console.log("=".repeat(80) + "\n");
 
       console.log("\n" + "=".repeat(80));
@@ -458,11 +399,7 @@ Respond as a helpful sales person. Answer their questions professionally and try
         sessionId,
         seller: sellerEmail,
         buyer: buyerEmail,
-        webhooksRegistered: webhooksSuccessful,
-        webhookError: webhookError,
-        message: webhooksSuccessful 
-          ? "Demo initialized - webhooks will handle buyer response"
-          : "Demo initialized - webhook registration failed, agents may not respond automatically",
+        message: "Demo initialized - webhooks configured at organization level",
       });
     } catch (error) {
       console.error("\n" + "❌".repeat(40));
