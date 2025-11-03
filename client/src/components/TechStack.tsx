@@ -364,33 +364,36 @@ export default function TechStack() {
                   Features and Tech to Implement
                 </h4>
                 <div className="space-y-1.5">
-                  {techToBeImplemented.map((feature, index) => (
-                    <div key={index} className="flex items-start gap-1.5 p-1.5 rounded-lg bg-card/50 border border-card-border">
-                      <CheckCircle2 className="h-3 w-3 text-muted-foreground flex-shrink-0 mt-0.5" />
-                      <div className="flex-1">
-                        <p className="font-semibold text-xs mb-0" data-testid={`text-to-implement-${index}`}>
-                          {feature.name}
-                        </p>
-                        <p className="text-[10px] text-muted-foreground leading-tight mb-1">
-                          {feature.description}
-                        </p>
-                        <div className="flex flex-wrap gap-0.5">
-                          {feature.tech.map((techName, techIndex) => {
-                            const isSponsor = sponsorTech.includes(techName);
-                            return (
-                              <Badge 
-                                key={techIndex} 
-                                variant="outline" 
-                                className={`text-[9px] px-1 py-0 ${isSponsor ? 'bg-purple-500/20 text-purple-300 border-purple-500/30' : ''}`}
-                              >
-                                {techName}
-                              </Badge>
-                            );
-                          })}
+                  {techToBeImplemented.map((feature, index) => {
+                    const hasSponsorTech = feature.tech.some(techName => sponsorTech.includes(techName));
+                    return (
+                      <div key={index} className="flex items-start gap-1.5 p-1.5 rounded-lg bg-card/50 border border-card-border">
+                        <CheckCircle2 className={`h-3 w-3 flex-shrink-0 mt-0.5 ${hasSponsorTech ? 'text-purple-300' : 'text-muted-foreground'}`} />
+                        <div className="flex-1">
+                          <p className="font-semibold text-xs mb-0" data-testid={`text-to-implement-${index}`}>
+                            {feature.name}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground leading-tight mb-1">
+                            {feature.description}
+                          </p>
+                          <div className="flex flex-wrap gap-0.5">
+                            {feature.tech.map((techName, techIndex) => {
+                              const isSponsor = sponsorTech.includes(techName);
+                              return (
+                                <Badge 
+                                  key={techIndex} 
+                                  variant="outline" 
+                                  className={`text-[9px] px-1 py-0 ${isSponsor ? 'bg-purple-500/20 text-purple-300 border-purple-500/30' : ''}`}
+                                >
+                                  {techName}
+                                </Badge>
+                              );
+                            })}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>
