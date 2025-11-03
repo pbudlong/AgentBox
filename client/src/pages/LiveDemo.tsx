@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useLayoutEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import ProgressIndicator from "@/components/ProgressIndicator";
@@ -85,6 +85,11 @@ export default function LiveDemo() {
   const [webhookEvents, setWebhookEvents] = useState<any[]>([]);
   const [processedWebhookIds, setProcessedWebhookIds] = useState<Set<string>>(new Set());
   const [, navigate] = useLocation();
+  
+  // Refs for dynamic positioning
+  const sellerMessageRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const buyerContainerRef = useRef<HTMLDivElement | null>(null);
+  const [buyerPositions, setBuyerPositions] = useState<number[]>([]);
 
   // Initialize demo mutation
   const initMutation = useMutation({
@@ -255,6 +260,49 @@ export default function LiveDemo() {
   const buyerMessages = liveMessages.filter(m => 
     m.from && (m.from.includes('buyer-demo@agentmail.to') || m.from.includes(buyerEmail))
   );
+  
+  // Dynamically calculate buyer message positions based on seller message DOM positions
+  useLayoutEffect(() => {
+    if (sellerMessages.length === 0 || buyerMessages.length === 0) return;
+    
+    const positions: number[] = [];
+    
+    buyerMessages.forEach((buyerMsg, buyerIdx) => {
+      // Find the corresponding seller message that came before this buyer message
+      const buyerTimelineIdx = liveMessages.findIndex(m => m.id === buyerMsg.id);
+      
+      // Count seller messages before this buyer message
+      let sellerIndexBeforeBuyer = -1;
+      for (let i = buyerTimelineIdx - 1; i >= 0; i--) {
+        if (liveMessages[i].from?.includes('seller') || liveMessages[i].from?.includes(sellerEmail)) {
+          // Find the index in sellerMessages array
+          sellerIndexBeforeBuyer = sellerMessages.findIndex(sm => sm.id === liveMessages[i].id);
+          break;
+        }
+      }
+      
+      // If we found a seller message before this buyer message, position 50px below it
+      if (sellerIndexBeforeBuyer >= 0 && sellerMessageRefs.current[sellerIndexBeforeBuyer]) {
+        const sellerElement = sellerMessageRefs.current[sellerIndexBeforeBuyer];
+        const containerElement = buyerContainerRef.current;
+        
+        if (sellerElement && containerElement) {
+          // Get positions relative to container
+          const containerRect = containerElement.getBoundingClientRect();
+          const sellerRect = sellerElement.getBoundingClientRect();
+          
+          // Calculate position: seller's bottom position relative to container + 50px
+          const relativeTop = sellerRect.bottom - containerRect.top + 50;
+          positions[buyerIdx] = relativeTop;
+        }
+      } else {
+        // Fallback: position at top if no seller message found
+        positions[buyerIdx] = 50;
+      }
+    });
+    
+    setBuyerPositions(positions);
+  }, [sellerMessages, buyerMessages, liveMessages, sellerEmail]);
 
   const resetDemo = () => {
     setLiveMessages([]);
@@ -391,6 +439,7 @@ export default function LiveDemo() {
               {sellerMessages.map((msg, idx) => (
                 <div 
                   key={msg.id} 
+                  ref={(el) => { sellerMessageRefs.current[idx] = el; }}
                   className="flex justify-end mb-4"
                 >
                   <Card 
@@ -470,27 +519,18 @@ export default function LiveDemo() {
               </div>
             )}
             
-            <div className="flex-1 overflow-auto p-6">
+            <div className="flex-1 overflow-auto p-6 relative" ref={buyerContainerRef}>
               {buyerMessages.map((msg, idx) => {
-                // Find the position of this buyer message in the full chronological timeline
-                const buyerTimelineIdx = liveMessages.findIndex(m => m.id === msg.id);
-                
-                // Find the seller message that came immediately before this buyer message
-                let sellerCountBeforeBuyer = 0;
-                for (let i = 0; i < buyerTimelineIdx; i++) {
-                  if (liveMessages[i].from?.includes('seller') || liveMessages[i].from?.includes(sellerEmail)) {
-                    sellerCountBeforeBuyer++;
-                  }
-                }
-                
-                // Position 50px below the seller message that came before this buyer
-                const marginTop = (sellerCountBeforeBuyer - 1) * 176 + 50;
+                // Use the dynamically calculated position from state
+                const topPosition = buyerPositions[idx] || 0;
                 
                 return (
                   <div 
                     key={msg.id} 
-                    className="flex justify-start mb-4"
-                    style={{ marginTop: `${marginTop}px` }}
+                    className="flex justify-start absolute left-0 right-0 px-6"
+                    style={{ 
+                      top: `${topPosition}px`
+                    }}
                   >
                     <Card 
                       className="p-4 border-gradient-via/20 bg-card max-w-[85%]" 
