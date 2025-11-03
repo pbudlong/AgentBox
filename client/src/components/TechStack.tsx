@@ -7,43 +7,43 @@ import { SiReplit } from "react-icons/si";
 const standardTech = [
   {
     name: "React + TypeScript",
-    status: "active",
+    demos: ["Scripted Demo", "Live Demo"],
     description: "Frontend framework with full type safety for UI components",
   },
   {
     name: "Tailwind CSS + shadcn/ui",
-    status: "active",
+    demos: ["Scripted Demo", "Live Demo"],
     description: "Professional UI component library with dark mode and gradient system",
   },
   {
     name: "Wouter",
-    status: "active",
+    demos: ["Scripted Demo", "Live Demo"],
     description: "Lightweight client-side routing for multi-page navigation",
   },
   {
     name: "Vite",
-    status: "active",
+    demos: ["Scripted Demo", "Live Demo"],
     description: "Fast build tool and development server",
   },
   {
     name: "Lucide React",
-    status: "active",
+    demos: ["Scripted Demo", "Live Demo"],
     description: "Icon system for UI elements and visual indicators",
   },
   {
     name: "Express.js",
-    status: "active",
-    description: "Backend API server with webhook handling (Live Demo only)",
+    demos: ["Live Demo"],
+    description: "Backend API server with webhook handling",
   },
   {
     name: "Drizzle ORM",
-    status: "active",
-    description: "Type-safe database operations and schema management (Live Demo only)",
+    demos: ["Live Demo"],
+    description: "Type-safe database operations and schema management",
   },
   {
     name: "TanStack Query",
-    status: "active",
-    description: "Efficient data fetching and caching with real-time polling (Live Demo only)",
+    demos: ["Live Demo"],
+    description: "Efficient data fetching and caching with real-time polling",
   },
 ];
 
@@ -52,7 +52,7 @@ const scriptedSponsorTech = [
   {
     name: "Replit",
     role: "Hosting Platform",
-    status: "active",
+    demos: ["Scripted Demo"],
     description: "Hosting the static demo experience with instant deployments",
   },
 ];
@@ -62,68 +62,32 @@ const liveSponsorTech = [
   {
     name: "AgentMail",
     role: "Core Email Infrastructure",
-    status: "active",
+    demos: ["Live Demo"],
     description: "Provides @agentmail.to email addresses, webhook delivery, and real-time email routing for agent conversations.",
   },
   {
     name: "Replit",
     role: "Hosting & Deployment",
-    status: "active",
+    demos: ["Live Demo"],
     description: "Full-stack hosting with integrated database, webhooks, and seamless deployment for rapid prototyping.",
   },
   {
     name: "Mastra",
     role: "AI Agent Framework",
-    status: "active",
+    demos: ["Live Demo"],
     description: "Framework for building AI agents with tool integration (wraps OpenAI for buyer and seller agents)",
   },
   {
     name: "OpenAI",
     role: "Agent Intelligence",
-    status: "active",
+    demos: ["Live Demo"],
     description: "Powers buyer and seller AI agents with GPT-4 for natural language generation and intelligent email responses (via Mastra framework).",
   },
   {
     name: "Perplexity",
     role: "Research & Context",
-    status: "active",
+    demos: ["Live Demo"],
     description: "Integrated as agent tool for real-time company research and market context enrichment (available to agents but not triggered in current 5-email demo).",
-  },
-  {
-    name: "Convex",
-    role: "Real-time Database",
-    status: "not-used",
-    description: "Could replace polling with WebSocket-based real-time updates (planned but using PostgreSQL + polling currently)",
-  },
-  {
-    name: "LiveKit",
-    role: "Real-time Communication",
-    status: "not-used",
-    description: "Not used in live demo",
-  },
-  {
-    name: "Browser-Use",
-    role: "Browser Automation",
-    status: "not-used",
-    description: "Not used in live demo",
-  },
-  {
-    name: "Hyperspell",
-    role: "Spell Check",
-    status: "not-used",
-    description: "Not used in live demo",
-  },
-  {
-    name: "Composio",
-    role: "Tool Integration",
-    status: "not-used",
-    description: "Not used in live demo",
-  },
-  {
-    name: "Moss",
-    role: "Infrastructure",
-    status: "not-used",
-    description: "Not used in live demo",
   },
 ];
 
@@ -215,7 +179,7 @@ export default function TechStack() {
               <span className="text-lg font-bold text-primary">1</span>
             </div>
             <h3 className="text-xl font-semibold" data-testid="text-standard-tech-heading">
-              Standard Tech
+              Active Standard Tech
             </h3>
           </div>
 
@@ -225,13 +189,23 @@ export default function TechStack() {
                 <div key={index} className="flex items-start gap-2">
                   <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-0.5">
+                    <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
                       <p className="font-semibold text-sm" data-testid={`text-standard-tech-${index}`}>
                         {tech.name}
                       </p>
-                      <Badge variant="default" className="text-[10px] px-1.5 py-0">
-                        {tech.status}
-                      </Badge>
+                      {tech.demos.map((demo, demoIndex) => (
+                        <Badge 
+                          key={demoIndex} 
+                          variant="default" 
+                          className={`text-[10px] px-1.5 py-0 ${
+                            demo === "Scripted Demo" 
+                              ? "bg-orange-500/20 text-orange-300 border-orange-500/30" 
+                              : "bg-purple-500/20 text-purple-300 border-purple-500/30"
+                          }`}
+                        >
+                          {demo}
+                        </Badge>
+                      ))}
                     </div>
                     <p className="text-xs text-muted-foreground leading-snug">
                       {tech.description}
@@ -254,73 +228,38 @@ export default function TechStack() {
             </h3>
           </div>
 
-          <Card className="p-4">
-            {/* Scripted Demo Sponsors */}
-            <div className="mb-4">
-              <h4 className="font-semibold text-sm mb-2">Scripted Demo (/demo)</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                {scriptedSponsorTech.map((tech, index) => (
-                  <div key={index} className="border-l-2 border-primary/30 pl-2">
+          <Card className="p-3">
+            <div className="space-y-2">
+              {/* All sponsors in single column */}
+              {[...scriptedSponsorTech, ...liveSponsorTech].map((tech, index) => (
+                <div key={index} className="flex items-start gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">
                     <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
-                      <h5 className="font-semibold text-xs" data-testid={`text-scripted-sponsor-${index}`}>
+                      <p className="font-semibold text-sm" data-testid={`text-sponsor-${index}`}>
                         {tech.name}
-                      </h5>
-                      <Badge variant="default" className="text-[9px] px-1 py-0">
-                        {tech.status}
-                      </Badge>
+                      </p>
+                      {tech.demos.map((demo, demoIndex) => (
+                        <Badge 
+                          key={demoIndex} 
+                          variant="default" 
+                          className={`text-[10px] px-1.5 py-0 ${
+                            demo === "Scripted Demo" 
+                              ? "bg-orange-500/20 text-orange-300 border-orange-500/30" 
+                              : "bg-purple-500/20 text-purple-300 border-purple-500/30"
+                          }`}
+                        >
+                          {demo}
+                        </Badge>
+                      ))}
                     </div>
-                    <p className="text-[10px] text-primary/80 mb-0.5">{tech.role}</p>
-                    <p className="text-[10px] text-muted-foreground leading-tight">
+                    <p className="text-xs text-primary/80 mb-0.5">{tech.role}</p>
+                    <p className="text-xs text-muted-foreground leading-snug">
                       {tech.description}
                     </p>
                   </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Live Demo Sponsors */}
-            <div>
-              <h4 className="font-semibold text-sm mb-2">Live Demo (/live)</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                {/* Active sponsors first */}
-                {liveSponsorTech
-                  .filter(tech => tech.status === "active")
-                  .map((tech, index) => (
-                    <div key={index} className="border-l-2 border-primary/30 pl-2">
-                      <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
-                        <h5 className="font-semibold text-xs" data-testid={`text-live-sponsor-${index}`}>
-                          {tech.name}
-                        </h5>
-                        <Badge variant="default" className="text-[9px] px-1 py-0">
-                          {tech.status}
-                        </Badge>
-                      </div>
-                      <p className="text-[10px] text-primary/80 mb-0.5">{tech.role}</p>
-                      <p className="text-[10px] text-muted-foreground leading-tight">
-                        {tech.description}
-                      </p>
-                    </div>
-                  ))}
-                {/* Not-used sponsors */}
-                {liveSponsorTech
-                  .filter(tech => tech.status === "not-used")
-                  .map((tech, index) => (
-                    <div key={index} className="border-l-2 border-muted/50 pl-2">
-                      <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
-                        <h5 className="font-semibold text-xs text-muted-foreground" data-testid={`text-live-sponsor-inactive-${index}`}>
-                          {tech.name}
-                        </h5>
-                        <Badge variant="secondary" className="text-[9px] px-1 py-0">
-                          {tech.status}
-                        </Badge>
-                      </div>
-                      <p className="text-[10px] text-muted-foreground/80 mb-0.5">{tech.role}</p>
-                      <p className="text-[10px] text-muted-foreground leading-tight">
-                        {tech.description}
-                      </p>
-                    </div>
-                  ))}
-              </div>
+                </div>
+              ))}
             </div>
           </Card>
         </div>
@@ -376,15 +315,16 @@ export default function TechStack() {
 
               {/* Tech to be Implemented */}
               <div>
-                <h4 className="font-semibold text-sm mb-2 text-gradient-to">
-                  Features and Tech to be Implemented
+                <h4 className="font-semibold text-sm mb-2">
+                  <Badge variant="default" className="bg-green-500/20 text-green-300 border-green-500/30 text-xs px-2 py-0.5 mr-2">
+                    To Implement
+                  </Badge>
+                  Features and Tech
                 </h4>
                 <div className="space-y-1.5">
                   {techToBeImplemented.map((feature, index) => (
-                    <div key={index} className="flex items-start gap-1.5 p-1.5 rounded-lg hover-elevate bg-card/50 border border-card-border">
-                      <div className="flex-shrink-0 w-4 h-4 rounded-full bg-primary/10 flex items-center justify-center">
-                        <span className="text-[9px] font-bold text-primary">{index + 1}</span>
-                      </div>
+                    <div key={index} className="flex items-start gap-1.5 p-1.5 rounded-lg bg-card/50 border border-card-border">
+                      <CheckCircle2 className="h-3 w-3 text-muted-foreground flex-shrink-0 mt-0.5" />
                       <div className="flex-1">
                         <p className="font-semibold text-xs mb-0" data-testid={`text-to-implement-${index}`}>
                           {feature.name}
@@ -399,7 +339,7 @@ export default function TechStack() {
                               <Badge 
                                 key={techIndex} 
                                 variant="outline" 
-                                className={`text-[9px] px-1 py-0 ${isSponsor ? 'bg-orange-500/20 text-orange-300 border-orange-500/30' : ''}`}
+                                className={`text-[9px] px-1 py-0 ${isSponsor ? 'bg-green-500/20 text-green-300 border-green-500/30' : ''}`}
                               >
                                 {techName}
                               </Badge>
