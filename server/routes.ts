@@ -1127,6 +1127,7 @@ Write a terse, data-driven outreach email introducing AgentBox - AI-powered sale
         initialized: true,
         seller: session.sellerEmail,
         buyer: session.buyerEmail,
+        sessionCreatedAt: session.createdAt, // Include session creation time for proper message filtering
       });
     } catch (error) {
       console.error("Error fetching messages:", error);
