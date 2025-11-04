@@ -774,6 +774,15 @@ Under 30 words.`;
       webhookEvents = [];
       processedWebhooks.clear();
       console.log("🔄 Reset webhook tracking (cleared composite key Set)");
+      
+      // CRITICAL FIX: Clear database webhook deduplication table for new session
+      // This prevents old webhooks from previous demo sessions from blocking new ones
+      try {
+        await db.delete(schema.processedWebhookEvents);
+        console.log("✅ Cleared processed webhook events from database");
+      } catch (err) {
+        console.error("⚠️ Failed to clear processed webhook events (will use in-memory only):", err);
+      }
 
       // Create FRESH inboxes with timestamp to avoid old messages
       const sellerInboxName = `seller-${timestamp}`;
