@@ -1,9 +1,15 @@
 import { AgentMailClient } from "agentmail";
 
-const apiKey = process.env.AGENTMAIL_API_KEY;
+// Use production key in production, dev key in development
+const isProduction = process.env.NODE_ENV === 'production';
+const apiKey = isProduction 
+  ? process.env.AGENTMAIL_API_KEY_PROD 
+  : process.env.AGENTMAIL_API_KEY;
 
 if (!apiKey) {
-  console.warn("AGENTMAIL_API_KEY not configured - email functionality will be limited");
+  console.warn(`AGENTMAIL_API_KEY${isProduction ? '_PROD' : ''} not configured - email functionality will be limited`);
+} else {
+  console.log(`✅ AgentMail configured for ${isProduction ? 'PRODUCTION' : 'DEVELOPMENT'}`);
 }
 
 export const agentmail = apiKey ? new AgentMailClient({ apiKey }) : null;
