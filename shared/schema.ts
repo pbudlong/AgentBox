@@ -49,6 +49,28 @@ export const insertProcessedWebhookEventSchema = createInsertSchema(processedWeb
 export type InsertProcessedWebhookEvent = z.infer<typeof insertProcessedWebhookEventSchema>;
 export type ProcessedWebhookEvent = typeof processedWebhookEvents.$inferSelect;
 
+// Development logs table to persist debugging logs across server restarts
+export const developmentLogs = pgTable("development_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: text("session_id").notNull(),
+  agent: text("agent").notNull(),
+  message: text("message").notNull(),
+  status: text("status").notNull(),
+  timestamp: text("timestamp").notNull(),
+  details: text("details"),
+  endpoint: text("endpoint"),
+  method: text("method"),
+  statusCode: integer("status_code"),
+  duration: integer("duration"),
+});
+
+export const insertDevelopmentLogSchema = createInsertSchema(developmentLogs).omit({
+  id: true,
+});
+
+export type InsertDevelopmentLog = z.infer<typeof insertDevelopmentLogSchema>;
+export type DevelopmentLog = typeof developmentLogs.$inferSelect;
+
 // AgentBox types
 export type Party = "seller" | "buyer";
 export type Status = "collecting" | "approved" | "declined" | "scheduled";

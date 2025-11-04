@@ -3,6 +3,9 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { buyerAgent, sellerAgent } from "./mastra/index";
 import { replyToEmail, type InboundEmail, createInbox, sendEmail, listMessages, getMessage, findInboxByEmail } from "./agentmail";
+import { db } from "./db";
+import * as schema from "@shared/schema";
+import { eq, desc } from "drizzle-orm";
 
 // MAX_EXCHANGES constant for preventing infinite loops
 const MAX_EXCHANGES = 5; // Seller → buyer (1) → seller (2) → buyer (3) → seller (4) → buyer (5) → STOP
@@ -78,21 +81,29 @@ interface DevelopmentLogEntry {
   duration?: number;
 }
 
-let developmentLogs: DevelopmentLogEntry[] = [];
-const MAX_DEVELOPMENT_LOGS = 200; // Keep last 200 entries
-
-function logToDevelopment(entry: Omit<DevelopmentLogEntry, 'timestamp' | 'environment'>) {
+async function logToDevelopment(entry: Omit<DevelopmentLogEntry, 'timestamp' | 'environment'>) {
   const logEntry: DevelopmentLogEntry = {
     ...entry,
     timestamp: new Date().toISOString(),
     environment: 'DEV'
   };
   
-  developmentLogs.push(logEntry);
-  
-  // Trim to max size
-  if (developmentLogs.length > MAX_DEVELOPMENT_LOGS) {
-    developmentLogs = developmentLogs.slice(-MAX_DEVELOPMENT_LOGS);
+  // Save to database for persistence across restarts
+  try {
+    await db.insert(schema.developmentLogs).values({
+      sessionId: entry.sessionId || 'unknown',
+      agent: entry.agent,
+      message: entry.message,
+      status: entry.status,
+      timestamp: logEntry.timestamp,
+      details: entry.details,
+      endpoint: entry.endpoint,
+      method: entry.method,
+      statusCode: entry.statusCode,
+      duration: entry.duration,
+    });
+  } catch (err) {
+    console.error('[DEV] Failed to save log to database:', err);
   }
   
   // Also log to console for dev debugging
@@ -1057,16 +1068,46 @@ Write a terse, data-driven outreach email introducing AgentBox - AI-powered sale
 
   // Development debug logs endpoint - accessible during local development for webhook debugging
   // Tagged with [DEV] environment identifier for clear distinction from production logs
-  app.get("/api/debug/dev-logs", (req, res) => {
-    const limit = parseInt(req.query.limit as string) || 100;
-    const recentLogs = developmentLogs.slice(-limit);
-    
-    res.json({
-      environment: 'DEV',
-      total: developmentLogs.length,
-      returned: recentLogs.length,
-      logs: recentLogs
-    });
+  app.get("/api/debug/dev-logs", async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 100;
+      const sessionId = req.query.sessionId as string;
+      
+      // Query from database with limit, ordered by timestamp
+      const logs = sessionId
+        ? await db
+            .select()
+            .from(schema.developmentLogs)
+            .where(eq(schema.developmentLogs.sessionId, sessionId))
+            .orderBy(schema.developmentLogs.timestamp)
+            .limit(limit)
+        : await db
+            .select()
+            .from(schema.developmentLogs)
+            .orderBy(schema.developmentLogs.timestamp)
+            .limit(limit);
+      
+      res.json({
+        environment: 'DEV',
+        returned: logs.length,
+        logs: logs.map(log => ({
+          timestamp: log.timestamp,
+          environment: 'DEV',
+          sessionId: log.sessionId,
+          agent: log.agent,
+          message: log.message,
+          status: log.status,
+          details: log.details,
+          endpoint: log.endpoint,
+          method: log.method,
+          statusCode: log.statusCode,
+          duration: log.duration,
+        }))
+      });
+    } catch (error) {
+      console.error("Error fetching dev logs:", error);
+      res.status(500).json({ error: "Failed to fetch development logs" });
+    }
   });
 
   const httpServer = createServer(app);
