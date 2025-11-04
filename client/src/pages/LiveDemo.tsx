@@ -419,6 +419,10 @@ export default function LiveDemo() {
               Reset
             </Button>
           )}
+          
+          <Badge variant="outline" className="ml-2">
+            v2.1-db-clear
+          </Badge>
         </div>
         
         {liveMessages.length > 0 && (
