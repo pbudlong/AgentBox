@@ -746,6 +746,10 @@ Under 30 words.`;
 
   // Initialize demo inboxes and start conversation
   app.post("/api/demo/initialize", async (req, res) => {
+    console.log("\n" + "🚀".repeat(50));
+    console.log("🚀 INITIALIZE ENDPOINT CALLED - START OF HANDLER");
+    console.log("🚀".repeat(50) + "\n");
+    
     // Generate unique session ID for detailed tracking
     const timestamp = Date.now();
     const sessionId = `session-${timestamp}-${Math.random().toString(36).substr(2, 9)}`;
@@ -770,9 +774,20 @@ Under 30 words.`;
       console.log("█".repeat(100));
       console.log("█".repeat(100) + "\n");
       
+      // Add session initialized message to UI
+      executionDetails.push({
+        agent: 'system' as any,
+        message: 'Session Initialized',
+        status: 'success',
+        timestamp: new Date(),
+        details: `Starting fresh demo session`,
+      });
+      
       // Clear previous webhook events and processed webhooks (composite keys)
+      console.log(`📊 In-memory Set BEFORE clear: ${processedWebhooks.size} webhooks`);
       webhookEvents = [];
       processedWebhooks.clear();
+      console.log(`📊 In-memory Set AFTER clear: ${processedWebhooks.size} webhooks`);
       console.log("🔄 Reset webhook tracking (cleared composite key Set)");
       
       // CRITICAL FIX: Clear database webhook deduplication table for new session
