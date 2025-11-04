@@ -107,6 +107,14 @@ export default function LiveDemo() {
     environment: string;
   } | null>(null);
 
+  // DEBUG: Database diagnostics to show webhook deduplication state
+  const [dbDiagnostics, setDbDiagnostics] = useState<{
+    tableExists: boolean;
+    recordCount: number | string;
+    inMemoryCacheSize: number;
+    lastChecked: Date;
+  } | null>(null);
+
   // Initialize demo mutation
   const initMutation = useMutation({
     mutationFn: async () => {
@@ -183,6 +191,25 @@ export default function LiveDemo() {
     enabled: isInitialized,
     refetchInterval: isConversationComplete ? false : 2000,
   });
+
+  // Poll for database diagnostics to monitor webhook deduplication state
+  const { data: dbDiagData } = useQuery({
+    queryKey: ["/api/admin/diagnose-webhook-table"],
+    enabled: isInitialized,
+    refetchInterval: 4000, // Poll every 4 seconds
+  });
+
+  // Update database diagnostics state
+  useEffect(() => {
+    if (dbDiagData) {
+      setDbDiagnostics({
+        tableExists: (dbDiagData as any).tableExists ?? false,
+        recordCount: (dbDiagData as any).recordCount ?? 'N/A',
+        inMemoryCacheSize: (dbDiagData as any).inMemoryCacheSize ?? 0,
+        lastChecked: new Date(),
+      });
+    }
+  }, [dbDiagData]);
 
   // Update debug logs from production/development logs
   useEffect(() => {
@@ -464,6 +491,59 @@ export default function LiveDemo() {
             
             <p className="text-yellow-400 mt-2">
               Last updated: {filteringDebug.lastUpdate.toLocaleTimeString()}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* DATABASE DIAGNOSTICS PANEL - Shows webhook deduplication state */}
+      {dbDiagnostics && (
+        <div className="mx-8 mb-4 p-4 bg-blue-500/10 border-2 border-blue-500/50 rounded-lg">
+          <div className="flex items-center gap-2 mb-3">
+            <Badge variant="outline" className="bg-blue-500/20 text-blue-300 border-blue-500">
+              🗄️ DEBUG: Database Webhook Deduplication
+            </Badge>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+            <div className="bg-background/30 p-3 rounded">
+              <p className="text-muted-foreground text-xs mb-1">Table Status</p>
+              <p className="text-lg font-bold">
+                {dbDiagnostics.tableExists ? (
+                  <span className="text-green-400">EXISTS ✓</span>
+                ) : (
+                  <span className="text-red-400">MISSING ✗</span>
+                )}
+              </p>
+            </div>
+            
+            <div className="bg-background/30 p-3 rounded">
+              <p className="text-muted-foreground text-xs mb-1">DB Webhook Count</p>
+              <p className="text-2xl font-bold text-foreground">{dbDiagnostics.recordCount}</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {typeof dbDiagnostics.recordCount === 'number' && dbDiagnostics.recordCount === 0 
+                  ? 'Table cleared ✓' 
+                  : 'Old webhooks present'}
+              </p>
+            </div>
+            
+            <div className="bg-background/30 p-3 rounded">
+              <p className="text-muted-foreground text-xs mb-1">In-Memory Cache</p>
+              <p className="text-2xl font-bold text-foreground">{dbDiagnostics.inMemoryCacheSize}</p>
+              <p className="text-xs text-muted-foreground mt-1">Current session</p>
+            </div>
+          </div>
+          
+          <div className="mt-3 p-3 bg-background/30 rounded text-xs">
+            <p className="text-blue-400">
+              Last checked: {dbDiagnostics.lastChecked.toLocaleTimeString()}
+            </p>
+            <p className="text-muted-foreground mt-2">
+              {dbDiagnostics.tableExists && typeof dbDiagnostics.recordCount === 'number' 
+                ? (dbDiagnostics.recordCount === 0 
+                    ? '✅ Database clear working - no old webhooks blocking new ones'
+                    : '⚠️ Old webhook IDs in database may block duplicates')
+                : '❌ Cannot verify database state'}
             </p>
           </div>
         </div>
