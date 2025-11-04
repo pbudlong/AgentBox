@@ -359,59 +359,38 @@ export default function LiveDemo() {
               </div>
             </div>
             
-            {/* Debug panel - show errors and pending webhooks */}
-            {(() => {
-              // Filter to show only errors and pending items (not successful setup steps)
-              const displayLogs = debugLogs.filter(log => 
-                log.status === 'error' || log.status === 'pending' || log.isWebhook
-              );
-              
-              return displayLogs.length > 0 ? (
-                <div className="px-6 py-3 bg-card border-b border-border">
-                  <p className="text-xs font-semibold text-muted-foreground mb-2">Agentmail Execution Flow:</p>
-                  <div className="space-y-1">
-                    {displayLogs.map((log: any, idx) => (
-                      <div key={idx}>
-                        {!log.isWebhook ? (
-                          <div 
-                            className={`text-xs px-2 py-1 rounded ${
-                              log.status === 'error' ? 'bg-red-500/20 text-red-400' : 
-                              'bg-orange-500/20 text-orange-400'
-                            }`}
-                          >
-                            <div>
-                              {log.status === 'error' && '✗ '}
-                              {log.status === 'pending' && '⏳ '}
-                              {log.message}
-                            </div>
-                          </div>
-                        ) : (
-                          <div className={`text-xs px-2 py-1 rounded ${
-                            log.webhookData.status?.includes('success') ? 'bg-green-500/20 text-green-400' : 
-                            log.webhookData.status?.includes('error') ? 'bg-red-500/20 text-red-400' : 
-                            'bg-orange-500/20 text-orange-400'
-                          }`}>
-                            {log.webhookData.status?.includes('success') && '✓ '}
-                            {log.webhookData.status?.includes('error') && '✗ '}
-                            {!log.webhookData.status?.includes('success') && !log.webhookData.status?.includes('error') && '⏳ '}
-                            Webhook {log.webhookData.status}
-                            <button
-                              onClick={() => {
-                                setSelectedWebhookPayload(log.webhookData.payload);
-                                setWebhookDialogOpen(true);
-                              }}
-                              className="ml-1 underline text-[10px] hover:opacity-80"
-                            >
-                              View Details
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
+            {/* Debug panel - show webhook events */}
+            {webhookEvents.length > 0 && (
+              <div className="px-6 py-3 bg-card border-b border-border">
+                <p className="text-xs font-semibold text-muted-foreground mb-2">Agentmail Execution Flow:</p>
+                <div className="space-y-1">
+                  {webhookEvents.map((webhook: any, idx) => (
+                    <div 
+                      key={idx}
+                      className={`text-xs px-2 py-1 rounded ${
+                        webhook.status?.includes('success') ? 'bg-green-500/20 text-green-400' : 
+                        webhook.status?.includes('error') ? 'bg-red-500/20 text-red-400' : 
+                        'bg-orange-500/20 text-orange-400'
+                      }`}
+                    >
+                      {webhook.status?.includes('success') && '✓ '}
+                      {webhook.status?.includes('error') && '✗ '}
+                      {!webhook.status?.includes('success') && !webhook.status?.includes('error') && '⏳ '}
+                      Webhook {webhook.status}
+                      <button
+                        onClick={() => {
+                          setSelectedWebhookPayload(webhook.payload);
+                          setWebhookDialogOpen(true);
+                        }}
+                        className="ml-1 underline text-[10px] hover:opacity-80"
+                      >
+                        View Details
+                      </button>
+                    </div>
+                  ))}
                 </div>
-              ) : null;
-            })()}
+              </div>
+            )}
             
             <div className="flex-1 overflow-auto p-6">
               {sellerMessages.map((msg, idx) => (
@@ -452,59 +431,38 @@ export default function LiveDemo() {
               </div>
             </div>
             
-            {/* Debug panel - show errors and pending webhooks */}
-            {(() => {
-              // Filter to show only errors and pending items (not successful setup steps)
-              const displayLogs = debugLogs.filter(log => 
-                log.status === 'error' || log.status === 'pending' || log.isWebhook
-              );
-              
-              return displayLogs.length > 0 ? (
-                <div className="px-6 py-3 bg-card border-b border-border">
-                  <p className="text-xs font-semibold text-muted-foreground mb-2">Agentmail Execution Flow:</p>
-                  <div className="space-y-1">
-                    {displayLogs.map((log: any, idx) => (
-                      <div key={idx}>
-                        {!log.isWebhook ? (
-                          <div 
-                            className={`text-xs px-2 py-1 rounded ${
-                              log.status === 'error' ? 'bg-red-500/20 text-red-400' : 
-                              'bg-orange-500/20 text-orange-400'
-                            }`}
-                          >
-                            <div>
-                              {log.status === 'error' && '✗ '}
-                              {log.status === 'pending' && '⏳ '}
-                              {log.message}
-                            </div>
-                          </div>
-                        ) : (
-                          <div className={`text-xs px-2 py-1 rounded ${
-                            log.webhookData.status?.includes('success') ? 'bg-green-500/20 text-green-400' : 
-                            log.webhookData.status?.includes('error') ? 'bg-red-500/20 text-red-400' : 
-                            'bg-orange-500/20 text-orange-400'
-                          }`}>
-                            {log.webhookData.status?.includes('success') && '✓ '}
-                            {log.webhookData.status?.includes('error') && '✗ '}
-                            {!log.webhookData.status?.includes('success') && !log.webhookData.status?.includes('error') && '⏳ '}
-                            Webhook {log.webhookData.status}
-                            <button
-                              onClick={() => {
-                                setSelectedWebhookPayload(log.webhookData.payload);
-                                setWebhookDialogOpen(true);
-                              }}
-                              className="ml-1 underline text-[10px] hover:opacity-80"
-                            >
-                              View Details
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
+            {/* Debug panel - show webhook events */}
+            {webhookEvents.length > 0 && (
+              <div className="px-6 py-3 bg-card border-b border-border">
+                <p className="text-xs font-semibold text-muted-foreground mb-2">Agentmail Execution Flow:</p>
+                <div className="space-y-1">
+                  {webhookEvents.map((webhook: any, idx) => (
+                    <div 
+                      key={idx}
+                      className={`text-xs px-2 py-1 rounded ${
+                        webhook.status?.includes('success') ? 'bg-green-500/20 text-green-400' : 
+                        webhook.status?.includes('error') ? 'bg-red-500/20 text-red-400' : 
+                        'bg-orange-500/20 text-orange-400'
+                      }`}
+                    >
+                      {webhook.status?.includes('success') && '✓ '}
+                      {webhook.status?.includes('error') && '✗ '}
+                      {!webhook.status?.includes('success') && !webhook.status?.includes('error') && '⏳ '}
+                      Webhook {webhook.status}
+                      <button
+                        onClick={() => {
+                          setSelectedWebhookPayload(webhook.payload);
+                          setWebhookDialogOpen(true);
+                        }}
+                        className="ml-1 underline text-[10px] hover:opacity-80"
+                      >
+                        View Details
+                      </button>
+                    </div>
+                  ))}
                 </div>
-              ) : null;
-            })()}
+              </div>
+            )}
             
             <div className="flex-1 overflow-auto p-6" style={{ paddingTop: '150px' }}>
               {buyerMessages.map((msg, idx) => (
