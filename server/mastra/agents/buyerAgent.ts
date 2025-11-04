@@ -3,7 +3,7 @@ import { openai, createOpenAI } from "@ai-sdk/openai";
 import { fitScoringTool } from "../tools/fitScoringTool";
 import { perplexityEnrichmentTool } from "../tools/perplexityTool";
 
-const OPENAI_API_KEY = process.env.AI_INTEGRATIONS_OPENAI_API_KEY || process.env.OPENAI_API_KEY;
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY || process.env.AI_INTEGRATIONS_OPENAI_API_KEY;
 let OPENAI_BASE_URL = process.env.AI_INTEGRATIONS_OPENAI_BASE_URL;
 
 if (!OPENAI_API_KEY) {
