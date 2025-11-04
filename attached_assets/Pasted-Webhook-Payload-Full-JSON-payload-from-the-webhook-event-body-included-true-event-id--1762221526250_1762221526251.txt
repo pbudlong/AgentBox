@@ -1,0 +1,40 @@
+Webhook Payload
+Full JSON payload from the webhook event
+
+{
+  "body_included": true,
+  "event_id": "0bc1dfd4-2dd5-47f5-a8c1-7c90302f8b7d",
+  "event_type": "message.received",
+  "message": {
+    "created_at": "2025-11-04T01:38:25.477Z",
+    "from": "Mike (Seller) <seller-1762220288127@agentmail.to>",
+    "from_": "Mike (Seller) <seller-1762220288127@agentmail.to>",
+    "in_reply_to": "<0100019a4c83dbdd-8ce09a7d-71b0-435d-ad39-194477de031b-000000@email.amazonses.com>",
+    "inbox_id": "buyer-1762220288127@agentmail.to",
+    "labels": [
+      "received",
+      "unread"
+    ],
+    "message_id": "PDAxMDAwMTlhNGM4M2U3NDYtMDI2N2I2ZDctMmZhMi00Zjk3LTkyMjctZjEzYWE4ZGY2N2VmLTAwMDAwMEBlbWFpbC5hbWF6b25zZXMuY29tPg",
+    "organization_id": "adbe24e4-6c30-47a7-9c6f-dd704b8513a9",
+    "pod_id": "adbe24e4-6c30-47a7-9c6f-dd704b8513a9",
+    "preview": "Confirmed for Tuesday at 2 PM. Calendar invite sent.  \n\nBest,  \nMike (via AgentBox)\n\nOn 2025-11-04T01:38:21.000Z Sarah (Buyer) <buyer-1762220288127@agentmail.to> wrote:\n\n> Accepted. Tuesday at 2 PM wo",
+    "references": [
+      "<0100019a4c83b0d5-9f227787-fb1c-4eeb-bb5b-40863f9679fe-000000@email.amazonses.com>",
+      "<0100019a4c83c02b-cb45fbec-283b-4676-8080-bd1b02640254-000000@email.amazonses.com>",
+      "<0100019a4c83cd16-440e5cfa-3376-43b8-be38-c9a0d8c0ef0a-000000@email.amazonses.com>",
+      "<0100019a4c83dbdd-8ce09a7d-71b0-435d-ad39-194477de031b-000000@email.amazonses.com>"
+    ],
+    "size": 5798,
+    "smtp_id": "b0geoqbiodljc3v2ooqeosv3kh2u6838i049l901",
+    "subject": "Re: Streamline Your Sales Qualification Process",
+    "text": "Confirmed for Tuesday at 2 PM. Calendar invite sent.  \n\nBest,  \nMike (via AgentBox)\n\nOn 2025-11-04T01:38:21.000Z Sarah (Buyer) <buyer-1762220288127@agentmail.to> wrote:\n\n> Accepted. Tuesday at 2 PM works. Confirm? \n>\n> Best,  \n> Sarah (via AgentBox)\n>\n> On 2025-11-04T01:38:17.000Z Mike (Seller) <seller-1762220288127@agentmail.to> wrote:\n>\n> > Hi Sarah,\n> >\n> > Our implementation timeline is 4-6 weeks, with dedicated support throughout. We adhere to industry standards for security and compliance, including GDPR and SOC 2.\n> >\n> > Would you be available to discuss further on Tuesday at 2 PM, Wednesday at 10 AM, or Thursday at 1 PM?\n> >\n> > Best,  \n> > Mike (via AgentBox)\n> >\n> > On 2025-11-04T01:38:14.000Z Sarah (Buyer) <buyer-1762220288127@agentmail.to> wrote:\n> >\n> > > Hi Mike,\n> > >\n> > > Thank you for reaching out. Could you provide more details on your platform's implementation timeline and any security or compliance measures in place?\n> > >\n> > > Best,  \n> > > Sarah (via AgentBox)\n> > >\n> > > On 2025-11-04T01:38:10.000Z Mike (Seller) <seller-1762220288127@agentmail.to> wrote:\n> > >\n> > > > Subject: Enhance Sales Qualification at TechCorp\n> > > >\n> > > > Hi Sarah,\n> > > >\n> > > > With TechCorp's focus on sales qualification and a $25K budget, our AI-powered platform integrates seamlessly with Salesforce to streamline your process. We can help you achieve your Q1 goals efficiently.\n> > > >\n> > > > Interested in a brief chat?\n> > > >\n> > > > Best,  \n> > > > Mike (via AgentBox)",
+    "thread_id": "9b38fefc-f29d-485e-9043-fb5d9c6e8f1f",
+    "timestamp": "2025-11-04T01:38:24.000Z",
+    "to": [
+      "Sarah <buyer-1762220288127@agentmail.to>"
+    ],
+    "updated_at": "2025-11-04T01:38:25.477Z"
+  },
+  "type": "event"
+}
