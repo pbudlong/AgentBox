@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { buyerAgent, sellerAgent } from "./mastra/index";
-import { replyToEmail, type InboundEmail, createInbox, sendEmail, listMessages, getMessage, findInboxByEmail } from "./agentmail";
+import { agentmail, replyToEmail, type InboundEmail, createInbox, sendEmail, listMessages, getMessage, findInboxByEmail } from "./agentmail";
 import { db } from "./db";
 import * as schema from "@shared/schema";
 import type { DemoSession } from "@shared/schema";
@@ -1375,6 +1375,61 @@ Write a terse, data-driven outreach email introducing AgentBox - AI-powered sale
         error: "Diagnostic failed",
         message: error.message,
         ...diagnostics
+      });
+    }
+  });
+
+  // System status endpoint - quick health check for debugging
+  app.get("/api/debug/status", async (req, res) => {
+    try {
+      const buildInfo = getBuildInfo();
+      
+      // Check webhook events table
+      let webhookTableStatus = 'unknown';
+      let webhookRecordCount = 0;
+      try {
+        const records = await db.select().from(schema.processedWebhookEvents);
+        webhookRecordCount = records.length;
+        webhookTableStatus = 'ok';
+      } catch (error) {
+        webhookTableStatus = 'error';
+      }
+      
+      // Check active session
+      let hasActiveSession = false;
+      let sessionInfo = null;
+      if (currentDemoSession) {
+        hasActiveSession = true;
+        sessionInfo = {
+          sellerEmail: currentDemoSession.sellerEmail,
+          buyerEmail: currentDemoSession.buyerEmail,
+          exchangeCount: currentDemoSession.exchangeCount,
+          createdAt: currentDemoSession.createdAt
+        };
+      }
+      
+      res.json({
+        timestamp: new Date().toISOString(),
+        version: buildInfo.buildLabel,
+        environment: buildInfo.environment,
+        agentmailConfigured: !!agentmail,
+        webhookTable: {
+          status: webhookTableStatus,
+          recordCount: webhookRecordCount
+        },
+        session: {
+          active: hasActiveSession,
+          info: sessionInfo
+        },
+        webhookTracking: {
+          inMemorySize: processedWebhooks.size,
+          webhookEventsCount: webhookEvents.length
+        }
+      });
+    } catch (error: any) {
+      res.status(500).json({ 
+        error: "Status check failed", 
+        message: error.message 
       });
     }
   });
