@@ -171,7 +171,9 @@ export default function LiveDemo() {
       setDebugLogs(prevLogs => {
         const logsWithoutPlaceholder = prevLogs.filter((log: any) => !log.isWebhookPlaceholder);
         
-        webhooks.forEach((webhook: any) => {
+        webhooks
+          .filter((w: any) => !w.status?.includes('ignored'))
+          .forEach((webhook: any) => {
             const existingLogIndex = logsWithoutPlaceholder.findIndex(
               (log: any) => log.isWebhook && log.webhookData?.event_id === webhook.event_id
             );
@@ -179,7 +181,7 @@ export default function LiveDemo() {
             const newWebhookLog = {
               agent: webhook.to?.includes('buyer') ? 'buyer' : 'seller' as 'buyer' | 'seller',
               message: `Webhook ${webhook.status}`,
-              status: webhook.status?.includes('error') || webhook.status?.includes('fail') || webhook.status?.includes('ignored') ? 'error' : webhook.status?.includes('success') ? 'success' : 'pending' as 'success' | 'error' | 'pending',
+              status: webhook.status?.includes('error') || webhook.status?.includes('fail') ? 'error' : webhook.status?.includes('success') ? 'success' : 'pending' as 'success' | 'error' | 'pending',
               timestamp: new Date(webhook.timestamp),
               isWebhook: true,
               webhookData: webhook,
