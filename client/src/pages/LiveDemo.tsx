@@ -359,33 +359,38 @@ export default function LiveDemo() {
               </div>
             </div>
             
-            {/* Debug panel - show webhook events */}
-            {webhookEvents.length > 0 && (
+            {/* Debug panel - show ALL execution steps */}
+            {debugLogs.length > 0 && (
               <div className="px-6 py-3 bg-card border-b border-border">
                 <p className="text-xs font-semibold text-muted-foreground mb-2">Agentmail Execution Flow:</p>
                 <div className="space-y-1">
-                  {webhookEvents.map((webhook: any, idx) => (
+                  {debugLogs.map((log: any, idx) => (
                     <div 
                       key={idx}
                       className={`text-xs px-2 py-1 rounded ${
-                        webhook.status?.includes('success') ? 'bg-green-500/20 text-green-400' : 
-                        webhook.status?.includes('error') ? 'bg-red-500/20 text-red-400' : 
+                        log.agent !== 'seller' ? 'opacity-50' : ''
+                      } ${
+                        log.status === 'success' ? 'bg-green-500/20 text-green-400' : 
+                        log.status === 'error' ? 'bg-red-500/20 text-red-400' : 
                         'bg-orange-500/20 text-orange-400'
                       }`}
                     >
-                      {webhook.status?.includes('success') && '✓ '}
-                      {webhook.status?.includes('error') && '✗ '}
-                      {!webhook.status?.includes('success') && !webhook.status?.includes('error') && '⏳ '}
-                      Webhook {webhook.status}
-                      <button
-                        onClick={() => {
-                          setSelectedWebhookPayload(webhook.payload);
-                          setWebhookDialogOpen(true);
-                        }}
-                        className="ml-1 underline text-[10px] hover:opacity-80"
-                      >
-                        View Details
-                      </button>
+                      {log.status === 'success' && '✓ '}
+                      {log.status === 'error' && '✗ '}
+                      {log.status === 'pending' && '⏳ '}
+                      {log.agent === 'buyer' && <span className="opacity-60">[Buyer] </span>}
+                      {log.message}
+                      {(log.status === 'pending' || log.isWebhookPlaceholder) && (
+                        <button
+                          onClick={() => {
+                            setSelectedWebhookPayload({ message: log.message, details: log.details, timestamp: log.timestamp });
+                            setWebhookDialogOpen(true);
+                          }}
+                          className="ml-1 underline text-[10px] hover:opacity-80"
+                        >
+                          View Details
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -431,33 +436,38 @@ export default function LiveDemo() {
               </div>
             </div>
             
-            {/* Debug panel - show webhook events */}
-            {webhookEvents.length > 0 && (
+            {/* Debug panel - show ALL execution steps */}
+            {debugLogs.length > 0 && (
               <div className="px-6 py-3 bg-card border-b border-border">
                 <p className="text-xs font-semibold text-muted-foreground mb-2">Agentmail Execution Flow:</p>
                 <div className="space-y-1">
-                  {webhookEvents.map((webhook: any, idx) => (
+                  {debugLogs.map((log: any, idx) => (
                     <div 
                       key={idx}
                       className={`text-xs px-2 py-1 rounded ${
-                        webhook.status?.includes('success') ? 'bg-green-500/20 text-green-400' : 
-                        webhook.status?.includes('error') ? 'bg-red-500/20 text-red-400' : 
+                        log.agent !== 'buyer' ? 'opacity-50' : ''
+                      } ${
+                        log.status === 'success' ? 'bg-green-500/20 text-green-400' : 
+                        log.status === 'error' ? 'bg-red-500/20 text-red-400' : 
                         'bg-orange-500/20 text-orange-400'
                       }`}
                     >
-                      {webhook.status?.includes('success') && '✓ '}
-                      {webhook.status?.includes('error') && '✗ '}
-                      {!webhook.status?.includes('success') && !webhook.status?.includes('error') && '⏳ '}
-                      Webhook {webhook.status}
-                      <button
-                        onClick={() => {
-                          setSelectedWebhookPayload(webhook.payload);
-                          setWebhookDialogOpen(true);
-                        }}
-                        className="ml-1 underline text-[10px] hover:opacity-80"
-                      >
-                        View Details
-                      </button>
+                      {log.status === 'success' && '✓ '}
+                      {log.status === 'error' && '✗ '}
+                      {log.status === 'pending' && '⏳ '}
+                      {log.agent === 'seller' && <span className="opacity-60">[Seller] </span>}
+                      {log.message}
+                      {(log.status === 'pending' || log.isWebhookPlaceholder) && (
+                        <button
+                          onClick={() => {
+                            setSelectedWebhookPayload({ message: log.message, details: log.details, timestamp: log.timestamp });
+                            setWebhookDialogOpen(true);
+                          }}
+                          className="ml-1 underline text-[10px] hover:opacity-80"
+                        >
+                          View Details
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>
