@@ -200,6 +200,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             details: `Event ID: ${eventId}, Message ID: ${messageId}`
           });
           
+          logToDevelopment({
+            sessionId,
+            agent: 'system',
+            message: 'Duplicate webhook ignored',
+            status: 'success',
+            details: `Event ID: ${eventId}, Message ID: ${messageId}`
+          });
+          
           // Don't add duplicate events to webhookEvents array
           return;
         }
@@ -221,6 +229,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log("⚠️ No demo session found in memory");
           
           logToProduction({
+            sessionId: null,
+            agent: 'system',
+            message: 'Webhook received but no active session',
+            status: 'error',
+            details: `From: ${inboundEmail.from || 'unknown'}, Subject: ${inboundEmail.subject || 'No subject'}`
+          });
+          
+          logToDevelopment({
             sessionId: null,
             agent: 'system',
             message: 'Webhook received but no active session',
@@ -354,6 +370,15 @@ Acknowledge briefly. Under 25 words.`;
             duration: agentDuration
           });
           
+          logToDevelopment({
+            sessionId,
+            agent: 'buyer',
+            message: 'Generated email response via OpenAI',
+            status: 'success',
+            details: `Response: "${response.text.substring(0, 100)}..."`,
+            duration: agentDuration
+          });
+          
           // Send reply
           console.log("📮 Sending buyer reply via webhook...");
           const emailStart = Date.now();
@@ -365,6 +390,17 @@ Acknowledge briefly. Under 25 words.`;
           const emailDuration = Date.now() - emailStart;
 
           logToProduction({
+            sessionId,
+            agent: 'buyer',
+            message: 'Sent reply email',
+            status: 'success',
+            endpoint: '/messages',
+            method: 'POST',
+            statusCode: 200,
+            duration: emailDuration
+          });
+          
+          logToDevelopment({
             sessionId,
             agent: 'buyer',
             message: 'Sent reply email',
@@ -449,6 +485,15 @@ Under 30 words.`;
             duration: agentDurationSeller
           });
           
+          logToDevelopment({
+            sessionId,
+            agent: 'seller',
+            message: 'Generated email response via OpenAI',
+            status: 'success',
+            details: `Response: "${response.text.substring(0, 100)}..."`,
+            duration: agentDurationSeller
+          });
+          
           // Send reply
           console.log("📮 Sending seller reply via webhook...");
           const emailStartSeller = Date.now();
@@ -460,6 +505,17 @@ Under 30 words.`;
           const emailDurationSeller = Date.now() - emailStartSeller;
 
           logToProduction({
+            sessionId,
+            agent: 'seller',
+            message: 'Sent reply email',
+            status: 'success',
+            endpoint: '/messages',
+            method: 'POST',
+            statusCode: 200,
+            duration: emailDurationSeller
+          });
+          
+          logToDevelopment({
             sessionId,
             agent: 'seller',
             message: 'Sent reply email',
@@ -505,6 +561,14 @@ Under 30 words.`;
       const sessionId = session ? `session-${session.createdAt.getTime()}` : null;
       
       logToProduction({
+        sessionId,
+        agent: 'system',
+        message: 'Webhook processing failed',
+        status: 'error',
+        details: (error as Error).message
+      });
+      
+      logToDevelopment({
         sessionId,
         agent: 'system',
         message: 'Webhook processing failed',
