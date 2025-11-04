@@ -380,10 +380,10 @@ export default function LiveDemo() {
                       {log.status === 'pending' && '⏳ '}
                       {log.agent === 'buyer' && <span className="opacity-60">[Buyer] </span>}
                       {log.message}
-                      {(log.status === 'pending' || log.isWebhookPlaceholder) && (
+                      {log.isWebhook && (
                         <button
                           onClick={() => {
-                            setSelectedWebhookPayload({ message: log.message, details: log.details, timestamp: log.timestamp });
+                            setSelectedWebhookPayload(log.webhookData?.payload || log.webhookData || { message: log.message, details: log.details, timestamp: log.timestamp });
                             setWebhookDialogOpen(true);
                           }}
                           className="ml-1 underline text-[10px] hover:opacity-80"
@@ -457,10 +457,10 @@ export default function LiveDemo() {
                       {log.status === 'pending' && '⏳ '}
                       {log.agent === 'seller' && <span className="opacity-60">[Seller] </span>}
                       {log.message}
-                      {(log.status === 'pending' || log.isWebhookPlaceholder) && (
+                      {log.isWebhook && (
                         <button
                           onClick={() => {
-                            setSelectedWebhookPayload({ message: log.message, details: log.details, timestamp: log.timestamp });
+                            setSelectedWebhookPayload(log.webhookData?.payload || log.webhookData || { message: log.message, details: log.details, timestamp: log.timestamp });
                             setWebhookDialogOpen(true);
                           }}
                           className="ml-1 underline text-[10px] hover:opacity-80"
