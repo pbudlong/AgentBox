@@ -88,7 +88,7 @@ export default function LiveDemo() {
   const [buyerEmail, setBuyerEmail] = useState("");
   const [isInitialized, setIsInitialized] = useState(false);
   const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
-  const [debugLogs, setDebugLogs] = useState<{ agent: 'seller' | 'buyer', message: string, status: 'success' | 'error' | 'pending', timestamp: Date, details?: string, duration?: number }[]>([]);
+  const [debugLogs, setDebugLogs] = useState<{ agent: 'seller' | 'buyer', message: string, status: 'success' | 'error' | 'pending', timestamp: Date, details?: string, duration?: number, isWebhook?: boolean, webhookData?: any, isWebhookPlaceholder?: boolean }[]>([]);
   const [webhookEvents, setWebhookEvents] = useState<any[]>([]);
   const [processedWebhookIds, setProcessedWebhookIds] = useState<Set<string>>(new Set());
   const [, navigate] = useLocation();
@@ -451,58 +451,54 @@ export default function LiveDemo() {
               </div>
             </div>
             
-            {/* Debug panel - show ALL logs chronologically */}
-            {debugLogs.length > 0 && (
-              <div className="px-6 py-3 bg-card border-b border-border">
-                <p className="text-xs font-semibold text-muted-foreground mb-2">Agentmail Execution Flow:</p>
-                <div className="space-y-1">
-                  {debugLogs.map((log: any, idx) => (
-                    <div key={idx} className={log.agent !== 'buyer' ? 'opacity-50' : ''}>
-                      {!log.isWebhook ? (
-                        <div 
-                          className={`text-xs px-2 py-1 rounded ${
-                            log.status === 'success' ? 'bg-green-500/20 text-green-400' : 
-                            log.status === 'error' ? 'bg-red-500/20 text-red-400' : 
-                            'bg-yellow-500/20 text-yellow-400'
-                          }`}
+            {/* Debug panel - show only final status/error */}
+            {(() => {
+              // Find the last error or pending webhook to display
+              const lastError = [...debugLogs].reverse().find(log => log.status === 'error');
+              const lastPending = [...debugLogs].reverse().find(log => log.status === 'pending');
+              const displayLog = lastError || lastPending;
+              
+              return displayLog ? (
+                <div className="px-6 py-3 bg-card border-b border-border">
+                  <p className="text-xs font-semibold text-muted-foreground mb-2">Agentmail Execution Flow:</p>
+                  <div>
+                    {!displayLog.isWebhook ? (
+                      <div 
+                        className={`text-xs px-2 py-1 rounded ${
+                          displayLog.status === 'success' ? 'bg-green-500/20 text-green-400' : 
+                          displayLog.status === 'error' ? 'bg-red-500/20 text-red-400' : 
+                          'bg-orange-500/20 text-orange-400'
+                        }`}
+                      >
+                        {displayLog.status === 'success' && '✓ '}
+                        {displayLog.status === 'error' && '✗ '}
+                        {displayLog.status === 'pending' && '⏳ '}
+                        {displayLog.agent === 'seller' && <span className="opacity-60">[Seller] </span>}
+                        {displayLog.message}
+                      </div>
+                    ) : (
+                      <div className={`text-xs px-2 py-1 rounded ${
+                        displayLog.webhookData.status?.includes('success') ? 'bg-green-500/20 text-green-400' : 
+                        displayLog.webhookData.status?.includes('error') ? 'bg-red-500/20 text-red-400' : 
+                        'bg-orange-500/20 text-orange-400'
+                      }`}>
+                        {displayLog.agent === 'seller' && <span className="opacity-60">[Seller] </span>}
+                        🔔 Webhook {displayLog.webhookData.status}
+                        <button
+                          onClick={() => {
+                            setSelectedWebhookPayload(displayLog.webhookData.payload);
+                            setWebhookDialogOpen(true);
+                          }}
+                          className="ml-1 underline text-[10px] hover:opacity-80"
                         >
-                          <div>
-                            {log.status === 'success' && '✓ '}
-                            {log.status === 'error' && '✗ '}
-                            {log.status === 'pending' && '⏳ '}
-                            {log.agent === 'seller' && <span className="opacity-60">[Seller] </span>}
-                            {log.message}
-                          </div>
-                          {log.details && (
-                            <div className="text-[10px] opacity-70 mt-0.5 ml-3">
-                              {log.details}
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <div className={`text-xs px-2 py-1 rounded ${
-                          log.webhookData.status?.includes('success') ? 'bg-green-500/20 text-green-400' : 
-                          log.webhookData.status?.includes('error') ? 'bg-red-500/20 text-red-400' : 
-                          'bg-gray-500/20 text-gray-400'
-                        }`}>
-                          {log.agent === 'seller' && <span className="opacity-60">[Seller] </span>}
-                          🔔 Webhook {log.webhookData.status}
-                          <button
-                            onClick={() => {
-                              setSelectedWebhookPayload(log.webhookData.payload);
-                              setWebhookDialogOpen(true);
-                            }}
-                            className="ml-1 underline text-[10px] hover:opacity-80"
-                          >
-                            View Details
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                          View Details
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
+              ) : null;
+            })()}
             
             <div className="flex-1 overflow-auto p-6" style={{ paddingTop: '150px' }}>
               {buyerMessages.map((msg, idx) => (

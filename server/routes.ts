@@ -23,6 +23,45 @@ let webhookEvents: Array<{
 // AgentMail may reuse event_ids, so we need both to uniquely identify a message
 const processedWebhooks = new Set<string>();
 
+// Production debug log storage - accessible via /api/debug/logs
+// Tagged with [PROD] for easy identification when fetching from production
+interface ProductionLogEntry {
+  timestamp: string;
+  environment: 'PROD';
+  sessionId: string | null;
+  agent: 'seller' | 'buyer' | 'system';
+  message: string;
+  status: 'success' | 'error' | 'pending';
+  details?: string;
+  endpoint?: string;
+  method?: string;
+  statusCode?: number;
+  duration?: number;
+}
+
+let productionLogs: ProductionLogEntry[] = [];
+const MAX_PRODUCTION_LOGS = 200; // Keep last 200 entries
+
+function logToProduction(entry: Omit<ProductionLogEntry, 'timestamp' | 'environment'>) {
+  const logEntry: ProductionLogEntry = {
+    ...entry,
+    timestamp: new Date().toISOString(),
+    environment: 'PROD'
+  };
+  
+  productionLogs.push(logEntry);
+  
+  // Trim to max size
+  if (productionLogs.length > MAX_PRODUCTION_LOGS) {
+    productionLogs = productionLogs.slice(-MAX_PRODUCTION_LOGS);
+  }
+  
+  // Also log to console for dev debugging
+  const prefix = `[PROD] [${entry.agent}]`;
+  const statusSymbol = entry.status === 'success' ? '✓' : entry.status === 'error' ? '✗' : '⏳';
+  console.log(`${prefix} ${statusSymbol} ${entry.message}${entry.details ? ` - ${entry.details}` : ''}`);
+}
+
 // In-memory demo session storage (production-ready for hackathon demo)
 let currentDemoSession: {
   sellerInboxId: string;
@@ -86,6 +125,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Quick response to webhook (must respond immediately)
       res.status(200).json({ success: true });
       console.log("✅ Webhook acknowledged (200 OK sent)");
+      
+      // Get session ID if available for logging
+      const session = currentDemoSession;
+      const sessionId = session ? `session-${session.createdAt.getTime()}` : null;
 
       // Create composite key for duplicate detection (event_id + message_id)
       // This prevents false duplicates when AgentMail reuses event_ids for different messages
@@ -109,6 +152,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log("   Message ID:", messageId);
           console.log("   Composite Key:", compositeKey);
           console.log(`${"=".repeat(80)}\n`);
+          
+          logToProduction({
+            sessionId,
+            agent: 'system',
+            message: 'Duplicate webhook ignored',
+            status: 'success',
+            details: `Event ID: ${eventId}, Message ID: ${messageId}`
+          });
+          
           // Don't add duplicate events to webhookEvents array
           return;
         }
@@ -128,6 +180,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         if (!session) {
           console.log("⚠️ No demo session found in memory");
+          
+          logToProduction({
+            sessionId: null,
+            agent: 'system',
+            message: 'Webhook received but no active session',
+            status: 'error',
+            details: `From: ${inboundEmail.from || 'unknown'}, Subject: ${inboundEmail.subject || 'No subject'}`
+          });
+          
           webhookEvents.push({
             timestamp: new Date(),
             from: inboundEmail.from || 'unknown',
@@ -240,15 +301,39 @@ Acknowledge briefly. Under 25 words.`;
           }
 
           console.log("🤖 Calling buyer agent...");
+          const agentStart = Date.now();
           const response = await buyerAgent.generate(prompt);
+          const agentDuration = Date.now() - agentStart;
           console.log("💬 Buyer response generated:", response.text.substring(0, 100) + "...");
+          
+          logToProduction({
+            sessionId,
+            agent: 'buyer',
+            message: 'Generated email response via OpenAI',
+            status: 'success',
+            details: 'OpenAI GPT-4',
+            duration: agentDuration
+          });
           
           // Send reply
           console.log("📮 Sending buyer reply via webhook...");
+          const emailStart = Date.now();
           await replyToEmail({
             inbox_id: inboundEmail.inbox_id,
             message_id: inboundEmail.message_id,
             text: response.text,
+          });
+          const emailDuration = Date.now() - emailStart;
+
+          logToProduction({
+            sessionId,
+            agent: 'buyer',
+            message: 'Sent reply email',
+            status: 'success',
+            endpoint: '/messages',
+            method: 'POST',
+            statusCode: 200,
+            duration: emailDuration
           });
 
           // Increment exchange count in memory
@@ -311,15 +396,39 @@ Under 30 words.`;
           }
 
           console.log("🤖 Calling seller agent...");
+          const agentStartSeller = Date.now();
           const response = await sellerAgent.generate(prompt);
+          const agentDurationSeller = Date.now() - agentStartSeller;
           console.log("💬 Seller response generated:", response.text.substring(0, 100) + "...");
+          
+          logToProduction({
+            sessionId,
+            agent: 'seller',
+            message: 'Generated email response via OpenAI',
+            status: 'success',
+            details: 'OpenAI GPT-4',
+            duration: agentDurationSeller
+          });
           
           // Send reply
           console.log("📮 Sending seller reply via webhook...");
+          const emailStartSeller = Date.now();
           await replyToEmail({
             inbox_id: inboundEmail.inbox_id,
             message_id: inboundEmail.message_id,
             text: response.text,
+          });
+          const emailDurationSeller = Date.now() - emailStartSeller;
+
+          logToProduction({
+            sessionId,
+            agent: 'seller',
+            message: 'Sent reply email',
+            status: 'success',
+            endpoint: '/messages',
+            method: 'POST',
+            statusCode: 200,
+            duration: emailDurationSeller
           });
 
           // Increment exchange count in memory
@@ -351,6 +460,18 @@ Under 30 words.`;
       console.error("❌ Error processing webhook:", error);
       console.error("Stack trace:", (error as Error).stack);
       console.log(`${"=".repeat(80)}\n`);
+      
+      // Get session ID if available for logging
+      const session = currentDemoSession;
+      const sessionId = session ? `session-${session.createdAt.getTime()}` : null;
+      
+      logToProduction({
+        sessionId,
+        agent: 'system',
+        message: 'Webhook processing failed',
+        status: 'error',
+        details: (error as Error).message
+      });
     }
   });
 
@@ -414,6 +535,17 @@ Under 30 words.`;
         details: `POST /inboxes → 200 OK (${sellerInboxDuration}ms)`,
         duration: sellerInboxDuration
       });
+      
+      logToProduction({
+        sessionId,
+        agent: 'seller',
+        message: 'Created fresh AgentMail inbox',
+        status: 'success',
+        endpoint: '/inboxes',
+        method: 'POST',
+        statusCode: 200,
+        duration: sellerInboxDuration
+      });
 
       // Create buyer inbox
       console.log(`⏳ Creating buyer inbox: ${buyerInboxName}@agentmail.to`);
@@ -432,6 +564,17 @@ Under 30 words.`;
         status: 'success',
         timestamp: new Date(),
         details: `POST /inboxes → 200 OK (${buyerInboxDuration}ms)`,
+        duration: buyerInboxDuration
+      });
+      
+      logToProduction({
+        sessionId,
+        agent: 'buyer',
+        message: 'Created fresh AgentMail inbox',
+        status: 'success',
+        endpoint: '/inboxes',
+        method: 'POST',
+        statusCode: 200,
         duration: buyerInboxDuration
       });
 
@@ -477,6 +620,15 @@ Write a terse, data-driven outreach email introducing AgentBox - AI-powered sale
         details: `OpenAI GPT-4 (${agentDuration}ms)`,
         duration: agentDuration
       });
+      
+      logToProduction({
+        sessionId,
+        agent: 'seller',
+        message: 'Generated outreach email via OpenAI',
+        status: 'success',
+        details: 'OpenAI GPT-4',
+        duration: agentDuration
+      });
 
       // Send first email from seller to buyer
       console.log(`📮 Sending email from ${sellerEmail} to ${buyerEmail}...`);
@@ -502,11 +654,30 @@ Write a terse, data-driven outreach email introducing AgentBox - AI-powered sale
         duration: emailDuration
       });
       
+      logToProduction({
+        sessionId,
+        agent: 'seller',
+        message: 'Sent email to buyer',
+        status: 'success',
+        endpoint: '/messages',
+        method: 'POST',
+        statusCode: 200,
+        duration: emailDuration
+      });
+      
       executionDetails.push({
         agent: 'buyer',
         message: 'Waiting for webhook...',
         status: 'pending',
         timestamp: new Date(),
+        details: 'Webhook will trigger when AgentMail delivers the email'
+      });
+      
+      logToProduction({
+        sessionId,
+        agent: 'buyer',
+        message: 'Waiting for webhook...',
+        status: 'pending',
         details: 'Webhook will trigger when AgentMail delivers the email'
       });
 
@@ -547,6 +718,14 @@ Write a terse, data-driven outreach email introducing AgentBox - AI-powered sale
         message: 'Demo initialization failed',
         status: 'error',
         timestamp: new Date(),
+        details: (error as Error).message
+      });
+      
+      logToProduction({
+        sessionId,
+        agent: 'seller',
+        message: 'Demo initialization failed',
+        status: 'error',
         details: (error as Error).message
       });
       
@@ -624,6 +803,20 @@ Write a terse, data-driven outreach email introducing AgentBox - AI-powered sale
   // Get webhook events for debugging
   app.get("/api/demo/webhooks", (req, res) => {
     res.json({ webhooks: webhookEvents });
+  });
+
+  // Production debug logs endpoint - accessible from deployed app for remote debugging
+  // Tagged with [PROD] environment identifier for clear distinction from dev logs
+  app.get("/api/debug/logs", (req, res) => {
+    const limit = parseInt(req.query.limit as string) || 100;
+    const recentLogs = productionLogs.slice(-limit);
+    
+    res.json({
+      environment: 'PROD',
+      total: productionLogs.length,
+      returned: recentLogs.length,
+      logs: recentLogs
+    });
   });
 
   const httpServer = createServer(app);
