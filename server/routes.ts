@@ -732,6 +732,17 @@ Under 30 words.`;
         statusCode: 200,
         duration: sellerInboxDuration
       });
+      
+      logToDevelopment({
+        sessionId,
+        agent: 'seller',
+        message: 'Created fresh AgentMail inbox',
+        status: 'success',
+        endpoint: '/inboxes',
+        method: 'POST',
+        statusCode: 200,
+        duration: sellerInboxDuration
+      });
 
       // Create buyer inbox
       console.log(`⏳ Creating buyer inbox: ${buyerInboxName}@agentmail.to`);
@@ -754,6 +765,17 @@ Under 30 words.`;
       });
       
       logToProduction({
+        sessionId,
+        agent: 'buyer',
+        message: 'Created fresh AgentMail inbox',
+        status: 'success',
+        endpoint: '/inboxes',
+        method: 'POST',
+        statusCode: 200,
+        duration: buyerInboxDuration
+      });
+      
+      logToDevelopment({
         sessionId,
         agent: 'buyer',
         message: 'Created fresh AgentMail inbox',
@@ -815,6 +837,15 @@ Write a terse, data-driven outreach email introducing AgentBox - AI-powered sale
         details: 'OpenAI GPT-4',
         duration: agentDuration
       });
+      
+      logToDevelopment({
+        sessionId,
+        agent: 'seller',
+        message: 'Generated outreach email via OpenAI',
+        status: 'success',
+        details: `Initial outreach: "${sellerMessage.text.substring(0, 100)}..."`,
+        duration: agentDuration
+      });
 
       // Send first email from seller to buyer
       console.log(`📮 Sending email from ${sellerEmail} to ${buyerEmail}...`);
@@ -851,6 +882,17 @@ Write a terse, data-driven outreach email introducing AgentBox - AI-powered sale
         duration: emailDuration
       });
       
+      logToDevelopment({
+        sessionId,
+        agent: 'seller',
+        message: 'Sent initial email to buyer',
+        status: 'success',
+        endpoint: '/messages',
+        method: 'POST',
+        statusCode: 200,
+        duration: emailDuration
+      });
+      
       executionDetails.push({
         agent: 'buyer',
         message: 'Waiting for webhook...',
@@ -865,6 +907,14 @@ Write a terse, data-driven outreach email introducing AgentBox - AI-powered sale
         message: 'Waiting for webhook...',
         status: 'pending',
         details: 'Webhook will trigger when AgentMail delivers the email'
+      });
+      
+      logToDevelopment({
+        sessionId,
+        agent: 'buyer',
+        message: 'Waiting for webhook to trigger buyer response',
+        status: 'pending',
+        details: 'AgentMail will deliver email and fire webhook'
       });
 
       const sessionEndTime = new Date().toISOString();
