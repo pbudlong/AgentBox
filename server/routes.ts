@@ -306,13 +306,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           details: `From: ${inboundEmail.from || 'unknown'}, Exchange: ${session.exchangeCount}/${MAX_EXCHANGES}`
         });
         
-        // Log webhook event for debugging
+        // Log webhook reception event (persistent, stays visible)
         webhookEvents.push({
           timestamp: new Date(),
           from: inboundEmail.from || 'unknown',
           to: Array.isArray(inboundEmail.to) ? inboundEmail.to.join(', ') : (inboundEmail.to || 'unknown'),
           subject: inboundEmail.subject || 'No subject',
-          status: receivedByBuyer ? 'processing (buyer received)' : receivedBySeller ? 'received (seller inbox)' : 'unknown inbox',
+          status: receivedByBuyer ? 'webhook received (buyer inbox)' : receivedBySeller ? 'webhook received (seller inbox)' : 'unknown inbox',
           event_id: event.event_id || 'unknown',
           payload: event,
           response: { success: true }
@@ -325,7 +325,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Check if we've hit the exchange limit
           if (session.exchangeCount >= MAX_EXCHANGES) {
             console.log(`⏹️ Maximum exchanges (${MAX_EXCHANGES}) reached. Stopping conversation.`);
-            webhookEvents[webhookEvents.length - 1].status = 'ignored (max exchanges reached)';
+            
+            // Add separate event for max exchanges reached (don't mutate webhook reception)
+            webhookEvents.push({
+              timestamp: new Date(),
+              from: inboundEmail.from || 'unknown',
+              to: Array.isArray(inboundEmail.to) ? inboundEmail.to.join(', ') : (inboundEmail.to || 'unknown'),
+              subject: inboundEmail.subject || 'No subject',
+              status: 'ignored (max exchanges reached)',
+              event_id: event.event_id || 'unknown',
+              payload: event,
+              response: { success: true }
+            });
             
             logToDevelopment({
               sessionId,
@@ -441,8 +452,17 @@ Acknowledge briefly. Under 25 words.`;
             details: `Now at ${session.exchangeCount}/${MAX_EXCHANGES}`
           });
 
-          // Update webhook event status
-          webhookEvents[webhookEvents.length - 1].status = 'success (buyer replied)';
+          // Add separate completion event (don't mutate webhook reception)
+          webhookEvents.push({
+            timestamp: new Date(),
+            from: 'Buyer Agent',
+            to: inboundEmail.from || 'unknown',
+            subject: `Re: ${inboundEmail.subject || 'No subject'}`,
+            status: 'success (buyer replied)',
+            event_id: event.event_id || 'unknown',
+            payload: { responseText: response.text },
+            response: { success: true }
+          });
           console.log("✅ Buyer response sent successfully via webhook");
         } 
         // Seller receives email → generate reply
@@ -452,7 +472,18 @@ Acknowledge briefly. Under 25 words.`;
           // Check if we've hit the exchange limit
           if (session.exchangeCount >= MAX_EXCHANGES) {
             console.log(`⏹️ Maximum exchanges (${MAX_EXCHANGES}) reached. Stopping conversation.`);
-            webhookEvents[webhookEvents.length - 1].status = 'ignored (max exchanges reached)';
+            
+            // Add separate event for max exchanges reached (don't mutate webhook reception)
+            webhookEvents.push({
+              timestamp: new Date(),
+              from: inboundEmail.from || 'unknown',
+              to: Array.isArray(inboundEmail.to) ? inboundEmail.to.join(', ') : (inboundEmail.to || 'unknown'),
+              subject: inboundEmail.subject || 'No subject',
+              status: 'ignored (max exchanges reached)',
+              event_id: event.event_id || 'unknown',
+              payload: event,
+              response: { success: true }
+            });
             
             logToDevelopment({
               sessionId,
@@ -573,8 +604,17 @@ Under 30 words.`;
             details: `Now at ${session.exchangeCount}/${MAX_EXCHANGES}`
           });
 
-          // Update webhook event status
-          webhookEvents[webhookEvents.length - 1].status = 'success (seller replied)';
+          // Add separate completion event (don't mutate webhook reception)
+          webhookEvents.push({
+            timestamp: new Date(),
+            from: 'Seller Agent',
+            to: inboundEmail.from || 'unknown',
+            subject: `Re: ${inboundEmail.subject || 'No subject'}`,
+            status: 'success (seller replied)',
+            event_id: event.event_id || 'unknown',
+            payload: { responseText: response.text },
+            response: { success: true }
+          });
           console.log("✅ Seller response sent successfully via webhook");
         }
         else {
