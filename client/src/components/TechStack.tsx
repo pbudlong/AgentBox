@@ -151,14 +151,14 @@ const techAlreadyInPlace = [
     description: "Polling-based message and webhook status updates",
     tech: ["TanStack Query"],
   },
+  {
+    name: "Database-Backed Sessions",
+    description: "Demo sessions, webhook deduplication, and debug logs persisted to PostgreSQL",
+    tech: ["PostgreSQL", "Drizzle", "Replit"],
+  },
 ];
 
 const techToBeImplemented = [
-  {
-    name: "Database-Backed Sessions",
-    description: "Persist demo sessions to PostgreSQL instead of in-memory storage",
-    tech: ["PostgreSQL", "Drizzle", "Replit"],
-  },
   {
     name: "AgentMail Inbox Creation",
     description: "Build UI for users to claim their own @agentbox.ai email addresses",
