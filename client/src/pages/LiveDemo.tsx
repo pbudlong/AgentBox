@@ -147,25 +147,29 @@ export default function LiveDemo() {
     },
   });
 
-  // Poll for messages when initialized
+  // Detect if conversation is complete (6 messages = 5 exchanges: seller → buyer → seller → buyer → seller → buyer)
+  // Once complete, stop polling to avoid infinite API calls
+  const isConversationComplete = liveMessages.length >= 6;
+  
+  // Poll for messages when initialized (stop when conversation complete)
   const { data: messagesData } = useQuery({
     queryKey: ["/api/demo/messages"],
     enabled: isInitialized,
-    refetchInterval: 3000,
+    refetchInterval: isConversationComplete ? false : 3000,
   });
 
-  // Poll for webhook events when initialized
+  // Poll for webhook events when initialized (stop when conversation complete)
   const { data: webhooksData } = useQuery({
     queryKey: ["/api/demo/webhooks"],
     enabled: isInitialized,
-    refetchInterval: 2000,
+    refetchInterval: isConversationComplete ? false : 2000,
   });
 
-  // Poll for debug logs (production execution flow) when initialized
+  // Poll for debug logs (production execution flow) when initialized (stop when conversation complete)
   const { data: debugLogsData } = useQuery({
     queryKey: ["/api/debug/logs", { limit: 50 }],
     enabled: isInitialized,
-    refetchInterval: 2000,
+    refetchInterval: isConversationComplete ? false : 2000,
   });
 
   // Update debug logs from production/development logs
