@@ -297,6 +297,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           currentExchangeCount: session.exchangeCount,
         });
         
+        // Log webhook reception at development level
+        logToDevelopment({
+          sessionId,
+          agent: receivedByBuyer ? 'buyer' : receivedBySeller ? 'seller' : 'system',
+          message: `Webhook received at ${receiverName} inbox`,
+          status: 'pending',
+          details: `From: ${inboundEmail.from || 'unknown'}, Exchange: ${session.exchangeCount}/${MAX_EXCHANGES}`
+        });
+        
         // Log webhook event for debugging
         webhookEvents.push({
           timestamp: new Date(),
@@ -317,6 +326,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (session.exchangeCount >= MAX_EXCHANGES) {
             console.log(`⏹️ Maximum exchanges (${MAX_EXCHANGES}) reached. Stopping conversation.`);
             webhookEvents[webhookEvents.length - 1].status = 'ignored (max exchanges reached)';
+            
+            logToDevelopment({
+              sessionId,
+              agent: 'buyer',
+              message: `Max exchanges reached (${MAX_EXCHANGES}), conversation stopped`,
+              status: 'success',
+              details: `Exchange count: ${session.exchangeCount}/${MAX_EXCHANGES}`
+            });
+            
             return;
           }
           
@@ -414,6 +432,14 @@ Acknowledge briefly. Under 25 words.`;
           // Increment exchange count in memory
           session.exchangeCount++;
           console.log(`📊 Exchange count: ${session.exchangeCount}/${MAX_EXCHANGES}`);
+          
+          logToDevelopment({
+            sessionId,
+            agent: 'buyer',
+            message: 'Exchange count incremented',
+            status: 'success',
+            details: `Now at ${session.exchangeCount}/${MAX_EXCHANGES}`
+          });
 
           // Update webhook event status
           webhookEvents[webhookEvents.length - 1].status = 'success (buyer replied)';
@@ -427,6 +453,15 @@ Acknowledge briefly. Under 25 words.`;
           if (session.exchangeCount >= MAX_EXCHANGES) {
             console.log(`⏹️ Maximum exchanges (${MAX_EXCHANGES}) reached. Stopping conversation.`);
             webhookEvents[webhookEvents.length - 1].status = 'ignored (max exchanges reached)';
+            
+            logToDevelopment({
+              sessionId,
+              agent: 'seller',
+              message: `Max exchanges reached (${MAX_EXCHANGES}), conversation stopped`,
+              status: 'success',
+              details: `Exchange count: ${session.exchangeCount}/${MAX_EXCHANGES}`
+            });
+            
             return;
           }
           
@@ -529,6 +564,14 @@ Under 30 words.`;
           // Increment exchange count in memory
           session.exchangeCount++;
           console.log(`📊 Exchange count: ${session.exchangeCount}/${MAX_EXCHANGES}`);
+          
+          logToDevelopment({
+            sessionId,
+            agent: 'seller',
+            message: 'Exchange count incremented',
+            status: 'success',
+            details: `Now at ${session.exchangeCount}/${MAX_EXCHANGES}`
+          });
 
           // Update webhook event status
           webhookEvents[webhookEvents.length - 1].status = 'success (seller replied)';
