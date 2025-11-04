@@ -82,7 +82,7 @@ const allSponsorTech = [
     role: "Research & Context",
     demos: [],
     status: "not-used",
-    description: "API integrated for company research (not actively used in current demo)",
+    description: "API integrated for company research but not used in demo",
   },
   {
     name: "Convex",
