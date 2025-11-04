@@ -161,6 +161,58 @@ export default function LiveDemo() {
     refetchInterval: 2000,
   });
 
+  // Poll for debug logs (production execution flow) when initialized
+  const { data: debugLogsData } = useQuery({
+    queryKey: ["/api/debug/logs", { limit: 50 }],
+    enabled: isInitialized,
+    refetchInterval: 2000,
+  });
+
+  // Update debug logs from production/development logs
+  useEffect(() => {
+    if (debugLogsData && (debugLogsData as any).logs) {
+      const logs = (debugLogsData as any).logs;
+      
+      // Merge debug logs with existing execution flow
+      setDebugLogs(prevLogs => {
+        // Keep only initial setup logs (from initialization)
+        const setupLogs = prevLogs.filter((log: any) => 
+          log.message.includes('Created fresh AgentMail inbox') ||
+          log.message.includes('Generated outreach email') ||
+          log.message.includes('Sent email to buyer')
+        );
+        
+        // Add all production/development logs
+        const newLogs = logs.map((log: any) => ({
+          agent: log.agent,
+          message: log.message,
+          status: log.status,
+          timestamp: new Date(log.timestamp),
+          details: log.details,
+          duration: log.duration,
+          endpoint: log.endpoint,
+          method: log.method,
+          statusCode: log.statusCode,
+        }));
+        
+        // Combine and deduplicate by timestamp + message
+        const allLogs = [...setupLogs, ...newLogs];
+        const uniqueLogs = allLogs.reduce((acc: any[], log: any) => {
+          const key = `${log.timestamp.getTime()}-${log.message}`;
+          if (!acc.some((l: any) => `${l.timestamp.getTime()}-${l.message}` === key)) {
+            acc.push(log);
+          }
+          return acc;
+        }, []);
+        
+        // Sort by timestamp
+        return uniqueLogs.sort((a, b) => 
+          a.timestamp.getTime() - b.timestamp.getTime()
+        );
+      });
+    }
+  }, [debugLogsData]);
+
   // Update webhook events and merge with debug logs
   useEffect(() => {
     if (webhooksData && (webhooksData as any).webhooks) {
