@@ -1074,7 +1074,10 @@ Write a terse, data-driven outreach email introducing AgentBox - AI-powered sale
       // Load latest session from DATABASE (production-ready, survives restarts)
       const session = await storage.getLatestDemoSession();
       
+      console.log("📧 /api/demo/messages - Session lookup:", session ? `Found (${session.sellerEmail})` : 'No session');
+      
       if (!session) {
+        console.log("⚠️ No session found - returning empty messages");
         return res.json({ messages: [], initialized: false });
       }
 
@@ -1087,6 +1090,7 @@ Write a terse, data-driven outreach email introducing AgentBox - AI-powered sale
       // AgentMail returns all messages for the pod (not per-inbox)
       // So both listMessages calls return the same data - just use one
       const messageList = (sellerMessages.messages || []);
+      console.log(`📧 Fetched ${messageList.length} messages from AgentMail for session`);
       
       // Fetch full content for each message (list only returns preview)
       const fullMessages = await Promise.all(
