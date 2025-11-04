@@ -1198,6 +1198,89 @@ Write a terse, data-driven outreach email introducing AgentBox - AI-powered sale
     }
   });
 
+  // DIAGNOSTIC: Check if processed_webhook_events table exists and is functional
+  app.get("/api/admin/diagnose-webhook-table", async (req, res) => {
+    const diagnostics: any = {
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV || 'unknown',
+      databaseUrl: process.env.DATABASE_URL ? 'SET (hidden)' : 'NOT SET',
+    };
+
+    try {
+      // Test 1: Check if table exists by attempting to select from it
+      console.log("🔍 Diagnostic: Checking if processed_webhook_events table exists...");
+      try {
+        const tableCheck = await db.select().from(schema.processedWebhookEvents).limit(1);
+        diagnostics.tableExists = true;
+        diagnostics.tableCheckError = null;
+        console.log("✅ Table exists!");
+      } catch (tableError: any) {
+        diagnostics.tableExists = false;
+        diagnostics.tableCheckError = tableError.message;
+        console.log("❌ Table does NOT exist:", tableError.message);
+      }
+
+      // Test 2: Count existing records
+      if (diagnostics.tableExists) {
+        try {
+          const allRecords = await db.select().from(schema.processedWebhookEvents);
+          diagnostics.recordCount = allRecords.length;
+          diagnostics.sampleRecords = allRecords.slice(0, 5);
+          console.log(`📊 Found ${allRecords.length} records in table`);
+        } catch (countError: any) {
+          diagnostics.recordCount = 'ERROR';
+          diagnostics.countError = countError.message;
+        }
+      }
+
+      // Test 3: Try to insert a test record
+      if (diagnostics.tableExists) {
+        const testEventId = `TEST_${Date.now()}_${Math.random()}`;
+        try {
+          await db.insert(schema.processedWebhookEvents).values({
+            eventId: testEventId,
+          });
+          diagnostics.insertTest = 'SUCCESS';
+          console.log("✅ Test insert successful!");
+
+          // Test 4: Try to read it back
+          const readBack = await db.select().from(schema.processedWebhookEvents)
+            .where(eq(schema.processedWebhookEvents.eventId, testEventId));
+          
+          if (readBack.length > 0) {
+            diagnostics.readTest = 'SUCCESS';
+            diagnostics.insertedRecord = readBack[0];
+            console.log("✅ Test read successful!");
+            
+            // Clean up test record
+            await db.delete(schema.processedWebhookEvents)
+              .where(eq(schema.processedWebhookEvents.eventId, testEventId));
+            diagnostics.cleanupTest = 'SUCCESS';
+          } else {
+            diagnostics.readTest = 'FAILED - inserted but could not read back';
+          }
+        } catch (insertError: any) {
+          diagnostics.insertTest = 'FAILED';
+          diagnostics.insertError = insertError.message;
+          console.log("❌ Test insert failed:", insertError.message);
+        }
+      }
+
+      // Test 5: Check in-memory cache state
+      diagnostics.inMemoryCacheSize = processedWebhooks.size;
+      diagnostics.inMemorySample = Array.from(processedWebhooks).slice(0, 5);
+
+      res.json(diagnostics);
+    } catch (error: any) {
+      console.error("Error during webhook table diagnostics:", error);
+      res.status(500).json({
+        error: "Diagnostic failed",
+        message: error.message,
+        ...diagnostics
+      });
+    }
+  });
+
   // Development debug logs endpoint - accessible during local development for webhook debugging
   // Tagged with [DEV] environment identifier for clear distinction from production logs
   app.get("/api/debug/dev-logs", async (req, res) => {
