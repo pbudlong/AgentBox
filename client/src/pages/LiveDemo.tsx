@@ -95,6 +95,7 @@ export default function LiveDemo() {
   const [, navigate] = useLocation();
   const [webhookDialogOpen, setWebhookDialogOpen] = useState(false);
   const [selectedWebhookPayload, setSelectedWebhookPayload] = useState<any>(null);
+  const [showDebugPanels, setShowDebugPanels] = useState(false);
   
   // DEBUG: Persistent filtering diagnostics to compare dev vs prod behavior
   const [filteringDebug, setFilteringDebug] = useState<{
@@ -430,6 +431,18 @@ export default function LiveDemo() {
           <Badge variant="outline" className="ml-2">
             {buildInfo?.buildLabel || 'loading...'} [{buildInfo?.environment === 'production' ? 'PROD' : 'DEV'}]
           </Badge>
+          
+          {(filteringDebug || dbDiagnostics) && (
+            <Button 
+              onClick={() => setShowDebugPanels(!showDebugPanels)}
+              variant="outline"
+              size="sm"
+              className="hover-elevate active-elevate-2"
+              data-testid="button-toggle-debug"
+            >
+              {showDebugPanels ? 'Hide' : 'Show'} Debug Info
+            </Button>
+          )}
         </div>
         
         {liveMessages.length > 0 && (
@@ -445,7 +458,7 @@ export default function LiveDemo() {
       </div>
 
       {/* DEBUG PANEL - Shows filtering diagnostics to compare dev vs prod */}
-      {filteringDebug && (
+      {showDebugPanels && filteringDebug && (
         <div className="mx-8 my-4 p-4 bg-yellow-500/10 border-2 border-yellow-500/50 rounded-lg">
           <div className="flex items-center gap-2 mb-3">
             <Badge variant="outline" className="bg-yellow-500/20 text-yellow-300 border-yellow-500">
@@ -508,7 +521,7 @@ export default function LiveDemo() {
       )}
 
       {/* DATABASE DIAGNOSTICS PANEL - Shows webhook deduplication state */}
-      {dbDiagnostics && (
+      {showDebugPanels && dbDiagnostics && (
         <div className="mx-8 mb-4 p-4 bg-blue-500/10 border-2 border-blue-500/50 rounded-lg">
           <div className="flex items-center gap-2 mb-3">
             <Badge variant="outline" className="bg-blue-500/20 text-blue-300 border-blue-500">

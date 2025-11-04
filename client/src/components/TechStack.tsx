@@ -80,9 +80,9 @@ const allSponsorTech = [
   {
     name: "Perplexity",
     role: "Research & Context",
-    demos: ["Live Demo"],
-    status: "active",
-    description: "Real-time company research and market context enrichment",
+    demos: [],
+    status: "not-used",
+    description: "API integrated for company research (not actively used in current demo)",
   },
   {
     name: "Convex",
