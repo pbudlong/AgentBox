@@ -4,10 +4,17 @@ import { fitScoringTool } from "../tools/fitScoringTool";
 import { perplexityEnrichmentTool } from "../tools/perplexityTool";
 
 const OPENAI_API_KEY = process.env.AI_INTEGRATIONS_OPENAI_API_KEY || process.env.OPENAI_API_KEY;
-const OPENAI_BASE_URL = process.env.AI_INTEGRATIONS_OPENAI_BASE_URL;
+let OPENAI_BASE_URL = process.env.AI_INTEGRATIONS_OPENAI_BASE_URL;
 
 if (!OPENAI_API_KEY) {
   throw new Error("OpenAI API key not configured");
+}
+
+// Ignore localhost base URLs - they don't work in production
+// The Replit integration sometimes sets this to localhost:1106 which only works in dev
+if (OPENAI_BASE_URL && OPENAI_BASE_URL.includes('localhost')) {
+  console.log('🔧 [BuyerAgent] Ignoring localhost base URL - using default OpenAI API');
+  OPENAI_BASE_URL = undefined;
 }
 
 // Log OpenAI configuration on startup
