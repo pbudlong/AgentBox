@@ -181,7 +181,7 @@ export default function LiveDemo() {
             const newWebhookLog = {
               agent: webhook.to?.includes('buyer') ? 'buyer' : 'seller' as 'buyer' | 'seller',
               message: `Webhook ${webhook.status}`,
-              status: webhook.status?.includes('success') ? 'success' : webhook.status?.includes('processing') ? 'pending' : 'error' as 'success' | 'error' | 'pending',
+              status: webhook.status?.includes('error') || webhook.status?.includes('fail') ? 'error' : webhook.status?.includes('success') ? 'success' : 'pending' as 'success' | 'error' | 'pending',
               timestamp: new Date(webhook.timestamp),
               isWebhook: true,
               webhookData: webhook,
