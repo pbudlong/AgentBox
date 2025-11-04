@@ -1,0 +1,112 @@
+🔍 DEBUG: Message Filtering Diagnostics
+Env: production
+API Messages
+
+6
+
+After Time Filter
+
+6
+
+Filtered: 0
+
+Final (Unique)
+
+6
+
+Polling
+
+STOPPED ✓
+
+Session Start:
+
+2025-11-04T19:16:56.681Z
+
+Sample Message Timestamps:
+
+1. 2025-11-04T19:17:06.040Z
+
+2. 2025-11-04T19:17:12.898Z
+
+3. 2025-11-04T19:17:16.793Z
+
+Last updated: 11:17:30 AM
+
+🗄️ DEBUG: Database Webhook Deduplication
+Table Status
+
+EXISTS ✓
+
+DB Webhook Count
+
+6
+
+Old webhooks present
+
+In-Memory Cache
+
+0
+
+Current session
+
+Last checked: 11:17:44 AM
+
+⚠️ Old webhook IDs in database may block duplicates
+
+Seller Agent (Mike)
+seller-1762283822014@agentmail.to
+
+Agentmail Execution Flow:
+
+✓ DB Clear: TRUE (removed 0 old webhooks)
+✓ Created fresh AgentMail inbox
+✓ [Buyer] Created fresh AgentMail inbox
+✓ Generated outreach email via OpenAI
+✓ Sent email to buyer
+To: buyer-1762283822014@agentmail.to
+
+Streamline Your Sales Qualification Process
+
+Subject: Enhance Sales Qualification at TechCorp
+
+Hi Sarah,
+
+With TechCorp's focus on sales qualification and a $25K budget, our AI-powered platform can seamlessly integrate with Salesforce to optimize your process. We can help you achieve your Q1 goals efficiently.
+
+Interested in a brief discussion?
+
+Best,  
+Mike (via AgentBox)
+
+To: Sarah (Buyer) <buyer-1762283822014@agentmail.to>
+
+Re: Streamline Your Sales Qualification Process
+
+Hi Sarah,
+
+Our platform implementation typically takes 4-6 weeks, with dedicated support throughout. We adhere to industry-standard security measures, including data encryption and compliance with GDPR and CCPA.
+
+Would you be available to discuss this further on Tuesday at 2 PM, Wednesday at 10 AM, or Thursday at 1 PM?
+
+Best,  
+Mike (via AgentBox)
+
+To: Sarah (Buyer) <buyer-1762283822014@agentmail.to>
+
+Re: Streamline Your Sales Qualification Process
+
+Confirmed for Tuesday at 2 PM. Calendar invite sent.  
+
+Best,  
+Mike (via AgentBox)
+
+Buyer Agent (Sarah)
+buyer-1762283822014@agentmail.to
+
+Agentmail Execution Flow:
+
+✓ DB Clear: TRUE (removed 0 old webhooks)
+✓ [Seller] Created fresh AgentMail inbox
+✓ Created fresh AgentMail inbox
+✓ [Seller] Generated outreach email via OpenAI
+✓ [Seller] Sent email to buyer
