@@ -18,7 +18,7 @@ if (OPENAI_BASE_URL && OPENAI_BASE_URL.includes('localhost')) {
 }
 
 // Log OpenAI configuration on startup
-const apiKeySource = process.env.AI_INTEGRATIONS_OPENAI_API_KEY ? 'AI_INTEGRATIONS_OPENAI_API_KEY' : 'OPENAI_API_KEY';
+const apiKeySource = process.env.OPENAI_API_KEY ? 'OPENAI_API_KEY' : 'AI_INTEGRATIONS_OPENAI_API_KEY';
 console.log('🔑 [BuyerAgent] OpenAI Config:', {
   keySource: apiKeySource,
   hasCustomBaseURL: !!OPENAI_BASE_URL,
