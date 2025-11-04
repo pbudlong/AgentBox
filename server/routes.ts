@@ -238,18 +238,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (event.event_type === "message.received" && event.message) {
         const inboundEmail = event.message;
         
-        // Load demo session from DATABASE using inbox_id (production-ready, survives restarts)
-        // This replaces the old in-memory approach that failed in serverless deployments
-        const inboxId = inboundEmail.inbox_id;
-        let session: DemoSession | undefined;
+        // Load demo session - try in-memory first (dev), then database (production)
+        // This hybrid approach supports both local dev and production deployments
+        let session = currentDemoSession;
         
-        if (inboxId) {
-          session = await storage.getDemoSessionByInboxId(inboxId);
-          console.log(`🔍 Session lookup by inbox_id ${inboxId}:`, session ? '✓ Found' : '✗ Not found');
+        if (!session) {
+          // Fallback to database lookup for production (serverless deployments)
+          const inboxId = inboundEmail.inbox_id;
+          if (inboxId) {
+            session = await storage.getDemoSessionByInboxId(inboxId);
+            console.log(`🔍 Session lookup from database by inbox_id ${inboxId}:`, session ? '✓ Found' : '✗ Not found');
+          }
+        } else {
+          console.log("🔍 Session found in memory (dev mode)");
         }
         
         if (!session) {
-          console.log("⚠️ No demo session found in database for this inbox");
+          console.log("⚠️ No demo session found in memory or database");
           
           await logToProduction({
             sessionId: null,
@@ -809,17 +814,30 @@ Under 30 words.`;
         duration: buyerInboxDuration
       });
 
-      // Save session to in-memory storage
-      console.log("💾 Saving demo session to memory...");
+      // Save session to DATABASE (production-ready, survives restarts)
+      console.log("💾 Saving demo session to database...");
+      const sessionCreatedAt = new Date();
+      const dbSession = await storage.createDemoSession({
+        id: sessionId,
+        sellerInboxId,
+        sellerEmail,
+        buyerInboxId,
+        buyerEmail,
+        exchangeCount: 0,
+        createdAt: sessionCreatedAt.toISOString(),
+      });
+      console.log("✅ Demo session saved to database");
+      
+      // Also save to in-memory for backward compatibility
       currentDemoSession = {
         sellerInboxId,
         sellerEmail,
         buyerInboxId,
         buyerEmail,
         exchangeCount: 0,
-        createdAt: new Date(),
+        createdAt: sessionCreatedAt,
       };
-      console.log("✅ Demo session created in memory");
+      console.log("✅ Demo session also cached in memory");
 
       console.log("Inboxes ready:", { seller: sellerEmail, buyer: buyerEmail });
       console.log("ℹ️  Webhooks are configured at organization level - no per-inbox registration needed");
