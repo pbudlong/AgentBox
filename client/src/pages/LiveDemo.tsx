@@ -8,6 +8,7 @@ import { useLocation } from "wouter";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import FitScoreIndicator from "@/components/FitScoreIndicator";
+import type { BuildInfo } from "@shared/build-info";
 import {
   Dialog,
   DialogContent,
@@ -165,6 +166,12 @@ export default function LiveDemo() {
       console.log("✅ Demo session started, filtering messages after:", data.sessionStart.toISOString());
       queryClient.invalidateQueries({ queryKey: ["/api/demo/messages"] });
     },
+  });
+
+  // Fetch build version info
+  const { data: buildInfo } = useQuery<BuildInfo>({
+    queryKey: ["/api/meta/version"],
+    staleTime: Infinity, // Version doesn't change during session
   });
 
   // Detect if conversation is complete (6 messages = 5 exchanges: seller → buyer → seller → buyer → seller → buyer)
@@ -421,7 +428,7 @@ export default function LiveDemo() {
           )}
           
           <Badge variant="outline" className="ml-2">
-            v2.2-init-logging [{import.meta.env.MODE === 'production' ? 'PROD' : 'DEV'}]
+            {buildInfo?.buildLabel || 'loading...'} [{buildInfo?.environment === 'production' ? 'PROD' : 'DEV'}]
           </Badge>
         </div>
         

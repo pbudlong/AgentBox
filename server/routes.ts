@@ -7,6 +7,7 @@ import { db } from "./db";
 import * as schema from "@shared/schema";
 import type { DemoSession } from "@shared/schema";
 import { eq, desc, sql } from "drizzle-orm";
+import { getBuildInfo } from "./build-info";
 
 // MAX_EXCHANGES constant for preventing infinite loops
 const MAX_EXCHANGES = 5; // Seller → buyer (1) → seller (2) → buyer (3) → seller (4) → buyer (5) → STOP
@@ -1224,6 +1225,12 @@ Write a terse, data-driven outreach email introducing AgentBox - AI-powered sale
   // Get webhook events for debugging
   app.get("/api/demo/webhooks", (req, res) => {
     res.json({ webhooks: webhookEvents });
+  });
+
+  // Build metadata endpoint - returns version info for UI display
+  app.get("/api/meta/version", (req, res) => {
+    const buildInfo = getBuildInfo();
+    res.json(buildInfo);
   });
 
   // Production debug logs endpoint - accessible from deployed app for remote debugging
