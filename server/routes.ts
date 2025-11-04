@@ -158,7 +158,7 @@ function extractNewContent(emailBody: string): string {
   return cleanLines.join('\n').trim();
 }
 
-// Initialize webhook cleanup on server startup
+// Initialize webhook cleanup on server startup - clears old records and in-memory Set
 async function initializeWebhookCleanup() {
   try {
     // Delete webhook records older than 12 hours to prevent table bloat
