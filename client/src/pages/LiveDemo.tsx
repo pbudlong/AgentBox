@@ -325,6 +325,18 @@ export default function LiveDemo() {
         console.log("🗑️ Removed", sessionMessages.length - uniqueMessages.length, "duplicate messages");
       }
       
+      // CAPTURE filtering diagnostics for visual debugging
+      setFilteringDebug({
+        lastUpdate: new Date(),
+        apiMessageCount: allMessages.length,
+        sessionFilteredCount: sessionMessages.length,
+        uniqueCount: uniqueMessages.length,
+        sessionStartTime: sessionStartTime?.toISOString() || null,
+        sampleMessageTimestamps: allMessages.slice(0, 3).map((m: any) => m.timestamp.toISOString()),
+        filteredOutCount: allMessages.length - sessionMessages.length,
+        environment: import.meta.env.MODE || 'unknown'
+      });
+      
       setLiveMessages(uniqueMessages);
     }
   }, [messagesData, sessionStartTime]);
@@ -394,6 +406,69 @@ export default function LiveDemo() {
         )}
       </div>
 
+      {/* DEBUG PANEL - Shows filtering diagnostics to compare dev vs prod */}
+      {filteringDebug && (
+        <div className="mx-8 my-4 p-4 bg-yellow-500/10 border-2 border-yellow-500/50 rounded-lg">
+          <div className="flex items-center gap-2 mb-3">
+            <Badge variant="outline" className="bg-yellow-500/20 text-yellow-300 border-yellow-500">
+              🔍 DEBUG: Message Filtering Diagnostics
+            </Badge>
+            <Badge variant="secondary" className="text-xs">
+              Env: {filteringDebug.environment}
+            </Badge>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <div className="bg-background/30 p-3 rounded">
+              <p className="text-muted-foreground text-xs mb-1">API Messages</p>
+              <p className="text-2xl font-bold text-foreground">{filteringDebug.apiMessageCount}</p>
+            </div>
+            
+            <div className="bg-background/30 p-3 rounded">
+              <p className="text-muted-foreground text-xs mb-1">After Time Filter</p>
+              <p className="text-2xl font-bold text-foreground">{filteringDebug.sessionFilteredCount}</p>
+              <p className="text-xs text-red-400 mt-1">
+                Filtered: {filteringDebug.filteredOutCount}
+              </p>
+            </div>
+            
+            <div className="bg-background/30 p-3 rounded">
+              <p className="text-muted-foreground text-xs mb-1">Final (Unique)</p>
+              <p className="text-2xl font-bold text-foreground">{filteringDebug.uniqueCount}</p>
+            </div>
+            
+            <div className="bg-background/30 p-3 rounded">
+              <p className="text-muted-foreground text-xs mb-1">Polling</p>
+              <p className="text-lg font-bold">
+                {isConversationComplete ? (
+                  <span className="text-green-400">STOPPED ✓</span>
+                ) : (
+                  <span className="text-orange-400">ACTIVE...</span>
+                )}
+              </p>
+            </div>
+          </div>
+          
+          <div className="mt-3 p-3 bg-background/30 rounded text-xs font-mono">
+            <p className="text-muted-foreground mb-1">Session Start:</p>
+            <p className="text-foreground">{filteringDebug.sessionStartTime || 'Not set'}</p>
+            
+            {filteringDebug.sampleMessageTimestamps.length > 0 && (
+              <>
+                <p className="text-muted-foreground mt-2 mb-1">Sample Message Timestamps:</p>
+                {filteringDebug.sampleMessageTimestamps.map((ts, i) => (
+                  <p key={i} className="text-foreground">{i + 1}. {ts}</p>
+                ))}
+              </>
+            )}
+            
+            <p className="text-yellow-400 mt-2">
+              Last updated: {filteringDebug.lastUpdate.toLocaleTimeString()}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Status message */}
       {!isInitialized && (
         <div className="p-8 text-center">
@@ -403,7 +478,7 @@ export default function LiveDemo() {
         </div>
       )}
 
-      {isInitialized && liveMessages.length === 0 && (
+      {isInitialized && liveMessages.length === 0 && !filteringDebug && (
         <div className="p-8 text-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
           <p className="text-muted-foreground">
