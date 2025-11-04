@@ -361,6 +361,16 @@ Under 30 words.`;
     const sessionId = `session-${timestamp}-${Math.random().toString(36).substr(2, 9)}`;
     const sessionStartTime = new Date().toISOString();
     
+    // Track execution details for frontend display
+    const executionDetails: Array<{
+      agent: 'seller' | 'buyer';
+      message: string;
+      status: 'success' | 'error' | 'pending';
+      timestamp: Date;
+      details?: string;
+      duration?: number;
+    }> = [];
+    
     try {
       console.log("\n" + "█".repeat(100));
       console.log("█".repeat(100));
@@ -395,6 +405,15 @@ Under 30 words.`;
       const sellerInboxId = (sellerInbox as any).inboxId; // AgentMail API uses camelCase
       const sellerEmail = (sellerInbox as any).inboxId;    // inboxId IS the email address
       console.log(`📧 Seller email address: ${sellerEmail}`);
+      
+      executionDetails.push({
+        agent: 'seller',
+        message: 'Created fresh AgentMail inbox',
+        status: 'success',
+        timestamp: new Date(),
+        details: `POST /inboxes → 200 OK (${sellerInboxDuration}ms)`,
+        duration: sellerInboxDuration
+      });
 
       // Create buyer inbox
       console.log(`⏳ Creating buyer inbox: ${buyerInboxName}@agentmail.to`);
@@ -406,6 +425,15 @@ Under 30 words.`;
       const buyerInboxId = (buyerInbox as any).inboxId; // AgentMail API uses camelCase
       const buyerEmail = (buyerInbox as any).inboxId;    // inboxId IS the email address
       console.log(`📧 Buyer email address: ${buyerEmail}`);
+      
+      executionDetails.push({
+        agent: 'buyer',
+        message: 'Created fresh AgentMail inbox',
+        status: 'success',
+        timestamp: new Date(),
+        details: `POST /inboxes → 200 OK (${buyerInboxDuration}ms)`,
+        duration: buyerInboxDuration
+      });
 
       // Save session to in-memory storage
       console.log("💾 Saving demo session to memory...");
@@ -440,6 +468,15 @@ Write a terse, data-driven outreach email introducing AgentBox - AI-powered sale
       console.log(`✅ Seller message generated in ${agentDuration}ms`);
       console.log("📝 Generated message preview:", sellerMessage.text.substring(0, 150) + "...");
       console.log("📏 Message length:", sellerMessage.text.length, "characters");
+      
+      executionDetails.push({
+        agent: 'seller',
+        message: 'Generated outreach email via OpenAI',
+        status: 'success',
+        timestamp: new Date(),
+        details: `OpenAI GPT-4 (${agentDuration}ms)`,
+        duration: agentDuration
+      });
 
       // Send first email from seller to buyer
       console.log(`📮 Sending email from ${sellerEmail} to ${buyerEmail}...`);
@@ -455,6 +492,23 @@ Write a terse, data-driven outreach email introducing AgentBox - AI-powered sale
       console.log("📦 AgentMail send response:", JSON.stringify(sellerEmailResult, null, 2));
       console.log("⏳ Waiting for buyer webhook to fire and auto-generate response...");
       console.log("=".repeat(80) + "\n");
+      
+      executionDetails.push({
+        agent: 'seller',
+        message: 'Sent email to buyer',
+        status: 'success',
+        timestamp: new Date(),
+        details: `POST /messages → 200 OK (${emailDuration}ms)`,
+        duration: emailDuration
+      });
+      
+      executionDetails.push({
+        agent: 'buyer',
+        message: 'Waiting for webhook...',
+        status: 'pending',
+        timestamp: new Date(),
+        details: 'Webhook will trigger when AgentMail delivers the email'
+      });
 
       const sessionEndTime = new Date().toISOString();
       const totalDuration = Date.now() - timestamp;
@@ -474,6 +528,7 @@ Write a terse, data-driven outreach email introducing AgentBox - AI-powered sale
         seller: sellerEmail,
         buyer: buyerEmail,
         message: "Demo initialized - webhooks configured at organization level",
+        executionDetails, // Send detailed API call info to frontend
       });
     } catch (error) {
       console.error("\n" + "❌".repeat(40));
@@ -486,10 +541,20 @@ Write a terse, data-driven outreach email introducing AgentBox - AI-powered sale
       console.error("Stack Trace:", (error as Error).stack);
       console.error("❌".repeat(40) + "\n");
       
+      // Add error to execution details
+      executionDetails.push({
+        agent: 'seller',
+        message: 'Demo initialization failed',
+        status: 'error',
+        timestamp: new Date(),
+        details: (error as Error).message
+      });
+      
       res.status(500).json({ 
         error: "Failed to initialize demo",
         details: (error as Error).message,
-        sessionId
+        sessionId,
+        executionDetails // Include partial execution details even on failure
       });
     }
   });

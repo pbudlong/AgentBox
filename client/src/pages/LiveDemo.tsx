@@ -88,7 +88,7 @@ export default function LiveDemo() {
   const [buyerEmail, setBuyerEmail] = useState("");
   const [isInitialized, setIsInitialized] = useState(false);
   const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
-  const [debugLogs, setDebugLogs] = useState<{ agent: 'seller' | 'buyer', message: string, status: 'success' | 'error' | 'pending', timestamp: Date }[]>([]);
+  const [debugLogs, setDebugLogs] = useState<{ agent: 'seller' | 'buyer', message: string, status: 'success' | 'error' | 'pending', timestamp: Date, details?: string, duration?: number }[]>([]);
   const [webhookEvents, setWebhookEvents] = useState<any[]>([]);
   const [processedWebhookIds, setProcessedWebhookIds] = useState<Set<string>>(new Set());
   const [, navigate] = useLocation();
@@ -109,24 +109,31 @@ export default function LiveDemo() {
       if (!response.ok) {
         const errorData = await response.json();
         const errorMessage = errorData.details || errorData.error || "Failed to initialize demo";
-        const sessionId = errorData.sessionId || "unknown";
         
-        setDebugLogs([
-          { agent: 'seller', message: `Demo initialization failed: ${errorMessage}`, status: 'error', timestamp: new Date() },
-          { agent: 'seller', message: `Session ID: ${sessionId}`, status: 'error', timestamp: new Date() },
-        ]);
+        // Use execution details from error response if available
+        // Convert timestamp strings to Date objects
+        if (errorData.executionDetails && errorData.executionDetails.length > 0) {
+          setDebugLogs(errorData.executionDetails.map((detail: any) => ({
+            ...detail,
+            timestamp: new Date(detail.timestamp)
+          })));
+        } else {
+          setDebugLogs([
+            { agent: 'seller', message: `Demo initialization failed: ${errorMessage}`, status: 'error', timestamp: new Date(), details: errorData.sessionId ? `Session ID: ${errorData.sessionId}` : undefined },
+          ]);
+        }
         throw new Error(errorMessage);
       }
       const data = await response.json();
       
-      // Set initial debug logs (webhooks will be added dynamically)
-      setDebugLogs([
-        { agent: 'seller', message: 'Created fresh AgentMail inbox', status: 'success', timestamp: new Date() },
-        { agent: 'buyer', message: 'Created fresh AgentMail inbox', status: 'success', timestamp: new Date() },
-        { agent: 'seller', message: 'Generated outreach email via OpenAI', status: 'success', timestamp: new Date() },
-        { agent: 'seller', message: 'Sent email to buyer', status: 'success', timestamp: new Date() },
-        { agent: 'buyer', message: 'Waiting for webhook...', status: 'pending', timestamp: new Date(), isWebhookPlaceholder: true } as any,
-      ]);
+      // Use execution details from backend (includes API call info, timing, errors)
+      // Convert timestamp strings to Date objects
+      const executionDetails = data.executionDetails || [];
+      setDebugLogs(executionDetails.map((detail: any) => ({
+        ...detail,
+        timestamp: new Date(detail.timestamp),
+        isWebhookPlaceholder: detail.status === 'pending' && detail.message.includes('Waiting for webhook')
+      })));
       
       return { ...data, sessionStart };
     },
@@ -367,11 +374,18 @@ export default function LiveDemo() {
                             'bg-yellow-500/20 text-yellow-400'
                           }`}
                         >
-                          {log.status === 'success' && '✓ '}
-                          {log.status === 'error' && '✗ '}
-                          {log.status === 'pending' && '⏳ '}
-                          {log.agent === 'buyer' && <span className="opacity-60">[Buyer] </span>}
-                          {log.message}
+                          <div>
+                            {log.status === 'success' && '✓ '}
+                            {log.status === 'error' && '✗ '}
+                            {log.status === 'pending' && '⏳ '}
+                            {log.agent === 'buyer' && <span className="opacity-60">[Buyer] </span>}
+                            {log.message}
+                          </div>
+                          {log.details && (
+                            <div className="text-[10px] opacity-70 mt-0.5 ml-3">
+                              {log.details}
+                            </div>
+                          )}
                         </div>
                       ) : (
                         <div className={`text-xs px-2 py-1 rounded ${
@@ -452,11 +466,18 @@ export default function LiveDemo() {
                             'bg-yellow-500/20 text-yellow-400'
                           }`}
                         >
-                          {log.status === 'success' && '✓ '}
-                          {log.status === 'error' && '✗ '}
-                          {log.status === 'pending' && '⏳ '}
-                          {log.agent === 'seller' && <span className="opacity-60">[Seller] </span>}
-                          {log.message}
+                          <div>
+                            {log.status === 'success' && '✓ '}
+                            {log.status === 'error' && '✗ '}
+                            {log.status === 'pending' && '⏳ '}
+                            {log.agent === 'seller' && <span className="opacity-60">[Seller] </span>}
+                            {log.message}
+                          </div>
+                          {log.details && (
+                            <div className="text-[10px] opacity-70 mt-0.5 ml-3">
+                              {log.details}
+                            </div>
+                          )}
                         </div>
                       ) : (
                         <div className={`text-xs px-2 py-1 rounded ${

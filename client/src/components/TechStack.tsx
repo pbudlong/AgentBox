@@ -138,18 +138,13 @@ const sponsorTech = [
 const techAlreadyInPlace = [
   {
     name: "Webhook Infrastructure",
-    description: "Real-time email webhooks with duplicate detection and status tracking",
+    description: "Real-time email webhooks with composite key duplicate detection",
     tech: ["AgentMail", "Replit"],
   },
   {
     name: "AI Agent Framework",
     description: "GPT-4 powered buyer and seller agents with tool integration",
     tech: ["Mastra", "OpenAI", "Perplexity"],
-  },
-  {
-    name: "Database-Backed Sessions",
-    description: "Demo sessions persisted across deployments",
-    tech: ["PostgreSQL", "Drizzle", "Replit"],
   },
   {
     name: "Real-time Updates",
@@ -159,6 +154,11 @@ const techAlreadyInPlace = [
 ];
 
 const techToBeImplemented = [
+  {
+    name: "Database-Backed Sessions",
+    description: "Persist demo sessions to PostgreSQL instead of in-memory storage",
+    tech: ["PostgreSQL", "Drizzle", "Replit"],
+  },
   {
     name: "AgentMail Inbox Creation",
     description: "Build UI for users to claim their own @agentbox.ai email addresses",
