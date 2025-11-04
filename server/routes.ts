@@ -5,6 +5,7 @@ import { buyerAgent, sellerAgent } from "./mastra/index";
 import { replyToEmail, type InboundEmail, createInbox, sendEmail, listMessages, getMessage, findInboxByEmail } from "./agentmail";
 import { db } from "./db";
 import * as schema from "@shared/schema";
+import type { DemoSession } from "@shared/schema";
 import { eq, desc } from "drizzle-orm";
 
 // MAX_EXCHANGES constant for preventing infinite loops
@@ -183,10 +184,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Quick response to webhook (must respond immediately)
       res.status(200).json({ success: true });
       console.log("✅ Webhook acknowledged (200 OK sent)");
-      
-      // Get session ID if available for logging
-      const session = currentDemoSession;
-      const sessionId = session ? `session-${session.createdAt.getTime()}` : null;
 
       // Create composite key for duplicate detection (event_id + message_id)
       // This prevents false duplicates when AgentMail reuses event_ids for different messages
@@ -211,16 +208,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log("   Composite Key:", compositeKey);
           console.log(`${"=".repeat(80)}\n`);
           
-          logToProduction({
-            sessionId,
+          await logToProduction({
+            sessionId: null,
             agent: 'system',
             message: 'Duplicate webhook ignored',
             status: 'success',
             details: `Event ID: ${eventId}, Message ID: ${messageId}`
           });
           
-          logToDevelopment({
-            sessionId,
+          await logToDevelopment({
+            sessionId: null,
             agent: 'system',
             message: 'Duplicate webhook ignored',
             status: 'success',
@@ -241,26 +238,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (event.event_type === "message.received" && event.message) {
         const inboundEmail = event.message;
         
-        // Load demo session from in-memory storage
-        const session = currentDemoSession;
+        // Load demo session from DATABASE using inbox_id (production-ready, survives restarts)
+        // This replaces the old in-memory approach that failed in serverless deployments
+        const inboxId = inboundEmail.inbox_id;
+        let session: DemoSession | undefined;
+        
+        if (inboxId) {
+          session = await storage.getDemoSessionByInboxId(inboxId);
+          console.log(`🔍 Session lookup by inbox_id ${inboxId}:`, session ? '✓ Found' : '✗ Not found');
+        }
         
         if (!session) {
-          console.log("⚠️ No demo session found in memory");
+          console.log("⚠️ No demo session found in database for this inbox");
           
-          logToProduction({
+          await logToProduction({
             sessionId: null,
             agent: 'system',
-            message: 'Webhook received but no active session',
+            message: 'Webhook received but no active session in database',
             status: 'error',
-            details: `From: ${inboundEmail.from || 'unknown'}, Subject: ${inboundEmail.subject || 'No subject'}`
+            details: `Inbox ID: ${inboxId || 'missing'}, From: ${inboundEmail.from || 'unknown'}, Subject: ${inboundEmail.subject || 'No subject'}`
           });
           
-          logToDevelopment({
+          await logToDevelopment({
             sessionId: null,
             agent: 'system',
-            message: 'Webhook received but no active session',
+            message: 'Webhook received but no active session in database',
             status: 'error',
-            details: `From: ${inboundEmail.from || 'unknown'}, Subject: ${inboundEmail.subject || 'No subject'}`
+            details: `Inbox ID: ${inboxId || 'missing'}, From: ${inboundEmail.from || 'unknown'}, Subject: ${inboundEmail.subject || 'No subject'}`
           });
           
           webhookEvents.push({
@@ -268,7 +272,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             from: inboundEmail.from || 'unknown',
             to: Array.isArray(inboundEmail.to) ? inboundEmail.to.join(', ') : (inboundEmail.to || 'unknown'),
             subject: inboundEmail.subject || 'No subject',
-            status: 'error (no session found)',
+            status: 'error (no session found in database)',
             event_id: event.event_id || 'unknown',
             payload: event,
             response: { success: true }
@@ -276,9 +280,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return;
         }
         
+        // Calculate session ID for logging (now that we have the session from database)
+        const sessionId = `session-${new Date(session.createdAt).getTime()}`;
+        
         // Check if message is older than session (AgentMail replays historical messages)
         const messageTimestamp = new Date(inboundEmail.created_at || inboundEmail.timestamp);
-        const sessionTimestamp = session.createdAt;
+        const sessionTimestamp = new Date(session.createdAt);
         
         if (messageTimestamp < sessionTimestamp) {
           console.log("⏮️ Ignoring old message from before session creation:", {
@@ -317,7 +324,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
         
         // Log webhook reception at development level
-        logToDevelopment({
+        await logToDevelopment({
           sessionId,
           agent: receivedByBuyer ? 'buyer' : receivedBySeller ? 'seller' : 'system',
           message: `Webhook received at ${receiverName} inbox`,
@@ -357,7 +364,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               response: { success: true }
             });
             
-            logToDevelopment({
+            await logToDevelopment({
               sessionId,
               agent: 'buyer',
               message: `Max exchanges reached (${MAX_EXCHANGES}), conversation stopped`,
@@ -409,7 +416,7 @@ Acknowledge briefly. Under 25 words.`;
           const agentDuration = Date.now() - agentStart;
           console.log("💬 Buyer response generated:", response.text.substring(0, 100) + "...");
           
-          logToProduction({
+          await logToProduction({
             sessionId,
             agent: 'buyer',
             message: 'Generated email response via OpenAI',
@@ -418,7 +425,7 @@ Acknowledge briefly. Under 25 words.`;
             duration: agentDuration
           });
           
-          logToDevelopment({
+          await logToDevelopment({
             sessionId,
             agent: 'buyer',
             message: 'Generated email response via OpenAI',
@@ -437,7 +444,7 @@ Acknowledge briefly. Under 25 words.`;
           });
           const emailDuration = Date.now() - emailStart;
 
-          logToProduction({
+          await logToProduction({
             sessionId,
             agent: 'buyer',
             message: 'Sent reply email',
@@ -448,7 +455,7 @@ Acknowledge briefly. Under 25 words.`;
             duration: emailDuration
           });
           
-          logToDevelopment({
+          await logToDevelopment({
             sessionId,
             agent: 'buyer',
             message: 'Sent reply email',
@@ -463,7 +470,7 @@ Acknowledge briefly. Under 25 words.`;
           session.exchangeCount++;
           console.log(`📊 Exchange count: ${session.exchangeCount}/${MAX_EXCHANGES}`);
           
-          logToDevelopment({
+          await logToDevelopment({
             sessionId,
             agent: 'buyer',
             message: 'Exchange count incremented',
@@ -504,7 +511,7 @@ Acknowledge briefly. Under 25 words.`;
               response: { success: true }
             });
             
-            logToDevelopment({
+            await logToDevelopment({
               sessionId,
               agent: 'seller',
               message: `Max exchanges reached (${MAX_EXCHANGES}), conversation stopped`,
@@ -561,7 +568,7 @@ Under 30 words.`;
           const agentDurationSeller = Date.now() - agentStartSeller;
           console.log("💬 Seller response generated:", response.text.substring(0, 100) + "...");
           
-          logToProduction({
+          await logToProduction({
             sessionId,
             agent: 'seller',
             message: 'Generated email response via OpenAI',
@@ -570,7 +577,7 @@ Under 30 words.`;
             duration: agentDurationSeller
           });
           
-          logToDevelopment({
+          await logToDevelopment({
             sessionId,
             agent: 'seller',
             message: 'Generated email response via OpenAI',
@@ -589,7 +596,7 @@ Under 30 words.`;
           });
           const emailDurationSeller = Date.now() - emailStartSeller;
 
-          logToProduction({
+          await logToProduction({
             sessionId,
             agent: 'seller',
             message: 'Sent reply email',
@@ -600,7 +607,7 @@ Under 30 words.`;
             duration: emailDurationSeller
           });
           
-          logToDevelopment({
+          await logToDevelopment({
             sessionId,
             agent: 'seller',
             message: 'Sent reply email',
@@ -615,7 +622,7 @@ Under 30 words.`;
           session.exchangeCount++;
           console.log(`📊 Exchange count: ${session.exchangeCount}/${MAX_EXCHANGES}`);
           
-          logToDevelopment({
+          await logToDevelopment({
             sessionId,
             agent: 'seller',
             message: 'Exchange count incremented',
@@ -658,20 +665,17 @@ Under 30 words.`;
       console.error("Stack trace:", (error as Error).stack);
       console.log(`${"=".repeat(80)}\n`);
       
-      // Get session ID if available for logging
-      const session = currentDemoSession;
-      const sessionId = session ? `session-${session.createdAt.getTime()}` : null;
-      
-      logToProduction({
-        sessionId,
+      // Log webhook processing error (sessionId unknown in error case)
+      await logToProduction({
+        sessionId: null,
         agent: 'system',
         message: 'Webhook processing failed',
         status: 'error',
         details: (error as Error).message
       });
       
-      logToDevelopment({
-        sessionId,
+      await logToDevelopment({
+        sessionId: null,
         agent: 'system',
         message: 'Webhook processing failed',
         status: 'error',
@@ -741,7 +745,7 @@ Under 30 words.`;
         duration: sellerInboxDuration
       });
       
-      logToProduction({
+      await logToProduction({
         sessionId,
         agent: 'seller',
         message: 'Created fresh AgentMail inbox',
@@ -752,7 +756,7 @@ Under 30 words.`;
         duration: sellerInboxDuration
       });
       
-      logToDevelopment({
+      await logToDevelopment({
         sessionId,
         agent: 'seller',
         message: 'Created fresh AgentMail inbox',
@@ -783,7 +787,7 @@ Under 30 words.`;
         duration: buyerInboxDuration
       });
       
-      logToProduction({
+      await logToProduction({
         sessionId,
         agent: 'buyer',
         message: 'Created fresh AgentMail inbox',
@@ -794,7 +798,7 @@ Under 30 words.`;
         duration: buyerInboxDuration
       });
       
-      logToDevelopment({
+      await logToDevelopment({
         sessionId,
         agent: 'buyer',
         message: 'Created fresh AgentMail inbox',
@@ -848,7 +852,7 @@ Write a terse, data-driven outreach email introducing AgentBox - AI-powered sale
         duration: agentDuration
       });
       
-      logToProduction({
+      await logToProduction({
         sessionId,
         agent: 'seller',
         message: 'Generated outreach email via OpenAI',
@@ -857,7 +861,7 @@ Write a terse, data-driven outreach email introducing AgentBox - AI-powered sale
         duration: agentDuration
       });
       
-      logToDevelopment({
+      await logToDevelopment({
         sessionId,
         agent: 'seller',
         message: 'Generated outreach email via OpenAI',
@@ -890,7 +894,7 @@ Write a terse, data-driven outreach email introducing AgentBox - AI-powered sale
         duration: emailDuration
       });
       
-      logToProduction({
+      await logToProduction({
         sessionId,
         agent: 'seller',
         message: 'Sent email to buyer',
@@ -901,7 +905,7 @@ Write a terse, data-driven outreach email introducing AgentBox - AI-powered sale
         duration: emailDuration
       });
       
-      logToDevelopment({
+      await logToDevelopment({
         sessionId,
         agent: 'seller',
         message: 'Sent initial email to buyer',
@@ -920,7 +924,7 @@ Write a terse, data-driven outreach email introducing AgentBox - AI-powered sale
         details: 'Webhook will trigger when AgentMail delivers the email'
       });
       
-      logToProduction({
+      await logToProduction({
         sessionId,
         agent: 'buyer',
         message: 'Waiting for webhook...',
@@ -928,7 +932,7 @@ Write a terse, data-driven outreach email introducing AgentBox - AI-powered sale
         details: 'Webhook will trigger when AgentMail delivers the email'
       });
       
-      logToDevelopment({
+      await logToDevelopment({
         sessionId,
         agent: 'buyer',
         message: 'Waiting for webhook to trigger buyer response',
@@ -976,7 +980,7 @@ Write a terse, data-driven outreach email introducing AgentBox - AI-powered sale
         details: (error as Error).message
       });
       
-      logToProduction({
+      await logToProduction({
         sessionId,
         agent: 'seller',
         message: 'Demo initialization failed',
@@ -996,8 +1000,8 @@ Write a terse, data-driven outreach email introducing AgentBox - AI-powered sale
   // Fetch demo messages
   app.get("/api/demo/messages", async (req, res) => {
     try {
-      // Load session from in-memory storage
-      const session = currentDemoSession;
+      // Load latest session from DATABASE (production-ready, survives restarts)
+      const session = await storage.getLatestDemoSession();
       
       if (!session) {
         return res.json({ messages: [], initialized: false });
