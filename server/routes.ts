@@ -255,9 +255,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return;
         }
         
-        // Mark webhook as processed using composite key
+        // Mark webhook as processed using composite key (both memory and database)
         processedWebhooks.add(compositeKey);
-        console.log("✅ Marked webhook as processed (composite key added to Set)");
+        console.log("✅ Marked webhook as processed (composite key added to in-memory Set)");
+        
+        // Persist to database for restart durability
+        try {
+          await db.insert(schema.processedWebhookEvents).values({
+            eventId: compositeKey,
+          });
+          console.log("✅ Webhook persisted to database");
+        } catch (dbError) {
+          // Log but don't fail - in-memory deduplication still works
+          console.error("⚠️ Failed to persist webhook to database (in-memory tracking still active):", dbError);
+        }
       }
 
       // Process email asynchronously
