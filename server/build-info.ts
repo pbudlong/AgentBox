@@ -1,5 +1,11 @@
 import { execSync } from 'child_process';
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 import type { BuildInfo } from '../shared/build-info';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 let cachedBuildInfo: BuildInfo | null = null;
 
@@ -13,32 +19,32 @@ export function getBuildInfo(): BuildInfo {
   let version = 0;
   let buildTimeIso = new Date().toISOString();
 
-  // Try to get git commit hash from environment or git command
-  try {
-    // Check for injected environment variables first (from CI/CD)
-    commit = process.env.BUILD_COMMIT || 
-             process.env.REPLIT_DEPLOYMENT_ID || 
-             execSync('git rev-parse HEAD', { encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'] }).trim();
-    commitShort = commit.substring(0, 7);
-    
-    // Get version number from git commit count
+  // In production, try to read from build metadata file first (generated at build time)
+  if (process.env.NODE_ENV === 'production') {
     try {
+      const metadataPath = join(__dirname, '../shared/build-metadata.json');
+      const metadata = JSON.parse(readFileSync(metadataPath, 'utf8'));
+      commit = metadata.commit;
+      commitShort = metadata.commitShort;
+      version = metadata.version;
+      buildTimeIso = metadata.buildTimeIso;
+      console.log('[BuildInfo] Loaded from build metadata:', { version, commitShort });
+    } catch (error) {
+      console.warn('[BuildInfo] Build metadata file not found, falling back to runtime detection');
+    }
+  }
+
+  // If not production or metadata file missing, try git commands (development)
+  if (version === 0) {
+    try {
+      commit = execSync('git rev-parse HEAD', { encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'] }).trim();
+      commitShort = commit.substring(0, 7);
+      
       const commitCount = execSync('git rev-list --count HEAD', { encoding: 'utf8', stdio: ['pipe', 'pipe', 'ignore'] }).trim();
       version = parseInt(commitCount, 10) || 0;
     } catch (error) {
-      // Fallback if git rev-list fails
-      version = 0;
+      console.warn('[BuildInfo] Git commands failed, using fallback version');
     }
-  } catch (error) {
-    // Git not available or not a git repo - use fallback
-    console.warn('[BuildInfo] Git metadata unavailable, using fallback version');
-  }
-
-  // Try to get build timestamp from environment
-  try {
-    buildTimeIso = process.env.BUILD_TIMESTAMP || buildTimeIso;
-  } catch (error) {
-    // Use current time as fallback
   }
 
   // Create human-readable label with version number
