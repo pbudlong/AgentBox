@@ -94,6 +94,18 @@ export default function LiveDemo() {
   const [, navigate] = useLocation();
   const [webhookDialogOpen, setWebhookDialogOpen] = useState(false);
   const [selectedWebhookPayload, setSelectedWebhookPayload] = useState<any>(null);
+  
+  // DEBUG: Persistent filtering diagnostics to compare dev vs prod behavior
+  const [filteringDebug, setFilteringDebug] = useState<{
+    lastUpdate: Date;
+    apiMessageCount: number;
+    sessionFilteredCount: number;
+    uniqueCount: number;
+    sessionStartTime: string | null;
+    sampleMessageTimestamps: string[];
+    filteredOutCount: number;
+    environment: string;
+  } | null>(null);
 
   // Initialize demo mutation
   const initMutation = useMutation({
