@@ -6,7 +6,7 @@ import { replyToEmail, type InboundEmail, createInbox, sendEmail, listMessages, 
 import { db } from "./db";
 import * as schema from "@shared/schema";
 import type { DemoSession } from "@shared/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, sql } from "drizzle-orm";
 
 // MAX_EXCHANGES constant for preventing infinite loops
 const MAX_EXCHANGES = 5; // Seller → buyer (1) → seller (2) → buyer (3) → seller (4) → buyer (5) → STOP
@@ -158,7 +158,34 @@ function extractNewContent(emailBody: string): string {
   return cleanLines.join('\n').trim();
 }
 
+// Initialize webhook cleanup on server startup
+async function initializeWebhookCleanup() {
+  try {
+    // Delete webhook records older than 12 hours to prevent table bloat
+    // while keeping recent records to block webhook replays during restarts
+    const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString();
+    
+    const result = await db
+      .delete(schema.processedWebhookEvents)
+      .where(sql`${schema.processedWebhookEvents.processedAt} < ${twelveHoursAgo}`)
+      .returning();
+    
+    const deletedCount = result.length;
+    console.log(`🧹 Webhook cleanup: Deleted ${deletedCount} webhook records older than 12 hours`);
+    
+    // Clear the in-memory Set to start fresh (it's empty on startup anyway)
+    processedWebhooks.clear();
+    console.log(`🧹 Webhook cleanup: Cleared in-memory duplicate tracking (Set now has ${processedWebhooks.size} entries)`);
+  } catch (error) {
+    console.error('❌ Webhook cleanup failed:', error);
+    // Don't throw - server should still start even if cleanup fails
+  }
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Clean up old webhook records on startup
+  await initializeWebhookCleanup();
+  
   // AgentMail webhook endpoint for inbound emails
   app.post("/webhooks/agentmail", async (req, res) => {
     const timestamp = new Date().toISOString();
