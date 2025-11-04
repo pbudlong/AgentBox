@@ -1168,6 +1168,25 @@ Write a terse, data-driven outreach email introducing AgentBox - AI-powered sale
     }
   });
 
+  // Emergency endpoint to clear webhook duplicate tracking (admin use only)
+  app.post("/api/admin/clear-webhook-cache", async (req, res) => {
+    try {
+      const beforeSize = processedWebhooks.size;
+      processedWebhooks.clear();
+      const afterSize = processedWebhooks.size;
+      
+      res.json({
+        success: true,
+        message: "Webhook duplicate tracking cleared",
+        before: beforeSize,
+        after: afterSize
+      });
+    } catch (error) {
+      console.error("Error clearing webhook cache:", error);
+      res.status(500).json({ error: "Failed to clear webhook cache" });
+    }
+  });
+
   // Development debug logs endpoint - accessible during local development for webhook debugging
   // Tagged with [DEV] environment identifier for clear distinction from production logs
   app.get("/api/debug/dev-logs", async (req, res) => {
