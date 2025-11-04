@@ -238,28 +238,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (event.event_type === "message.received" && event.message) {
         const inboundEmail = event.message;
         
-        // Load demo session - try in-memory first (dev), then database (production)
-        // This hybrid approach supports both local dev and production deployments
+        // Load demo session - try in-memory first (fast path), then database (handles restarts)
+        // This hybrid approach works for both dev and production
         let session = currentDemoSession;
+        let sessionFromDb: DemoSession | undefined;
         
         if (!session) {
-          // Fallback to database lookup for production (serverless deployments)
+          // Fallback to database lookup (handles server restarts, serverless deployments)
           const inboxId = inboundEmail.inbox_id;
           if (inboxId) {
-            session = await storage.getDemoSessionByInboxId(inboxId);
-            console.log(`🔍 Session lookup from database by inbox_id ${inboxId}:`, session ? '✓ Found' : '✗ Not found');
+            sessionFromDb = await storage.getDemoSessionByInboxId(inboxId);
+            console.log(`🔍 Session lookup from database by inbox_id ${inboxId}:`, sessionFromDb ? '✓ Found' : '✗ Not found');
+            
+            // Convert database session to in-memory format if found
+            if (sessionFromDb) {
+              session = {
+                sellerInboxId: sessionFromDb.sellerInboxId,
+                sellerEmail: sessionFromDb.sellerEmail,
+                buyerInboxId: sessionFromDb.buyerInboxId,
+                buyerEmail: sessionFromDb.buyerEmail,
+                exchangeCount: sessionFromDb.exchangeCount,
+                createdAt: new Date(sessionFromDb.createdAt),
+              };
+              // Update in-memory cache
+              currentDemoSession = session;
+              console.log("✅ Session loaded from database and cached in memory");
+            }
           }
         } else {
-          console.log("🔍 Session found in memory (dev mode)");
+          console.log("🔍 Session found in memory (fast path)");
         }
         
         if (!session) {
+          const inboxId = inboundEmail.inbox_id;
           console.log("⚠️ No demo session found in memory or database");
           
           await logToProduction({
             sessionId: null,
             agent: 'system',
-            message: 'Webhook received but no active session in database',
+            message: 'Webhook received but no active session',
             status: 'error',
             details: `Inbox ID: ${inboxId || 'missing'}, From: ${inboundEmail.from || 'unknown'}, Subject: ${inboundEmail.subject || 'No subject'}`
           });
@@ -267,7 +284,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           await logToDevelopment({
             sessionId: null,
             agent: 'system',
-            message: 'Webhook received but no active session in database',
+            message: 'Webhook received but no active session',
             status: 'error',
             details: `Inbox ID: ${inboxId || 'missing'}, From: ${inboundEmail.from || 'unknown'}, Subject: ${inboundEmail.subject || 'No subject'}`
           });
@@ -818,15 +835,13 @@ Under 30 words.`;
       console.log("💾 Saving demo session to database...");
       const sessionCreatedAt = new Date();
       const dbSession = await storage.createDemoSession({
-        id: sessionId,
         sellerInboxId,
         sellerEmail,
         buyerInboxId,
         buyerEmail,
         exchangeCount: 0,
-        createdAt: sessionCreatedAt.toISOString(),
       });
-      console.log("✅ Demo session saved to database");
+      console.log("✅ Demo session saved to database:", dbSession.id);
       
       // Also save to in-memory for backward compatibility
       currentDemoSession = {
