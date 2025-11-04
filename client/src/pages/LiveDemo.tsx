@@ -421,7 +421,7 @@ export default function LiveDemo() {
           )}
           
           <Badge variant="outline" className="ml-2">
-            v2.1-db-clear
+            v2.1-db-clear [{import.meta.env.MODE === 'production' ? 'PROD' : 'DEV'}]
           </Badge>
         </div>
         

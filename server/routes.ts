@@ -780,6 +780,7 @@ Under 30 words.`;
       console.log("\n" + "🗄️".repeat(40));
       console.log("DATABASE WEBHOOK DEDUPLICATION TABLE CLEAR");
       console.log("🗄️".repeat(40));
+      let dbClearSuccess = false;
       try {
         // Count before clearing
         const countBefore = await db.select({ count: sql<number>`count(*)` })
@@ -799,13 +800,54 @@ Under 30 words.`;
         
         if (afterCount === 0) {
           console.log(`✅ SUCCESS: Cleared ${beforeCount} webhook IDs from database`);
+          dbClearSuccess = true;
+          
+          // Add to execution details so it shows in UI
+          executionDetails.push({
+            agent: 'system' as any,
+            message: `DB Clear: TRUE (removed ${beforeCount} old webhooks)`,
+            status: 'success',
+            timestamp: new Date(),
+            details: `Cleared webhook deduplication table`,
+          });
+          
+          await logToProduction({
+            sessionId,
+            agent: 'system',
+            message: 'DB Clear: TRUE',
+            status: 'success',
+            details: `Cleared ${beforeCount} old webhook IDs from database`,
+          });
         } else {
           console.error(`⚠️ WARNING: Expected 0 but found ${afterCount} remaining`);
+          executionDetails.push({
+            agent: 'system' as any,
+            message: `DB Clear: PARTIAL (${afterCount} webhooks remain)`,
+            status: 'error',
+            timestamp: new Date(),
+            details: `Expected 0, found ${afterCount}`,
+          });
         }
       } catch (err) {
         console.error("❌ FAILED to clear processed webhook events:", err);
         console.error("⚠️ This will cause webhooks to be rejected as duplicates!");
         console.error("Full error details:", JSON.stringify(err, null, 2));
+        
+        executionDetails.push({
+          agent: 'system' as any,
+          message: 'DB Clear: FALSE (error occurred)',
+          status: 'error',
+          timestamp: new Date(),
+          details: String(err),
+        });
+        
+        await logToProduction({
+          sessionId,
+          agent: 'system',
+          message: 'DB Clear: FALSE',
+          status: 'error',
+          details: `Failed to clear webhook table: ${String(err)}`,
+        });
       }
       console.log("🗄️".repeat(40) + "\n");
 
