@@ -98,6 +98,11 @@ export default function LiveDemo() {
   // Initialize demo mutation
   const initMutation = useMutation({
     mutationFn: async () => {
+      // Set session start time BEFORE sending the email
+      // Subtract 5 seconds to account for any clock skew or processing time
+      const sessionStart = new Date(Date.now() - 5000);
+      console.log("🎬 Demo session starting at:", sessionStart.toISOString());
+      
       const response = await fetch("/api/demo/initialize", {
         method: "POST",
       });
@@ -130,14 +135,14 @@ export default function LiveDemo() {
         isWebhookPlaceholder: detail.status === 'pending' && detail.message.includes('Waiting for webhook')
       })));
       
-      return data;
+      return { ...data, sessionStart };
     },
     onSuccess: (data: any) => {
-      // Don't set sessionStartTime yet - wait for messages endpoint to provide actual session creation time
+      setSessionStartTime(data.sessionStart);
       setSellerEmail(data.seller);
       setBuyerEmail(data.buyer);
       setIsInitialized(true);
-      console.log("✅ Demo session initialized");
+      console.log("✅ Demo session started, filtering messages after:", data.sessionStart.toISOString());
       queryClient.invalidateQueries({ queryKey: ["/api/demo/messages"] });
     },
   });
@@ -257,16 +262,8 @@ export default function LiveDemo() {
   // Update messages from real API data
   useEffect(() => {
     if (messagesData && (messagesData as any).initialized) {
-      // Get session creation time from the API response
-      const apiSessionCreatedAt = (messagesData as any).sessionCreatedAt;
-      if (apiSessionCreatedAt && !sessionStartTime) {
-        const sessionStart = new Date(apiSessionCreatedAt);
-        setSessionStartTime(sessionStart);
-        console.log("✅ Using session creation time from backend:", sessionStart.toISOString());
-      }
-      
       const allMessages = ((messagesData as any).messages || []).map((m: any, idx: number) => {
-        const messageTimestamp = new Date(m.createdAt || m.created_at || m.timestamp || Date.now());
+        const messageTimestamp = new Date(m.createdAt || m.created_at || Date.now());
         return {
           id: m.messageId || m.message_id || `msg-${idx}`,
           from: m.from,
@@ -279,19 +276,15 @@ export default function LiveDemo() {
         };
       });
       
-      // Use session creation time from API (backend knows the real time)
-      const sessionCreationTime = apiSessionCreatedAt ? new Date(apiSessionCreatedAt) : sessionStartTime;
-      
-      // Only show messages from the current session (sent after session creation)
-      // Subtract 5 seconds to account for clock skew or processing delays
-      const sessionMessages = sessionCreationTime 
+      // Only show messages from the current session (sent after session start)
+      const sessionMessages = sessionStartTime 
         ? allMessages.filter((m: any) => {
             const msgTime = m.timestamp.getTime();
-            const sessionTime = sessionCreationTime.getTime() - 5000; // 5 second buffer
+            const sessionTime = sessionStartTime.getTime();
             const isAfterSession = msgTime >= sessionTime;
             
             if (!isAfterSession) {
-              console.log(`🗑️ Filtering out old message from ${m.timestamp.toISOString()} (session: ${sessionCreationTime.toISOString()})`);
+              console.log(`🗑️ Filtering out old message from ${m.timestamp.toISOString()} (session: ${sessionStartTime.toISOString()})`);
             }
             
             return isAfterSession;
@@ -318,7 +311,7 @@ export default function LiveDemo() {
       
       setLiveMessages(uniqueMessages);
     }
-  }, [messagesData]);
+  }, [messagesData, sessionStartTime]);
 
   // Filter messages by from/to addresses (AgentMail returns all messages for the pod)
   // Seller pane: Messages FROM seller (seller's sent emails)
