@@ -9,6 +9,15 @@ if (!OPENAI_API_KEY) {
   throw new Error("OpenAI API key not configured");
 }
 
+// Log OpenAI configuration on startup
+const apiKeySource = process.env.AI_INTEGRATIONS_OPENAI_API_KEY ? 'AI_INTEGRATIONS_OPENAI_API_KEY' : 'OPENAI_API_KEY';
+console.log('🔑 [SellerAgent] OpenAI Config:', {
+  keySource: apiKeySource,
+  hasCustomBaseURL: !!OPENAI_BASE_URL,
+  baseURL: OPENAI_BASE_URL || 'default (https://api.openai.com)',
+  model: 'gpt-4o-mini'
+});
+
 // Create OpenAI provider with custom config if needed
 const openaiProvider = OPENAI_BASE_URL 
   ? createOpenAI({ apiKey: OPENAI_API_KEY, baseURL: OPENAI_BASE_URL })
