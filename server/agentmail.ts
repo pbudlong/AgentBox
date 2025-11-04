@@ -63,14 +63,34 @@ export async function replyToEmail(params: {
     throw new Error("AgentMail not configured");
   }
 
-  return await agentmail.inboxes.messages.reply(
-    params.inbox_id,
-    params.message_id,
-    {
-      text: params.text,
-      html: params.html,
-    }
-  );
+  // Log request details for debugging
+  console.log("📧 AgentMail reply request:", {
+    inbox_id: params.inbox_id,
+    message_id: params.message_id,
+    text_length: params.text?.length || 0,
+    has_html: !!params.html
+  });
+
+  try {
+    const result = await agentmail.inboxes.messages.reply(
+      params.inbox_id,
+      params.message_id,
+      {
+        text: params.text,
+        html: params.html,
+      }
+    );
+    console.log("✅ AgentMail reply successful");
+    return result;
+  } catch (error) {
+    console.error("❌ AgentMail reply failed:", {
+      inbox_id: params.inbox_id,
+      message_id: params.message_id,
+      error: error instanceof Error ? error.message : String(error),
+      text_preview: params.text?.substring(0, 200)
+    });
+    throw error;
+  }
 }
 
 export async function listMessages(inbox_id: string) {
