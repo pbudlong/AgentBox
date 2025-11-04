@@ -777,12 +777,37 @@ Under 30 words.`;
       
       // CRITICAL FIX: Clear database webhook deduplication table for new session
       // This prevents old webhooks from previous demo sessions from blocking new ones
+      console.log("\n" + "🗄️".repeat(40));
+      console.log("DATABASE WEBHOOK DEDUPLICATION TABLE CLEAR");
+      console.log("🗄️".repeat(40));
       try {
-        await db.delete(schema.processedWebhookEvents);
-        console.log("✅ Cleared processed webhook events from database");
+        // Count before clearing
+        const countBefore = await db.select({ count: sql<number>`count(*)` })
+          .from(schema.processedWebhookEvents);
+        const beforeCount = Number(countBefore[0]?.count || 0);
+        console.log(`📊 BEFORE: Database has ${beforeCount} old webhook IDs`);
+        
+        // Clear the table
+        const deleteResult = await db.delete(schema.processedWebhookEvents);
+        console.log(`🗑️  DELETE executed successfully`);
+        
+        // Count after clearing
+        const countAfter = await db.select({ count: sql<number>`count(*)` })
+          .from(schema.processedWebhookEvents);
+        const afterCount = Number(countAfter[0]?.count || 0);
+        console.log(`📊 AFTER: Database has ${afterCount} webhook IDs`);
+        
+        if (afterCount === 0) {
+          console.log(`✅ SUCCESS: Cleared ${beforeCount} webhook IDs from database`);
+        } else {
+          console.error(`⚠️ WARNING: Expected 0 but found ${afterCount} remaining`);
+        }
       } catch (err) {
-        console.error("⚠️ Failed to clear processed webhook events (will use in-memory only):", err);
+        console.error("❌ FAILED to clear processed webhook events:", err);
+        console.error("⚠️ This will cause webhooks to be rejected as duplicates!");
+        console.error("Full error details:", JSON.stringify(err, null, 2));
       }
+      console.log("🗄️".repeat(40) + "\n");
 
       // Create FRESH inboxes with timestamp to avoid old messages
       const sellerInboxName = `seller-${timestamp}`;
