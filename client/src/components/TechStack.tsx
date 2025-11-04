@@ -147,14 +147,14 @@ const techAlreadyInPlace = [
     tech: ["Mastra", "OpenAI", "Perplexity"],
   },
   {
-    name: "Real-time Updates",
-    description: "Polling-based message and webhook status updates",
-    tech: ["TanStack Query"],
-  },
-  {
     name: "Database-Backed Sessions",
     description: "Demo sessions, webhook deduplication, and debug logs persisted to PostgreSQL",
     tech: ["PostgreSQL", "Drizzle", "Replit"],
+  },
+  {
+    name: "Real-time Updates",
+    description: "Polling-based message and webhook status updates",
+    tech: ["TanStack Query"],
   },
 ];
 
