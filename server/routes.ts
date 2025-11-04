@@ -42,21 +42,29 @@ interface ProductionLogEntry {
   duration?: number;
 }
 
-let productionLogs: ProductionLogEntry[] = [];
-const MAX_PRODUCTION_LOGS = 200; // Keep last 200 entries
-
-function logToProduction(entry: Omit<ProductionLogEntry, 'timestamp' | 'environment'>) {
+async function logToProduction(entry: Omit<ProductionLogEntry, 'timestamp' | 'environment'>) {
   const logEntry: ProductionLogEntry = {
     ...entry,
     timestamp: new Date().toISOString(),
     environment: 'PROD'
   };
   
-  productionLogs.push(logEntry);
-  
-  // Trim to max size
-  if (productionLogs.length > MAX_PRODUCTION_LOGS) {
-    productionLogs = productionLogs.slice(-MAX_PRODUCTION_LOGS);
+  // Save to database for persistence across restarts
+  try {
+    await db.insert(schema.productionLogs).values({
+      sessionId: entry.sessionId || 'unknown',
+      agent: entry.agent,
+      message: entry.message,
+      status: entry.status,
+      timestamp: logEntry.timestamp,
+      details: entry.details,
+      endpoint: entry.endpoint,
+      method: entry.method,
+      statusCode: entry.statusCode,
+      duration: entry.duration,
+    });
+  } catch (err) {
+    console.error('[PROD] Failed to save log to database:', err);
   }
   
   // Also log to console for dev debugging
@@ -1054,16 +1062,46 @@ Write a terse, data-driven outreach email introducing AgentBox - AI-powered sale
 
   // Production debug logs endpoint - accessible from deployed app for remote debugging
   // Tagged with [PROD] environment identifier for clear distinction from dev logs
-  app.get("/api/debug/logs", (req, res) => {
-    const limit = parseInt(req.query.limit as string) || 100;
-    const recentLogs = productionLogs.slice(-limit);
-    
-    res.json({
-      environment: 'PROD',
-      total: productionLogs.length,
-      returned: recentLogs.length,
-      logs: recentLogs
-    });
+  app.get("/api/debug/logs", async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 100;
+      const sessionId = req.query.sessionId as string;
+      
+      // Query from database with limit, ordered by timestamp
+      const logs = sessionId
+        ? await db
+            .select()
+            .from(schema.productionLogs)
+            .where(eq(schema.productionLogs.sessionId, sessionId))
+            .orderBy(schema.productionLogs.timestamp)
+            .limit(limit)
+        : await db
+            .select()
+            .from(schema.productionLogs)
+            .orderBy(schema.productionLogs.timestamp)
+            .limit(limit);
+      
+      res.json({
+        environment: 'PROD',
+        returned: logs.length,
+        logs: logs.map(log => ({
+          timestamp: log.timestamp,
+          environment: 'PROD',
+          sessionId: log.sessionId,
+          agent: log.agent,
+          message: log.message,
+          status: log.status,
+          details: log.details,
+          endpoint: log.endpoint,
+          method: log.method,
+          statusCode: log.statusCode,
+          duration: log.duration,
+        }))
+      });
+    } catch (error) {
+      console.error("Error fetching production logs:", error);
+      res.status(500).json({ error: "Failed to fetch production logs" });
+    }
   });
 
   // Development debug logs endpoint - accessible during local development for webhook debugging

@@ -71,6 +71,28 @@ export const insertDevelopmentLogSchema = createInsertSchema(developmentLogs).om
 export type InsertDevelopmentLog = z.infer<typeof insertDevelopmentLogSchema>;
 export type DevelopmentLog = typeof developmentLogs.$inferSelect;
 
+// Production logs table to persist production debugging logs across server restarts
+export const productionLogs = pgTable("production_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: text("session_id").notNull(),
+  agent: text("agent").notNull(),
+  message: text("message").notNull(),
+  status: text("status").notNull(),
+  timestamp: text("timestamp").notNull(),
+  details: text("details"),
+  endpoint: text("endpoint"),
+  method: text("method"),
+  statusCode: integer("status_code"),
+  duration: integer("duration"),
+});
+
+export const insertProductionLogSchema = createInsertSchema(productionLogs).omit({
+  id: true,
+});
+
+export type InsertProductionLog = z.infer<typeof insertProductionLogSchema>;
+export type ProductionLog = typeof productionLogs.$inferSelect;
+
 // AgentBox types
 export type Party = "seller" | "buyer";
 export type Status = "collecting" | "approved" | "declined" | "scheduled";
