@@ -62,6 +62,45 @@ function logToProduction(entry: Omit<ProductionLogEntry, 'timestamp' | 'environm
   console.log(`${prefix} ${statusSymbol} ${entry.message}${entry.details ? ` - ${entry.details}` : ''}`);
 }
 
+// Development debug log storage - accessible via /api/debug/dev-logs
+// Tagged with [DEV] for easy identification during local development
+interface DevelopmentLogEntry {
+  timestamp: string;
+  environment: 'DEV';
+  sessionId: string | null;
+  agent: 'seller' | 'buyer' | 'system';
+  message: string;
+  status: 'success' | 'error' | 'pending';
+  details?: string;
+  endpoint?: string;
+  method?: string;
+  statusCode?: number;
+  duration?: number;
+}
+
+let developmentLogs: DevelopmentLogEntry[] = [];
+const MAX_DEVELOPMENT_LOGS = 200; // Keep last 200 entries
+
+function logToDevelopment(entry: Omit<DevelopmentLogEntry, 'timestamp' | 'environment'>) {
+  const logEntry: DevelopmentLogEntry = {
+    ...entry,
+    timestamp: new Date().toISOString(),
+    environment: 'DEV'
+  };
+  
+  developmentLogs.push(logEntry);
+  
+  // Trim to max size
+  if (developmentLogs.length > MAX_DEVELOPMENT_LOGS) {
+    developmentLogs = developmentLogs.slice(-MAX_DEVELOPMENT_LOGS);
+  }
+  
+  // Also log to console for dev debugging
+  const prefix = `[DEV] [${entry.agent}]`;
+  const statusSymbol = entry.status === 'success' ? '✓' : entry.status === 'error' ? '✗' : '⏳';
+  console.log(`${prefix} ${statusSymbol} ${entry.message}${entry.details ? ` - ${entry.details}` : ''}`);
+}
+
 // In-memory demo session storage (production-ready for hackathon demo)
 let currentDemoSession: {
   sellerInboxId: string;
@@ -814,6 +853,20 @@ Write a terse, data-driven outreach email introducing AgentBox - AI-powered sale
     res.json({
       environment: 'PROD',
       total: productionLogs.length,
+      returned: recentLogs.length,
+      logs: recentLogs
+    });
+  });
+
+  // Development debug logs endpoint - accessible during local development for webhook debugging
+  // Tagged with [DEV] environment identifier for clear distinction from production logs
+  app.get("/api/debug/dev-logs", (req, res) => {
+    const limit = parseInt(req.query.limit as string) || 100;
+    const recentLogs = developmentLogs.slice(-limit);
+    
+    res.json({
+      environment: 'DEV',
+      total: developmentLogs.length,
       returned: recentLogs.length,
       logs: recentLogs
     });
