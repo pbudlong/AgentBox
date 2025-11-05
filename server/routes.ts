@@ -547,7 +547,7 @@ Acknowledge briefly. Under 25 words.`;
             subject: `Re: ${inboundEmail.subject || 'No subject'}`,
             status: 'success (buyer replied)',
             event_id: event.event_id || 'unknown',
-            payload: { responseText: response.text },
+            payload: { ...event, agentResponse: response.text },
             response: { success: true }
           });
           console.log("✅ Buyer response sent successfully via webhook");
@@ -699,7 +699,7 @@ Under 30 words.`;
             subject: `Re: ${inboundEmail.subject || 'No subject'}`,
             status: 'success (seller replied)',
             event_id: event.event_id || 'unknown',
-            payload: { responseText: response.text },
+            payload: { ...event, agentResponse: response.text },
             response: { success: true }
           });
           console.log("✅ Seller response sent successfully via webhook");
