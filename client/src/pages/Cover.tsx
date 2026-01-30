@@ -65,15 +65,6 @@ export default function Cover() {
           </p>
 
           <div className="flex flex-col items-center gap-8">
-            {/* Hackathon badge */}
-            <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-card border border-card-border">
-              <span className="text-sm text-muted-foreground">Built for</span>
-              <span className="font-semibold bg-gradient-to-r from-gradient-from to-gradient-via bg-clip-text text-transparent" data-testid="text-hackathon">
-                AgentMail's HackHalloween @YC
-              </span>
-              <span className="text-sm text-muted-foreground">exclusively with Replit</span>
-            </div>
-
             {/* CTA */}
             <Button 
               size="lg"
@@ -84,6 +75,18 @@ export default function Cover() {
               Start Project
               <ArrowRight className="ml-3 h-6 w-6" />
             </Button>
+
+            {/* Hackathon badge */}
+            <div className="flex flex-col items-center gap-2">
+              <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-card border border-card-border">
+                <span className="text-sm text-muted-foreground">Built for</span>
+                <span className="font-semibold bg-gradient-to-r from-gradient-from to-gradient-via bg-clip-text text-transparent" data-testid="text-hackathon">
+                  AgentMail's HackHalloween @YC
+                </span>
+                <span className="text-sm text-muted-foreground">exclusively with Replit by Pete Budlong</span>
+              </div>
+              <p className="text-white font-medium">Replit Vibecoding Track Winner - 1st place - $500</p>
+            </div>
           </div>
         </div>
       </div>
